@@ -23,7 +23,6 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
-  # הוספנו את זה כאן בצורה מסודרת:
   flutter_launcher_icons: ^0.14.4
 
 flutter:
@@ -33,7 +32,6 @@ flutter:
     - assets/logo.jpg
     - assets/hebrew.json
     - assets/english.json
-    # ודא שקובץ האייקון באמת קיים בתיקייה הזו!
     - assets/icon.png 
 
 # ההגדרות של האייקון

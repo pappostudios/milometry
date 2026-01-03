@@ -9,6 +9,11 @@ import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
 // ==========================================
+// הגדרות גלובליות
+// ==========================================
+const int currentTermsVersion = 2;
+
+// ==========================================
 // 1. Theme Manager
 // ==========================================
 class ThemeManager {
@@ -329,12 +334,17 @@ void main() async {
   await NotificationManager().init();
 
   final prefs = await SharedPreferences.getInstance();
-  final bool hasAcceptedTerms = prefs.getBool('hasAcceptedTerms') ?? false;
+  final int userAcceptedVersion = prefs.getInt('accepted_terms_version') ?? 0;
 
-  runApp(PsychoApp(
-      startScreen: hasAcceptedTerms
-          ? const SplashScreen()
-          : const TermsOfServiceScreen()));
+  Widget firstScreen;
+
+  if (userAcceptedVersion == currentTermsVersion) {
+    firstScreen = const SplashScreen();
+  } else {
+    firstScreen = const TermsOfServiceScreen();
+  }
+
+  runApp(PsychoApp(startScreen: firstScreen));
 }
 
 class PsychoApp extends StatelessWidget {
@@ -1880,6 +1890,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 }
 
 // --- מסך תנאי השימוש ---
+// --- מסך תנאי השימוש (מתוקן) ---
 class TermsOfServiceScreen extends StatefulWidget {
   const TermsOfServiceScreen({super.key});
 
@@ -1888,12 +1899,15 @@ class TermsOfServiceScreen extends StatefulWidget {
 }
 
 class _TermsOfServiceScreenState extends State<TermsOfServiceScreen> {
+  // משתנים הם בתוך המחלקה (State)
   bool _isChecked = false;
   final ScrollController _scrollController = ScrollController();
 
   Future<void> _acceptTerms() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('hasAcceptedTerms', true);
+
+    // שמירת הגרסה העדכנית
+    await prefs.setInt('accepted_terms_version', currentTermsVersion);
 
     if (!mounted) return;
 
@@ -1927,21 +1941,43 @@ class _TermsOfServiceScreenState extends State<TermsOfServiceScreen> {
                     controller: _scrollController,
                     child: const Text(
                       '''
-ברוכים הבאים לאפליקציית הלימוד לפסיכומטרי של Pappo Studios.
+מדיניות פרטיות ותנאי שימוש – אפליקציית מילומטרי
+עדכון אחרון: 02/01/2026
 
-1. שימוש באפליקציה:
-השימוש באפליקציה הוא באחריות המשתמש בלבד. האפליקציה נועדה לתרגול ושיפור אוצר מילים לפסיכומטרי, אך אינה מבטיחה ציון מסוים במבחן.
+1.	כללי:
+a.	ברוכים הבאים לאפליקציית "מילומטרי", אשר פותחה על ידי Pappo" Studios"" הורדה ושימוש באפליקציה מהווים הסכמה מלאה ומחייבת לתנאים המפורטים במסמך זה.
 
-2. קניין רוחני:
-כל התכנים באפליקציה, לרבות מאגרי המילים, העיצובים והקוד, הם קניינו הבלעדי של המפתח ואין להעתיקם או לעשות בהם שימוש מסחרי ללא אישור.
+2.	מהות השירות:
+a.	האפליקציה נועדה לשמש ככלי עזר לתרגול, לימוד ושיפור אוצר המילים לקראת הבחינה הפסיכומטרית.
+b.	השימוש באפליקציה הוא באחריות המשתמש בלבד.
+c.	המפתח מבהיר כי השימוש באפליקציה אינו מבטיח קבלת ציון מסוים בבחינה ואינו מהווה תחליף לקורס פסיכומטרי מלא או לחומרים הרשמיים של המרכז הארצי לבחינות והערכה.
 
-3. פרטיות:
-אנו מכבדים את פרטיותך. האפליקציה שומרת נתונים מקומיים על גבי המכשיר שלך לצורך מעקב התקדמות.
+3.	קניין רוחני:
+a.	כל זכויות הקניין הרוחני באפליקציה, לרבות העיצוב הגרפי, קוד המקור, הלוגו, בסיסי הנתונים והתכנים, הינם קניינו הבלעדי של המפתח (Pappo Studios).
+b.	אין להעתיק, לשכפל, להפיץ, לשווק או לעשות כל שימוש מסחרי בחלקים מהאפליקציה או בעיצובה ללא קבלת אישור מפורש ובכתב מהמפתח.
 
-4. היוצר אינו אחראי לכל נזק ישיר או עקיף שייגרם כתוצאה משימוש באפליקציה.
+4.	מדיניות פרטיות ואיסוף נתונים:
+אנו ב-Pappo Studios  מכבדים את פרטיותך.
+a.	איסוף נתונים אישיים: האפליקציה אינה אוספת מידע אישי מזהה (כגון שם, טלפון או מייל) באופן יזום ואינה מעבירה נתונים כאלו לשרתים שלנו.
+b.	אחסון מידע: נתוני ההתקדמות של המשתמש נשמרים באופן מקומי (Locally) על גבי מכשיר המשתמש. מחיקת האפליקציה תוביל למחיקת נתוני ההתקדמות.
+
+5.	פרסומות:
+a.	האפליקציה נכון להיום(תאריך עדכון המסמך) לא מציגה פרסומות. בקריאה ואישור של מסמך זה - הינך(המשתמש) מסכים לכך שבעתיד ייתכן וכי בזמן שימושך באפליקציה יופיעו פרסומות המוגשות ע"י צד שלישי.
+b.	ספקים אלו עשויים להשתמש במידע אנונימי, מזהי מכשיר (Device ID) או טכנולוגיות מעקב כגון "Cookies" על מנת להציג פרסומות המותאמות לתחומי העניין של המשתמש ולשפר את חווית השימוש. השימוש במידע זה כפוף למדיניות הפרטיות של אותם ספקי פרסום.
+
+6.	תמחור ושינויים עתידיים:
+a.	שינוי מודל התמחור: המפתח שומר לעצמו את הזכות הבלעדית לשנות את מודל התמחור של האפליקציה בכל עת.(המשתמש לא יחויב בהוצאות כאלה ואחרות ללא הסכמתו האישית).
+b.	העדר התחייבות למחיר: המשתמש מאשר כי ידוע לו שהאפליקציה עשויה להפוך לבת-תשלום בעתיד, או כי פיצ'רים מסוימים שכרגע ניתנים בחינם עשויים לדרוש תשלום בגרסאות הבאות. אין בהורדת האפליקציה שום התחייבות של המפתח למחיר קבוע או לחינמיות השירות לצמיתות.
+
+7.	הגבלת אחריות:
+a.	היוצר ו/או המפתח אינו אחראי לכל נזק, ישיר או עקיף, שייגרם למשתמש או לצד שלישי כלשהו כתוצאה משימוש באפליקציה, חוסר יכולת להשתמש בה, תקלות טכניות, או הסתמכות על התכנים המופיעים בה. השירות מסופק במתכונת "As Is".
+
+8.	יצירת קשר:
+a.	בכל שאלה, בקשה או דיווח על תקלה בנוגע לאפליקציה או למדיניות הפרטיות, ניתן לפנות אלינו בכתובת המייל [pappostudios@gmail.com].
                       ''',
                       style: TextStyle(fontSize: 16),
                       textAlign: TextAlign.right,
+                      textDirection: TextDirection.rtl,
                     ),
                   ),
                 ),
