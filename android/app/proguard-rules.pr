@@ -1,0 +1,3 @@
+-keep class com.dexterous.flutterlocalnotifications.** { *; }
+-keep class java.time.** { *; }
+-keep class org.threeten.bp.** { *; }
