@@ -109,7 +109,11 @@ Color getTextColorForBackground(int unit, bool isDark) {
 }
 
 // ==========================================
-// 3. Notification Manager (מתוקן עם Timezone)
+// 3. NotificationManager (מעודכן לוגיקת נחישות)
+// ==========================================
+
+// ==========================================
+// 3. NotificationManager (מתוקן - כולל את כל האפשרויות)
 // ==========================================
 
 class NotificationManager {
@@ -158,6 +162,7 @@ class NotificationManager {
         ?.requestNotificationsPermission();
   }
 
+  // --- פונקציה 1: תזכורת יומית קבועה (עבור מסך ההגדרות) ---
   Future<void> scheduleDailyNotification(int hour, int minute) async {
     const String channelId = 'daily_reminders_v10';
 
@@ -176,9 +181,42 @@ class NotificationManager {
           icon: '@mipmap/launcher_icon',
         ),
       ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      // שימוש ב-inexact כדי לרצות את גוגל
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time,
     );
+  }
+
+  // --- פונקציה 2: תזכורת נחישות (לפי זמן אי-פעילות) ---
+  Future<void> scheduleInactivityNotification(int hoursFromNow) async {
+    // קודם כל מבטלים תזכורות קודמות כדי לא להציף
+    await cancelNotifications();
+
+    const String channelId = 'inactivity_reminder_v1';
+
+    // חישוב הזמן העתידי
+    final tz.TZDateTime scheduledDate =
+        tz.TZDateTime.now(tz.local).add(Duration(hours: hoursFromNow));
+
+    await flutterLocalNotificationsPlugin.zonedSchedule(
+      0,
+      'המילים מתגעגעות אליך! 🥺',
+      'עברו כבר $hoursFromNow שעות... בוא להשלים פערים!',
+      scheduledDate,
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          channelId,
+          'תזכורות נחישות',
+          channelDescription: 'תזכורת המבוססת על זמן אי-פעילות',
+          importance: Importance.max,
+          priority: Priority.high,
+          icon: '@mipmap/launcher_icon',
+        ),
+      ),
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+    );
+
+    print("Notification scheduled for: $scheduledDate");
   }
 
   Future<void> cancelNotifications() async {
@@ -334,14 +372,25 @@ void main() async {
   await NotificationManager().init();
 
   final prefs = await SharedPreferences.getInstance();
+
+  // בדיקת תנאי שימוש
   final int userAcceptedVersion = prefs.getInt('accepted_terms_version') ?? 0;
+
+  // בדיקת בחירת נחישות
+  final bool hasChosenDetermination =
+      prefs.getBool('hasChosenDetermination') ?? false;
 
   Widget firstScreen;
 
-  if (userAcceptedVersion == currentTermsVersion) {
-    firstScreen = const SplashScreen();
-  } else {
+  if (userAcceptedVersion != currentTermsVersion) {
+    // 1. קודם כל תנאי שימוש
     firstScreen = const TermsOfServiceScreen();
+  } else if (!hasChosenDetermination) {
+    // 2. אחר כך בחירת נחישות (אם טרם בחר)
+    firstScreen = const DeterminationScreen();
+  } else {
+    // 3. מסך הבית
+    firstScreen = const HomeScreen();
   }
 
   runApp(PsychoApp(startScreen: firstScreen));
@@ -475,8 +524,45 @@ class _SplashScreenState extends State<SplashScreen> {
 // ==========================================
 // 8. Home Screen
 // ==========================================
-class HomeScreen extends StatelessWidget {
+// ==========================================
+// 8. Home Screen (המסך הראשי)
+// ==========================================
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    // ביטול התראות כשנכנסים למסך הבית
+    NotificationManager().cancelNotifications();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) async {
+    final prefs = await SharedPreferences.getInstance();
+    final int hours = prefs.getInt('determination_hours') ?? 24;
+
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      print("App paused. Scheduling reminder for $hours hours.");
+      await NotificationManager().scheduleInactivityNotification(hours);
+    } else if (state == AppLifecycleState.resumed) {
+      print("App resumed. Canceling reminder.");
+      await NotificationManager().cancelNotifications();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -614,7 +700,7 @@ class HomeScreen extends StatelessWidget {
 }
 
 // ==========================================
-// 9. Unit Selector
+// 9. Unit Selector (מסך בחירת יחידה)
 // ==========================================
 class UnitSelectorScreen extends StatefulWidget {
   final String jsonPath;
@@ -1906,13 +1992,12 @@ class _TermsOfServiceScreenState extends State<TermsOfServiceScreen> {
   Future<void> _acceptTerms() async {
     final prefs = await SharedPreferences.getInstance();
 
-    // שמירת הגרסה העדכנית
     await prefs.setInt('accepted_terms_version', currentTermsVersion);
 
     if (!mounted) return;
 
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (context) => const HomeScreen()),
+      MaterialPageRoute(builder: (context) => const DeterminationScreen()),
     );
   }
 
@@ -2007,6 +2092,112 @@ a.	בכל שאלה, בקשה או דיווח על תקלה בנוגע לאפלי
                   'המשך לאפליקציה',
                   style: TextStyle(fontSize: 18, color: Colors.white),
                 ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ==========================================
+// 17. Determination Screen (מסך בחירת נחישות)
+// ==========================================
+class DeterminationScreen extends StatelessWidget {
+  const DeterminationScreen({super.key});
+
+  Future<void> _setDetermination(BuildContext context, int hours) async {
+    final prefs = await SharedPreferences.getInstance();
+    // שומרים את ההעדפה (24, 12, או 8)
+    await prefs.setInt('determination_hours', hours);
+    // מסמנים שהמשתמש בחר כבר רמת נחישות
+    await prefs.setBool('hasChosenDetermination', true);
+
+    if (!context.mounted) return;
+
+    // מעבר למסך הבית
+    Navigator.pushReplacement(
+        context, MaterialPageRoute(builder: (context) => const HomeScreen()));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(30.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.psychology, size: 80, color: Colors.blue),
+              const SizedBox(height: 30),
+              const Text(
+                "כמה אתה נחוש?",
+                style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                "בחר באיזו תדירות נזכיר לך ללמוד\nאם לא נכנסת לאפליקציה",
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 18, color: Colors.grey),
+              ),
+              const SizedBox(height: 50),
+              _buildOption(context, "🏆 רואה את הניצחון", "כל 8 שעות", 8,
+                  Colors.redAccent),
+              const SizedBox(height: 20),
+              _buildOption(
+                  context, "🔥 מתקדם", "כל 12 שעות", 12, Colors.orange),
+              const SizedBox(height: 20),
+              _buildOption(context, "😎 ברגוע", "כל 24 שעות", 24, Colors.green),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOption(BuildContext context, String title, String subtitle,
+      int hours, Color color) {
+    // מחקנו את ה-SizedBox שעטף הכל וקבע גובה 80
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20), // רווח בין הכפתורים
+      width: double.infinity,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.white,
+            foregroundColor: Colors.black,
+            elevation: 5,
+            // כאן אנחנו מגדירים את הריווח הפנימי - זה מה שייצר את הגובה באופן דינמי
+            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 15),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
+                side: BorderSide(color: color, width: 2))),
+        onPressed: () => _setDetermination(context, hours),
+        child: Row(
+          children: [
+            CircleAvatar(
+              backgroundColor: color.withOpacity(0.2),
+              child: Text("$hours",
+                  style: TextStyle(color: color, fontWeight: FontWeight.bold)),
+            ),
+            const SizedBox(width: 20),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                        fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 4), // רווח קטן בין הכותרת לתת-כותרת
+                  Text(
+                    subtitle,
+                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                  ),
+                ],
               ),
             ),
           ],
