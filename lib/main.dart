@@ -7,6 +7,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+import 'package:url_launcher/url_launcher.dart';
 
 // ==========================================
 // הגדרות גלובליות
@@ -109,11 +110,7 @@ Color getTextColorForBackground(int unit, bool isDark) {
 }
 
 // ==========================================
-// 3. NotificationManager (מעודכן לוגיקת נחישות)
-// ==========================================
-
-// ==========================================
-// 3. NotificationManager (מתוקן - כולל את כל האפשרויות)
+// 3. NotificationManager
 // ==========================================
 
 class NotificationManager {
@@ -181,7 +178,6 @@ class NotificationManager {
           icon: '@mipmap/launcher_icon',
         ),
       ),
-      // שימוש ב-inexact כדי לרצות את גוגל
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time,
     );
@@ -1773,9 +1769,11 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   double ttsSpeed = 0.5;
-  // --- משתנים חדשים לתזכורות ---
-  bool isReminderOn = false;
-  TimeOfDay reminderTime = const TimeOfDay(hour: 18, minute: 0);
+  String _currentDetermination = ""; // משתנה להצגת המצב הנוכחי
+
+  // לינקים ליצירת קשר
+  final String _email = "pappostudios@gmail.com";
+  final String _instagramUrl = "https://www.instagram.com/pappostudios";
 
   @override
   void initState() {
@@ -1785,14 +1783,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
+    int hours = prefs.getInt('determination_hours') ?? 24;
+
+    // בדיקה איזה טקסט להציג לפי השעות השמורות
+    String determinationText;
+    switch (hours) {
+      case 8:
+        determinationText = "🏆 רואה את הניצחון (כל 8 שעות)";
+        break;
+      case 12:
+        determinationText = "🔥 מתקדם (כל 12 שעות)";
+        break;
+      default:
+        determinationText = "😎 ברגוע (כל 24 שעות)";
+    }
+
     setState(() {
       ttsSpeed = prefs.getDouble('tts_speed') ?? 0.5;
-
-      // טעינת הגדרות תזכורת
-      isReminderOn = prefs.getBool('reminder_on') ?? false;
-      int hour = prefs.getInt('reminder_hour') ?? 18;
-      int minute = prefs.getInt('reminder_minute') ?? 0;
-      reminderTime = TimeOfDay(hour: hour, minute: minute);
+      _currentDetermination = determinationText;
     });
   }
 
@@ -1804,51 +1812,59 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
   }
 
-  // --- פונקציות לתפעול התזכורות ---
-  Future<void> _toggleReminder(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      isReminderOn = value;
-    });
-    await prefs.setBool('reminder_on', value);
-
-    if (value) {
-      await NotificationManager()
-          .scheduleDailyNotification(reminderTime.hour, reminderTime.minute);
-      await NotificationManager()
-          .flutterLocalNotificationsPlugin
-          .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>()
-          ?.requestNotificationsPermission();
-    } else {
-      await NotificationManager().cancelNotifications();
-    }
-  }
-
-  Future<void> _pickTime() async {
-    final TimeOfDay? newTime = await showTimePicker(
+  void _showContactOptions() {
+    showModalBottomSheet(
       context: context,
-      initialTime: reminderTime,
-      builder: (context, child) {
-        return MediaQuery(
-          data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
-          child: child!,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Wrap(
+            children: [
+              ListTile(
+                leading: const Icon(Icons.email_outlined, color: Colors.blue),
+                title: const Text("שלח אימייל"),
+                onTap: () {
+                  Navigator.pop(context);
+                  _launchEmail();
+                },
+              ),
+              ListTile(
+                leading:
+                    const Icon(Icons.camera_alt_outlined, color: Colors.purple),
+                title: const Text("הודעה באינסטגרם"),
+                onTap: () {
+                  Navigator.pop(context);
+                  _launchInstagram();
+                },
+              ),
+            ],
+          ),
         );
       },
     );
+  }
 
-    if (newTime != null) {
-      setState(() {
-        reminderTime = newTime;
-      });
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setInt('reminder_hour', newTime.hour);
-      await prefs.setInt('reminder_minute', newTime.minute);
+  Future<void> _launchEmail() async {
+    final Uri emailLaunchUri = Uri(
+      scheme: 'mailto',
+      path: _email,
+      query: 'subject=פניה בנושא אפליקציית מילומטרי',
+    );
+    if (!await launchUrl(emailLaunchUri)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("לא הצלחנו לפתוח את אפליקציית המייל")),
+      );
+    }
+  }
 
-      if (isReminderOn) {
-        await NotificationManager()
-            .scheduleDailyNotification(newTime.hour, newTime.minute);
-      }
+  Future<void> _launchInstagram() async {
+    final Uri url = Uri.parse(_instagramUrl);
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("לא הצלחנו לפתוח את האינסטגרם")),
+      );
     }
   }
 
@@ -1872,27 +1888,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ThemeManager().toggleTheme();
             },
           ),
+
           const Divider(),
 
-          // --- מדור תזכורות (חדש) ---
-          _buildSectionHeader("תזכורות"),
-          SwitchListTile(
-            title: const Text("תזכורת יומית"),
-            subtitle: Text(isReminderOn
-                ? "תזכורת בשעה ${reminderTime.format(context)}"
-                : "כבוי"),
-            secondary: const Icon(Icons.alarm),
-            value: isReminderOn,
-            onChanged: (val) => _toggleReminder(val),
+          // --- מדור חדש: נחישות ---
+          _buildSectionHeader("נחישות ותזכורות"),
+          ListTile(
+            leading: const Icon(Icons.psychology, color: Colors.orange),
+            title: const Text("הגדרת רמת נחישות"),
+            subtitle: Text(_currentDetermination), // מציג את המצב הנוכחי
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () {
+              // מעבר למסך הנחישות
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const DeterminationScreen()),
+              );
+            },
           ),
-
-          if (isReminderOn)
-            ListTile(
-              leading: const Icon(Icons.edit_calendar),
-              title: const Text("שנה שעת תזכורת"),
-              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-              onTap: _pickTime,
-            ),
 
           const Divider(),
 
@@ -1910,6 +1924,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onChanged: (val) => _updateSpeed(val),
             ),
             trailing: Text("${(ttsSpeed * 100).toInt()}%"),
+          ),
+
+          const Divider(),
+
+          // --- יצירת קשר ---
+          _buildSectionHeader("צור קשר"),
+          ListTile(
+            leading: const Icon(Icons.chat_bubble_outline, color: Colors.blue),
+            title: const Text("דברו איתי"),
+            subtitle: const Text("דיווח על תקלות, הצעות או סתם דיבור"),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: _showContactOptions,
           ),
 
           const Divider(),
