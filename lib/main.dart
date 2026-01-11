@@ -713,6 +713,7 @@ class _UnitSelectorScreenState extends State<UnitSelectorScreen> {
   Map<int, List<Word>> units = {};
   Map<int, int> learnedCounts = {};
   bool isLoading = true;
+  int totalFailedCount = 0;
 
   @override
   void initState() {
@@ -729,6 +730,7 @@ class _UnitSelectorScreenState extends State<UnitSelectorScreen> {
 
       Map<int, List<Word>> tempUnits = {};
       Map<int, int> tempCounts = {};
+      int failedCounter = 0;
 
       for (var word in allWords) {
         int u = word.unitNumber;
@@ -741,8 +743,10 @@ class _UnitSelectorScreenState extends State<UnitSelectorScreen> {
         tempUnits[u]!.add(word);
 
         var progress = ProgressManager().getWordProgress(word.uniqueId);
-        if (progress != null && (progress['repetitions'] ?? 0) > 0) {
-          tempCounts[u] = tempCounts[u]! + 1;
+        if (progress != null) {
+          int reps = progress['repetitions'] ?? 0;
+          if (reps > 0) tempCounts[u] = tempCounts[u]! + 1;
+          if (reps == 0) failedCounter++;
         }
       }
 
@@ -750,6 +754,7 @@ class _UnitSelectorScreenState extends State<UnitSelectorScreen> {
       setState(() {
         units = tempUnits;
         learnedCounts = tempCounts;
+        totalFailedCount = failedCounter;
         isLoading = false;
       });
     } catch (e) {
@@ -767,74 +772,112 @@ class _UnitSelectorScreenState extends State<UnitSelectorScreen> {
     bool isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text("בחר יחידה - ${widget.title}"),
-        elevation: 0,
-      ),
+      appBar: AppBar(title: Text("בחר יחידה - ${widget.title}"), elevation: 0),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : sortedKeys.isEmpty
-              ? const Center(child: Text("לא נמצאו יחידות"))
-              : ListView.builder(
-                  padding: const EdgeInsets.all(20),
-                  itemCount: sortedKeys.length,
-                  itemBuilder: (context, index) {
-                    int unitNum = sortedKeys[index];
-                    int total = units[unitNum]!.length;
-                    int learned = learnedCounts[unitNum]!;
-                    double progress = total > 0 ? learned / total : 0.0;
+          : ListView(
+              padding: const EdgeInsets.all(20),
+              children: [
+                // --- כפתור חדש: חזרה על שגיאות (מעודן) ---
+                if (totalFailedCount > 0) ...[
+                  Card(
+                    // צבע הרבה יותר עדין (אדום/ורוד בהיר מאוד)
+                    color: const Color(0xFFFFEBEE),
+                    margin: const EdgeInsets.only(
+                        bottom: 20,
+                        left: 10,
+                        right: 10), // הקטנת רוחב ע"י מרג'ין
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                        side: BorderSide(color: Colors.red.shade200, width: 1)),
+                    elevation: 2, // פחות צל
+                    child: ListTile(
+                      // הקטנת ה-Padding כדי להקטין את גובה הכפתור
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 15, vertical: 8),
+                      leading: Icon(Icons.refresh_rounded,
+                          size: 30, color: Colors.red[800]), // אייקון קטן יותר
+                      title: Text(
+                        "חזרה על מילים שלא הכרת", // הטקסט החדש
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                            color: Colors.red[900]),
+                      ),
+                      subtitle: Text(
+                        "יש לך $totalFailedCount מילים לחיזוק",
+                        style: TextStyle(fontSize: 14, color: Colors.red[700]),
+                      ),
+                      trailing: Icon(Icons.arrow_forward_ios,
+                          size: 16, color: Colors.red[900]),
+                      onTap: () async {
+                        // ניווט למסך הבחירה החדש במקום ישר לתרגול
+                        await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => FailedWordsSelectorScreen(
+                                    jsonPath: widget.jsonPath)));
+                        loadAndOrganizeData(); // רענון כשחוזרים
+                      },
+                    ),
+                  ),
+                ],
 
-                    Color unitColor = getUnitColor(unitNum, isDark);
-                    Color textColor =
-                        getTextColorForBackground(unitNum, isDark);
+                // --- רשימת היחידות הרגילה (ללא שינוי) ---
+                ...sortedKeys.map((unitNum) {
+                  int total = units[unitNum]!.length;
+                  int learned = learnedCounts[unitNum]!;
+                  double progress = total > 0 ? learned / total : 0.0;
+                  Color unitColor = getUnitColor(unitNum, isDark);
+                  Color textColor = getTextColorForBackground(unitNum, isDark);
 
-                    return Card(
-                      color: unitColor,
-                      margin: const EdgeInsets.only(bottom: 15),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15)),
-                      elevation: 3,
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.all(15),
-                        title: Text(
-                          "יחידה $unitNum",
+                  return Card(
+                    color: unitColor,
+                    margin: const EdgeInsets.only(bottom: 15),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15)),
+                    elevation: 3,
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.all(15),
+                      title: Text("יחידה $unitNum",
                           style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 18,
-                              color: textColor),
-                        ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SizedBox(height: 8),
-                            Text("התקדמות: $learned / $total מילים",
-                                style: TextStyle(
-                                    color: textColor.withOpacity(0.8))),
-                            const SizedBox(height: 5),
-                            LinearProgressIndicator(
+                              color: textColor)),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 8),
+                          Text("התקדמות: $learned / $total מילים",
+                              style:
+                                  TextStyle(color: textColor.withOpacity(0.8))),
+                          const SizedBox(height: 5),
+                          LinearProgressIndicator(
                               value: progress,
                               backgroundColor: Colors.white.withOpacity(0.5),
                               color: textColor == Colors.white
                                   ? Colors.greenAccent
                                   : Colors.blue,
                               minHeight: 8,
-                              borderRadius: BorderRadius.circular(4),
-                            )
-                          ],
-                        ),
-                        trailing: Icon(Icons.arrow_forward_ios,
-                            size: 16, color: textColor),
-                        onTap: () {
-                          _showOptionsDialog(context, unitNum);
-                        },
+                              borderRadius: BorderRadius.circular(4))
+                        ],
                       ),
-                    );
-                  },
-                ),
+                      trailing: Icon(Icons.arrow_forward_ios,
+                          size: 16, color: textColor),
+                      onTap: () {
+                        _showOptionsDialog(context, unitNum);
+                      },
+                    ),
+                  );
+                }).toList(),
+              ],
+            ),
     );
   }
 
+  // פונקציית _showOptionsDialog נשארת אותו דבר...
   void _showOptionsDialog(BuildContext context, int unitNum) {
+    // תעתיק את הפונקציה הזו מהקוד הקודם שלך, היא לא השתנתה
     showDialog(
         context: context,
         builder: (ctx) => SimpleDialog(
@@ -1081,11 +1124,18 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
 // ==========================================
 // 11. Learning Screen
 // ==========================================
+
 class LearningScreen extends StatefulWidget {
   final String jsonPath;
   final int? unitFilter;
+  final bool onlyFailed; // משתנה חדש: האם זה מצב חזרה על שגיאות?
 
-  const LearningScreen({super.key, required this.jsonPath, this.unitFilter});
+  const LearningScreen({
+    super.key,
+    required this.jsonPath,
+    this.unitFilter,
+    this.onlyFailed = false, // ברירת מחדל: לא
+  });
 
   @override
   State<LearningScreen> createState() => _LearningScreenState();
@@ -1124,11 +1174,13 @@ class _LearningScreenState extends State<LearningScreen> {
     List<Word> filteredTotal = [];
 
     for (var w in rawWords) {
+      // --- תיקון הבאג: סינון לפי יחידה חייב להיות ראשון! ---
+      // זה מבטיח שגם אם אנחנו במצב "שגיאות", לא נתייחס למילים מיחידות אחרות
       if (widget.unitFilter != null && w.unitNumber != widget.unitFilter) {
         continue;
       }
-      filteredTotal.add(w);
 
+      // טעינת התקדמות
       var progress = ProgressManager().getWordProgress(w.uniqueId);
       if (progress != null) {
         w.repetitions = progress['repetitions'];
@@ -1137,6 +1189,19 @@ class _LearningScreenState extends State<LearningScreen> {
         w.nextReview = progress['nextReview'];
       }
 
+      // --- לוגיקה למצב "מילים שלא הכרת" (Only Failed) ---
+      if (widget.onlyFailed) {
+        // נוסיף רק אם המילה נלמדה (לא null) וגם הסטטוס שלה הוא 0
+        if (progress != null && w.repetitions == 0) {
+          sessionWords.add(w);
+          filteredTotal
+              .add(w); // מוסיפים גם לרשימה הכללית כדי שהפרוגרס-בר יהיה מדויק
+        }
+        continue; // עוברים למילה הבאה, לא ממשיכים ללוגיקה הרגילה
+      }
+
+      // --- לוגיקה רגילה (אימון יומי) ---
+      filteredTotal.add(w);
       if (w.nextReview.isBefore(DateTime.now()) || w.repetitions == 0) {
         sessionWords.add(w);
       }
@@ -1147,7 +1212,13 @@ class _LearningScreenState extends State<LearningScreen> {
     setState(() {
       fullVocabulary = filteredTotal;
       studySession = sessionWords;
-      studySession.sort((a, b) => a.nextReview.compareTo(b.nextReview));
+
+      if (widget.onlyFailed) {
+        studySession.shuffle(); // מערבבים רק במצב שגיאות
+      } else {
+        studySession.sort((a, b) => a.nextReview.compareTo(b.nextReview));
+      }
+
       isLoading = false;
       isReviewMode = false;
       _currentIndex = 0;
@@ -1178,7 +1249,10 @@ class _LearningScreenState extends State<LearningScreen> {
     Word word = studySession[_currentIndex];
 
     setState(() {
-      if (isReviewMode) {
+      // אם אנחנו במצב "חזרה על שגיאות", אנחנו מתייחסים לזה כמו ללמידה רגילה
+      // (אם ידעת - זה יוצא מהאדום, אם לא - נשאר)
+
+      if (isReviewMode && !widget.onlyFailed) {
         if (knewIt) {
           studySession.removeAt(_currentIndex);
         } else {
@@ -1214,6 +1288,7 @@ class _LearningScreenState extends State<LearningScreen> {
         if (knewIt) {
           studySession.removeAt(_currentIndex);
         } else {
+          // אם לא ידעת, המילה עוברת לסוף התור (גם בחזרה על שגיאות)
           studySession.removeAt(_currentIndex);
           studySession.add(word);
         }
@@ -1247,41 +1322,15 @@ class _LearningScreenState extends State<LearningScreen> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
+    String titleText = widget.onlyFailed
+        ? "חזרה על שגיאות"
+        : "אימון - יחידה ${widget.unitFilter ?? 'כללי'}";
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          "אימון - יחידה ${widget.unitFilter ?? 'כללי'}",
-        ),
+        title: Text(titleText),
         elevation: 0,
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.delete_forever, color: Colors.red),
-            onPressed: () {
-              showDialog(
-                  context: context,
-                  builder: (ctx) => AlertDialog(
-                        title: const Text("איפוס התקדמות"),
-                        content:
-                            const Text("פעולה זו תאפס את הזיכרון באפליקציה."),
-                        actions: [
-                          TextButton(
-                              onPressed: () => Navigator.pop(ctx),
-                              child: const Text("ביטול")),
-                          TextButton(
-                              onPressed: () {
-                                Navigator.pop(ctx);
-                                ProgressManager().resetAll().then((_) {
-                                  resetAllProgress();
-                                });
-                              },
-                              child: const Text("אפס הכל",
-                                  style: TextStyle(color: Colors.red))),
-                        ],
-                      ));
-            },
-          ),
-        ],
       ),
       body: studySession.isEmpty
           ? Center(
@@ -1290,17 +1339,27 @@ class _LearningScreenState extends State<LearningScreen> {
                 children: [
                   const Icon(Icons.check_circle, size: 80, color: Colors.green),
                   const SizedBox(height: 20),
-                  const Text("סיימת את המילים להיום!",
-                      style:
-                          TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                  Text(
+                      widget.onlyFailed
+                          ? "אין מילים אדומות!\nכל הכבוד!"
+                          : "סיימת את המילים להיום!",
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                          fontSize: 24, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 30),
-                  ElevatedButton.icon(
-                    onPressed: startReviewSession,
-                    icon: const Icon(Icons.refresh, color: Colors.white),
-                    label: const Text("תרגול מילים שלמדתי",
-                        style: TextStyle(color: Colors.white, fontSize: 18)),
-                    style:
-                        ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                  if (!widget.onlyFailed) // מציג כפתור חזרה רק באימון רגיל
+                    ElevatedButton.icon(
+                      onPressed: startReviewSession,
+                      icon: const Icon(Icons.refresh, color: Colors.white),
+                      label: const Text("תרגול מילים שלמדתי",
+                          style: TextStyle(color: Colors.white, fontSize: 18)),
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue),
+                    ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text("חזור לרשימה"),
                   ),
                 ],
               ),
@@ -1309,16 +1368,21 @@ class _LearningScreenState extends State<LearningScreen> {
               padding: const EdgeInsets.all(20.0),
               child: Column(
                 children: [
+                  // --- Progress Bar ---
                   Row(
                     children: [
                       Expanded(
                         child: LinearProgressIndicator(
-                          value: 1 -
-                              (studySession.length /
-                                  (isReviewMode
-                                      ? studySession.length + 1
-                                      : fullVocabulary.length)),
-                          color: isReviewMode ? Colors.orange : Colors.blue,
+                          // חישוב שונה לפרוגרס בר אם זה רק שגיאות
+                          value: widget.onlyFailed
+                              ? (studySession.isEmpty
+                                  ? 1.0
+                                  : 0.0) // פשוט מראה שיש עוד עבודה
+                              : 1 -
+                                  (studySession.length / fullVocabulary.length),
+                          color: widget.onlyFailed
+                              ? Colors.redAccent
+                              : Colors.blue,
                           backgroundColor: Colors.grey[200],
                         ),
                       ),
@@ -1329,6 +1393,8 @@ class _LearningScreenState extends State<LearningScreen> {
                     ],
                   ),
                   const SizedBox(height: 20),
+
+                  // --- The Card ---
                   Expanded(
                     flex: 10,
                     child: Center(
@@ -1342,6 +1408,8 @@ class _LearningScreenState extends State<LearningScreen> {
                     ),
                   ),
                   const SizedBox(height: 10),
+
+                  // --- Arrows Navigation ---
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -1365,6 +1433,8 @@ class _LearningScreenState extends State<LearningScreen> {
                     ],
                   ),
                   const Spacer(),
+
+                  // --- Buttons ---
                   Row(
                     children: [
                       Expanded(
@@ -1374,7 +1444,9 @@ class _LearningScreenState extends State<LearningScreen> {
                       Expanded(
                           child: _buildButton(
                               "ידעתי!",
-                              isReviewMode ? Colors.orange : Colors.blue,
+                              widget.onlyFailed
+                                  ? Colors.redAccent
+                                  : Colors.blue,
                               Colors.white,
                               () => updateWordProgress(true))),
                     ],
@@ -1385,20 +1457,18 @@ class _LearningScreenState extends State<LearningScreen> {
     );
   }
 
+  // שאר הפונקציות (_buildCardFace, _buildButton) נשארות זהות...
+  // אבל צריך להעתיק אותן כדי שהמחלקה תהיה שלמה.
+  // אני מניח שאתה משתמש בקוד הקודם, אז הנה הן ליתר ביטחון:
+
   Widget _buildCardFace(Word word, bool isFront) {
     bool isDark = Theme.of(context).brightness == Brightness.dark;
-
     Color unitColor = getUnitColor(word.unitNumber, isDark);
     Color cardColor =
         isFront ? unitColor : (isDark ? const Color(0xFF1E1E1E) : Colors.white);
-
-    Color textColor;
-    if (isFront) {
-      textColor = getTextColorForBackground(word.unitNumber, isDark);
-    } else {
-      textColor = isDark ? Colors.white : Colors.black87;
-    }
-
+    Color textColor = isFront
+        ? getTextColorForBackground(word.unitNumber, isDark)
+        : (isDark ? Colors.white : Colors.black87);
     Color iconColor = isFront
         ? (textColor == Colors.white ? Colors.white : Colors.blue)
         : Colors.blue;
@@ -1739,15 +1809,14 @@ class AboutScreen extends StatelessWidget {
               const SizedBox(height: 20),
               const Text("מילומטרי",
                   style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-              const Text("גרסה 0.3 (Beta)",
-                  style: TextStyle(color: Colors.grey)),
+              const Text("גרסה 1.0.1", style: TextStyle(color: Colors.grey)),
               const SizedBox(height: 30),
               const Text(
                   "ברוכים הבאים לאפליקציית מילומטרי!\n\nהאפליקציה נועדה לעזור לכם ללמוד מילים לפסיכומטרי בצורה כיפית וקלה.\nתוכלו לתרגל מילים בעברית ובאנגלית ולעקוב אחרי ההתקדמות שלכם.\n\nפותח על ידי Pappo Studios.\nבהצלחה במבחן!",
                   style: TextStyle(fontSize: 18, height: 1.5),
                   textAlign: TextAlign.center),
               const SizedBox(height: 40),
-              const Text("© 2025 כל הזכויות שמורות",
+              const Text("© 2026 כל הזכויות שמורות",
                   style: TextStyle(fontSize: 12, color: Colors.grey)),
             ],
           ),
@@ -1773,7 +1842,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   // לינקים ליצירת קשר
   final String _email = "pappostudios@gmail.com";
-  final String _instagramUrl = "https://www.instagram.com/pappostudios";
 
   @override
   void initState() {
@@ -1860,11 +1928,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _launchInstagram() async {
-    final Uri url = Uri.parse(_instagramUrl);
-    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("לא הצלחנו לפתוח את האינסטגרם")),
-      );
+    const String username = "pappo_studios";
+
+    // ניסיון 1: פקודה ישירה לאפליקציה (זה פותר את המסך האפור)
+    final Uri nativeUrl = Uri.parse("instagram://user?username=$username");
+
+    // ניסיון 2: גיבוי לדפדפן רגיל
+    final Uri webUrl = Uri.parse("https://www.instagram.com/$username");
+
+    try {
+      // מנסים לפתוח את האפליקציה
+      if (!await launchUrl(nativeUrl, mode: LaunchMode.externalApplication)) {
+        // אם זה מחזיר false, זורקים שגיאה כדי להגיע ל-catch
+        throw Exception('Could not launch native app');
+      }
+    } catch (e) {
+      // אם הגענו לפה (אין אפליקציה או שהקישור נכשל), פותחים בדפדפן
+      if (!await launchUrl(webUrl, mode: LaunchMode.externalApplication)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("לא הצלחנו לפתוח את האינסטגרם")),
+        );
+      }
     }
   }
 
@@ -2229,6 +2313,147 @@ class DeterminationScreen extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+// ==========================================
+// NEW: Failed Words Unit Selector (מסך בחירת יחידות לשגיאות)
+// ==========================================
+class FailedWordsSelectorScreen extends StatefulWidget {
+  final String jsonPath;
+  const FailedWordsSelectorScreen({super.key, required this.jsonPath});
+
+  @override
+  State<FailedWordsSelectorScreen> createState() =>
+      _FailedWordsSelectorScreenState();
+}
+
+class _FailedWordsSelectorScreenState extends State<FailedWordsSelectorScreen> {
+  Map<int, int> failedCountsPerUnit = {};
+  int totalFailed = 0;
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    loadData();
+  }
+
+  Future<void> loadData() async {
+    final String response = await rootBundle.loadString(widget.jsonPath);
+    final data = await json.decode(response);
+    var list = data["words"] as List;
+    List<Word> allWords = list.map((w) => Word.fromJson(w)).toList();
+
+    Map<int, int> tempCounts = {};
+    int tempTotal = 0;
+
+    for (var w in allWords) {
+      var progress = ProgressManager().getWordProgress(w.uniqueId);
+      if (progress != null && progress['repetitions'] == 0) {
+        tempCounts[w.unitNumber] = (tempCounts[w.unitNumber] ?? 0) + 1;
+        tempTotal++;
+      }
+    }
+
+    if (!mounted) return;
+    setState(() {
+      failedCountsPerUnit = tempCounts;
+      totalFailed = tempTotal;
+      isLoading = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    var sortedUnits = failedCountsPerUnit.keys.toList()..sort();
+    bool isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Scaffold(
+      appBar: AppBar(title: const Text("בחירת תרגול"), elevation: 0),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : ListView(
+              padding: const EdgeInsets.all(20),
+              children: [
+                // כפתור תרגול הכל
+                Card(
+                  color: Colors.red[50],
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                      side: BorderSide(color: Colors.red.shade200)),
+                  elevation: 2,
+                  // הקטנת הכפתור ע"י הגדלת השוליים החיצוניים
+                  margin:
+                      const EdgeInsets.only(bottom: 25, left: 15, right: 15),
+                  child: ListTile(
+                    // הקטנת הגובה ע"י הקטנת ה-Padding הפנימי
+                    contentPadding: const EdgeInsets.symmetric(
+                        vertical: 10, horizontal: 15),
+                    leading:
+                        Icon(Icons.shuffle, color: Colors.red[800], size: 28),
+                    title: Text("תרגל הכל (ערבוב)",
+                        style: TextStyle(
+                            color: Colors.red[900],
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18)),
+                    // תיקון ניסוח: "כל 17 המילים"
+                    subtitle: Text("כל $totalFailed המילים מכל היחידות",
+                        style: TextStyle(color: Colors.red[700])),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                    onTap: () {
+                      Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => LearningScreen(
+                                  jsonPath: widget.jsonPath,
+                                  onlyFailed: true)));
+                    },
+                  ),
+                ),
+
+                // תיקון ניסוח: הורדת המילה "או"
+                const Text("בחר יחידה ספציפית:",
+                    style:
+                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 15),
+
+                // רשימת היחידות
+                ...sortedUnits.map((unitNum) {
+                  int count = failedCountsPerUnit[unitNum]!;
+                  Color unitColor = getUnitColor(unitNum, isDark);
+                  Color textColor = getTextColorForBackground(unitNum, isDark);
+
+                  return Card(
+                    color: unitColor,
+                    margin: const EdgeInsets.only(bottom: 10),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15)),
+                    child: ListTile(
+                      title: Text("יחידה $unitNum",
+                          style: TextStyle(
+                              color: textColor, fontWeight: FontWeight.bold)),
+                      // תיקון ניסוח: "לשנן" במקום "לחיזוק"
+                      subtitle: Text("יש לך $count מילים לשנן ביחידה זו",
+                          style: TextStyle(color: textColor.withOpacity(0.8))),
+                      trailing: Icon(Icons.arrow_forward_ios,
+                          color: textColor, size: 16),
+                      onTap: () {
+                        Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => LearningScreen(
+                                    jsonPath: widget.jsonPath,
+                                    onlyFailed: true,
+                                    unitFilter:
+                                        unitNum))); // מעביר את מספר היחידה לסינון
+                      },
+                    ),
+                  );
+                }).toList(),
+              ],
+            ),
     );
   }
 }
