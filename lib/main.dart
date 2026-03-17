@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -70,79 +69,6 @@ class _AnimatedButtonState extends State<AnimatedButton>
       child: ScaleTransition(
         scale: _scaleAnimation,
         child: widget.child,
-      ),
-    );
-  }
-}
-
-// ==========================================
-// GRADIENT BUTTON
-// ==========================================
-class GradientButton extends StatelessWidget {
-  final String text;
-  final List<Color> colors;
-  final VoidCallback onTap;
-  final double height;
-  final double fontSize;
-  final IconData? icon;
-
-  const GradientButton({
-    super.key,
-    required this.text,
-    required this.colors,
-    required this.onTap,
-    this.height = 70,
-    this.fontSize = 24,
-    this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedButton(
-      onTap: onTap,
-      child: Container(
-        height: height,
-        width: double.infinity,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: colors,
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(25),
-          boxShadow: [
-            BoxShadow(
-              color: colors.last.withOpacity(0.5),
-              blurRadius: 18,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (icon != null) ...[
-              Icon(icon, color: Colors.white, size: 28),
-              const SizedBox(width: 10),
-            ],
-            Text(
-              text,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: fontSize,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.2,
-                shadows: const [
-                  Shadow(
-                    color: Colors.black26,
-                    offset: Offset(1, 1),
-                    blurRadius: 3,
-                  )
-                ],
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -326,6 +252,7 @@ class NotificationManager {
       ),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
     );
+    print("Notification scheduled for: $scheduledDate");
   }
 
   Future<void> cancelNotifications() async {
@@ -585,8 +512,7 @@ class _SplashScreenState extends State<SplashScreen> {
     super.initState();
     Future.delayed(const Duration(seconds: 3), () {
       if (!mounted) return;
-      Navigator.pushReplacement(
-          context, _slideRoute(const HomeScreen()));
+      Navigator.pushReplacement(context, _slideRoute(const HomeScreen()));
     });
   }
 
@@ -642,7 +568,6 @@ class _HomeScreenState extends State<HomeScreen>
     WidgetsBinding.instance.addObserver(this);
     NotificationManager().cancelNotifications();
 
-    // אנימציית לוגו
     _logoController = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 900));
     _logoScale = Tween<double>(begin: 0.5, end: 1.0).animate(
@@ -650,7 +575,6 @@ class _HomeScreenState extends State<HomeScreen>
     _logoFade = Tween<double>(begin: 0.0, end: 1.0).animate(
         CurvedAnimation(parent: _logoController, curve: Curves.easeIn));
 
-    // אנימציית כפתורים
     _buttonsController = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 600));
     _hebrewSlide =
@@ -693,11 +617,12 @@ class _HomeScreenState extends State<HomeScreen>
     bool isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF0F4FF),
+      backgroundColor:
+          isDark ? const Color(0xFF121212) : const Color(0xFFF0F4FF),
       body: SafeArea(
         child: Stack(
           children: [
-            // רקע עם עיגולים דקורטיביים
+            // עיגולים דקורטיביים ברקע
             Positioned(
               top: -60,
               right: -60,
@@ -728,8 +653,8 @@ class _HomeScreenState extends State<HomeScreen>
               top: 10,
               left: 10,
               child: AnimatedButton(
-                onTap: () => Navigator.push(
-                    context, _slideRoute(const SettingsScreen())),
+                onTap: () =>
+                    Navigator.push(context, _slideRoute(const SettingsScreen())),
                 child: Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
@@ -808,52 +733,103 @@ class _HomeScreenState extends State<HomeScreen>
                     ),
                   ),
 
-                  const Text(
-                    "מילים לפסיכומטרי",
-                    style: TextStyle(fontSize: 18, color: Colors.grey),
+                  FadeTransition(
+                    opacity: _logoFade,
+                    child: const Text(
+                      "מילים לפסיכומטרי",
+                      style: TextStyle(fontSize: 18, color: Colors.grey),
+                    ),
                   ),
 
                   const Spacer(flex: 2),
 
-                  // כפתור עברית עם אנימציית כניסה
+                  // כפתור עברית
                   SlideTransition(
                     position: _hebrewSlide,
-                    child: GradientButton(
-                      text: "עברית",
-                      icon: Icons.translate_rounded,
-                      colors: isDark
+                    child: _buildHomeButton(
+                      context,
+                      "עברית",
+                      Icons.translate_rounded,
+                      isDark
                           ? [const Color(0xFF37474F), const Color(0xFF263238)]
                           : [const Color(0xFF424242), const Color(0xFF212121)],
-                      onTap: () => Navigator.push(
+                      () => Navigator.push(
                         context,
                         _slideRoute(const UnitSelectorScreen(
-                            jsonPath: 'assets/hebrew.json',
-                            title: 'עברית')),
+                            jsonPath: 'assets/hebrew.json', title: 'עברית')),
                       ),
                     ),
                   ),
 
                   const SizedBox(height: 20),
 
-                  // כפתור אנגלית עם אנימציית כניסה
+                  // כפתור אנגלית
                   SlideTransition(
                     position: _englishSlide,
-                    child: GradientButton(
-                      text: "אנגלית",
-                      icon: Icons.language_rounded,
-                      colors: isDark
+                    child: _buildHomeButton(
+                      context,
+                      "אנגלית",
+                      Icons.language_rounded,
+                      isDark
                           ? [const Color(0xFF1B5E20), const Color(0xFF2E7D32)]
                           : [const Color(0xFF00C853), const Color(0xFF1B5E20)],
-                      onTap: () => Navigator.push(
+                      () => Navigator.push(
                         context,
                         _slideRoute(const UnitSelectorScreen(
-                            jsonPath: 'assets/english.json',
-                            title: 'אנגלית')),
+                            jsonPath: 'assets/english.json', title: 'אנגלית')),
                       ),
                     ),
                   ),
 
                   const Spacer(flex: 2),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHomeButton(BuildContext context, String title, IconData icon,
+      List<Color> colors, VoidCallback onTap) {
+    return AnimatedButton(
+      onTap: onTap,
+      child: Container(
+        height: 75,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: colors,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(25),
+          boxShadow: [
+            BoxShadow(
+              color: colors.last.withOpacity(0.45),
+              blurRadius: 16,
+              offset: const Offset(0, 8),
+            )
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: Colors.white, size: 28),
+            const SizedBox(width: 12),
+            Text(
+              title,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 26,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.2,
+                shadows: [
+                  Shadow(
+                      color: Colors.black26,
+                      offset: Offset(1, 1),
+                      blurRadius: 2)
                 ],
               ),
             ),
@@ -926,6 +902,7 @@ class _UnitSelectorScreenState extends State<UnitSelectorScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => isLoading = false);
+      print("Error loading data: $e");
     }
   }
 
@@ -951,12 +928,16 @@ class _UnitSelectorScreenState extends State<UnitSelectorScreen> {
                       loadAndOrganizeData();
                     },
                     child: Container(
-                      margin: const EdgeInsets.only(bottom: 20, left: 5, right: 5),
+                      margin: const EdgeInsets.only(
+                          bottom: 20, left: 5, right: 5),
                       padding: const EdgeInsets.symmetric(
                           horizontal: 15, vertical: 14),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [Colors.red.shade300, Colors.red.shade700],
+                          colors: [
+                            Colors.red.shade300,
+                            Colors.red.shade700
+                          ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
@@ -983,7 +964,8 @@ class _UnitSelectorScreenState extends State<UnitSelectorScreen> {
                                         fontWeight: FontWeight.bold,
                                         fontSize: 17,
                                         color: Colors.white)),
-                                Text("יש לך $totalFailedCount מילים לחיזוק",
+                                Text(
+                                    "יש לך $totalFailedCount מילים לחיזוק",
                                     style: const TextStyle(
                                         fontSize: 13,
                                         color: Colors.white70)),
@@ -1070,4 +1052,31 @@ class _UnitSelectorScreenState extends State<UnitSelectorScreen> {
         builder: (ctx) => SimpleDialog(
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20)),
-              title: Text("יחידה $
+              title: Text("יחידה $unitNum", textAlign: TextAlign.center),
+              children: [
+                SimpleDialogOption(
+                  onPressed: () async {
+                    Navigator.pop(ctx);
+                    await Navigator.push(
+                        context,
+                        _slideRoute(LearningScreen(
+                            jsonPath: widget.jsonPath,
+                            unitFilter: unitNum)));
+                    loadAndOrganizeData();
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 10),
+                    child: Row(children: [
+                      Icon(Icons.play_circle_fill,
+                          color: Colors.blue, size: 30),
+                      SizedBox(width: 15),
+                      Text("התחל תרגול", style: TextStyle(fontSize: 18))
+                    ]),
+                  ),
+                ),
+                const Divider(),
+                SimpleDialogOption(
+                  onPressed: () async {
+                    Navigator.pop(ctx);
+                    await Navigator.push(
+                        context,
