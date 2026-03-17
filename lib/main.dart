@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -13,6 +15,153 @@ import 'package:url_launcher/url_launcher.dart';
 // הגדרות גלובליות
 // ==========================================
 const int currentTermsVersion = 2;
+
+// ==========================================
+// ANIMATION HELPER: כפתור עם אפקט לחיצה
+// ==========================================
+class AnimatedButton extends StatefulWidget {
+  final Widget child;
+  final VoidCallback onTap;
+  final double scale;
+
+  const AnimatedButton({
+    super.key,
+    required this.child,
+    required this.onTap,
+    this.scale = 0.95,
+  });
+
+  @override
+  State<AnimatedButton> createState() => _AnimatedButtonState();
+}
+
+class _AnimatedButtonState extends State<AnimatedButton>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 120),
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: widget.scale).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => _controller.forward(),
+      onTapUp: (_) {
+        _controller.reverse();
+        widget.onTap();
+      },
+      onTapCancel: () => _controller.reverse(),
+      child: ScaleTransition(
+        scale: _scaleAnimation,
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+// ==========================================
+// GRADIENT BUTTON
+// ==========================================
+class GradientButton extends StatelessWidget {
+  final String text;
+  final List<Color> colors;
+  final VoidCallback onTap;
+  final double height;
+  final double fontSize;
+  final IconData? icon;
+
+  const GradientButton({
+    super.key,
+    required this.text,
+    required this.colors,
+    required this.onTap,
+    this.height = 70,
+    this.fontSize = 24,
+    this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedButton(
+      onTap: onTap,
+      child: Container(
+        height: height,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: colors,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(25),
+          boxShadow: [
+            BoxShadow(
+              color: colors.last.withOpacity(0.5),
+              blurRadius: 18,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (icon != null) ...[
+              Icon(icon, color: Colors.white, size: 28),
+              const SizedBox(width: 10),
+            ],
+            Text(
+              text,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: fontSize,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.2,
+                shadows: const [
+                  Shadow(
+                    color: Colors.black26,
+                    offset: Offset(1, 1),
+                    blurRadius: 3,
+                  )
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ==========================================
+// PAGE ROUTE עם אנימציה
+// ==========================================
+Route _slideRoute(Widget page) {
+  return PageRouteBuilder(
+    pageBuilder: (context, animation, secondaryAnimation) => page,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      final tween = Tween(begin: const Offset(1.0, 0.0), end: Offset.zero)
+          .chain(CurveTween(curve: Curves.easeInOutCubic));
+      return SlideTransition(position: animation.drive(tween), child: child);
+    },
+    transitionDuration: const Duration(milliseconds: 350),
+  );
+}
 
 // ==========================================
 // 1. Theme Manager
@@ -52,53 +201,31 @@ class ThemeManager {
 Color getUnitColor(int unit, bool isDark) {
   if (isDark) {
     switch (unit) {
-      case 1:
-        return const Color(0xFF006064);
-      case 2:
-        return const Color(0xFF00838F);
-      case 3:
-        return const Color(0xFF0097A7);
-      case 4:
-        return const Color(0xFF00ACC1);
-      case 5:
-        return const Color(0xFF00BCD4);
-      case 6:
-        return const Color(0xFFF57F17);
-      case 7:
-        return const Color(0xFFE65100);
-      case 8:
-        return const Color(0xFFBF360C);
-      case 9:
-        return const Color(0xFF3E2723);
-      case 10:
-        return const Color(0xFFB71C1C);
-      default:
-        return const Color(0xFF424242);
+      case 1: return const Color(0xFF006064);
+      case 2: return const Color(0xFF00838F);
+      case 3: return const Color(0xFF0097A7);
+      case 4: return const Color(0xFF00ACC1);
+      case 5: return const Color(0xFF00BCD4);
+      case 6: return const Color(0xFFF57F17);
+      case 7: return const Color(0xFFE65100);
+      case 8: return const Color(0xFFBF360C);
+      case 9: return const Color(0xFF3E2723);
+      case 10: return const Color(0xFFB71C1C);
+      default: return const Color(0xFF424242);
     }
   } else {
     switch (unit) {
-      case 1:
-        return const Color(0xFFE0F7FA);
-      case 2:
-        return const Color(0xFFB2EBF2);
-      case 3:
-        return const Color(0xFF80DEEA);
-      case 4:
-        return const Color(0xFF4DD0E1);
-      case 5:
-        return const Color(0xFF26C6DA);
-      case 6:
-        return const Color(0xFFFFD54F);
-      case 7:
-        return const Color(0xFFFFB74D);
-      case 8:
-        return const Color(0xFFFF8A65);
-      case 9:
-        return const Color(0xFFF4511E);
-      case 10:
-        return const Color(0xFFB71C1C);
-      default:
-        return Colors.white;
+      case 1: return const Color(0xFFE0F7FA);
+      case 2: return const Color(0xFFB2EBF2);
+      case 3: return const Color(0xFF80DEEA);
+      case 4: return const Color(0xFF4DD0E1);
+      case 5: return const Color(0xFF26C6DA);
+      case 6: return const Color(0xFFFFD54F);
+      case 7: return const Color(0xFFFFB74D);
+      case 8: return const Color(0xFFFF8A65);
+      case 9: return const Color(0xFFF4511E);
+      case 10: return const Color(0xFFB71C1C);
+      default: return Colors.white;
     }
   }
 }
@@ -112,7 +239,6 @@ Color getTextColorForBackground(int unit, bool isDark) {
 // ==========================================
 // 3. NotificationManager
 // ==========================================
-
 class NotificationManager {
   static final NotificationManager _instance = NotificationManager._internal();
   factory NotificationManager() => _instance;
@@ -132,14 +258,12 @@ class NotificationManager {
 
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/launcher_icon');
-
     const DarwinInitializationSettings initializationSettingsDarwin =
         DarwinInitializationSettings(
       requestSoundPermission: true,
       requestBadgePermission: true,
       requestAlertPermission: true,
     );
-
     const InitializationSettings initializationSettings =
         InitializationSettings(
       android: initializationSettingsAndroid,
@@ -152,17 +276,14 @@ class NotificationManager {
         print("User clicked on notification");
       },
     );
-
     await flutterLocalNotificationsPlugin
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()
         ?.requestNotificationsPermission();
   }
 
-  // --- פונקציה 1: תזכורת יומית קבועה (עבור מסך ההגדרות) ---
   Future<void> scheduleDailyNotification(int hour, int minute) async {
     const String channelId = 'daily_reminders_v10';
-
     await flutterLocalNotificationsPlugin.zonedSchedule(
       0,
       'זמן ללמוד! 🎓',
@@ -183,17 +304,11 @@ class NotificationManager {
     );
   }
 
-  // --- פונקציה 2: תזכורת נחישות (לפי זמן אי-פעילות) ---
   Future<void> scheduleInactivityNotification(int hoursFromNow) async {
-    // קודם כל מבטלים תזכורות קודמות כדי לא להציף
     await cancelNotifications();
-
     const String channelId = 'inactivity_reminder_v1';
-
-    // חישוב הזמן העתידי
     final tz.TZDateTime scheduledDate =
         tz.TZDateTime.now(tz.local).add(Duration(hours: hoursFromNow));
-
     await flutterLocalNotificationsPlugin.zonedSchedule(
       0,
       'המילים מתגעגעות אליך! 🥺',
@@ -211,8 +326,6 @@ class NotificationManager {
       ),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
     );
-
-    print("Notification scheduled for: $scheduledDate");
   }
 
   Future<void> cancelNotifications() async {
@@ -247,19 +360,18 @@ class ProgressManager {
   }
 
   void _loadFromDisk() {
-    List<String> rawData = _prefs?.getStringList('user_progress') ?? [];
+    List<String> rawData = _prefs?.getStringList('userprogress') ?? [];
     _cache.clear();
-
     for (String record in rawData) {
       List<String> parts = record.split(':');
       String id = parts[0];
-
       if (parts.length >= 5) {
         _cache[id] = {
           'repetitions': int.parse(parts[1]),
           'interval': int.parse(parts[2]),
           'easinessFactor': double.parse(parts[3]),
-          'nextReview': DateTime.fromMillisecondsSinceEpoch(int.parse(parts[4]))
+          'nextReview':
+              DateTime.fromMillisecondsSinceEpoch(int.parse(parts[4]))
         };
       } else if (parts.length == 3) {
         int lvl = int.parse(parts[1]);
@@ -302,10 +414,9 @@ class ProgressManager {
       int i = value['interval'];
       double ef = value['easinessFactor'];
       int time = (value['nextReview'] as DateTime).millisecondsSinceEpoch;
-
       exportList.add("$key:$n:$i:$ef:$time");
     });
-    await _prefs?.setStringList('user_progress', exportList);
+    await _prefs?.setStringList('userprogress', exportList);
   }
 
   Future<void> resetAll() async {
@@ -324,7 +435,6 @@ class Word {
   final String translation;
   final String example;
   final int unitNumber;
-
   DateTime nextReview;
   int repetitions;
   int interval;
@@ -362,30 +472,21 @@ class Word {
 // ==========================================
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
   await ThemeManager().init();
   await ProgressManager().init();
   await NotificationManager().init();
 
   final prefs = await SharedPreferences.getInstance();
-
-  // בדיקת תנאי שימוש
   final int userAcceptedVersion = prefs.getInt('accepted_terms_version') ?? 0;
-
-  // בדיקת בחירת נחישות
   final bool hasChosenDetermination =
       prefs.getBool('hasChosenDetermination') ?? false;
 
   Widget firstScreen;
-
   if (userAcceptedVersion != currentTermsVersion) {
-    // 1. קודם כל תנאי שימוש
     firstScreen = const TermsOfServiceScreen();
   } else if (!hasChosenDetermination) {
-    // 2. אחר כך בחירת נחישות (אם טרם בחר)
     firstScreen = const DeterminationScreen();
   } else {
-    // 3. מסך הבית
     firstScreen = const HomeScreen();
   }
 
@@ -394,7 +495,6 @@ void main() async {
 
 class PsychoApp extends StatelessWidget {
   final Widget startScreen;
-
   const PsychoApp({super.key, required this.startScreen});
 
   @override
@@ -419,7 +519,7 @@ class PsychoApp extends StatelessWidget {
           theme: ThemeData(
             brightness: Brightness.light,
             primaryColor: Colors.blue,
-            scaffoldBackgroundColor: Colors.white,
+            scaffoldBackgroundColor: const Color(0xFFF0F4FF),
             fontFamily: 'Arial',
             appBarTheme: const AppBarTheme(
               backgroundColor: Colors.white,
@@ -428,6 +528,7 @@ class PsychoApp extends StatelessWidget {
                   color: Colors.black,
                   fontSize: 20,
                   fontWeight: FontWeight.bold),
+              elevation: 0,
             ),
             elevatedButtonTheme: ElevatedButtonThemeData(
               style: ElevatedButton.styleFrom(
@@ -450,6 +551,7 @@ class PsychoApp extends StatelessWidget {
                   color: Colors.white,
                   fontSize: 20,
                   fontWeight: FontWeight.bold),
+              elevation: 0,
             ),
             elevatedButtonTheme: ElevatedButtonThemeData(
               style: ElevatedButton.styleFrom(
@@ -484,7 +586,7 @@ class _SplashScreenState extends State<SplashScreen> {
     Future.delayed(const Duration(seconds: 3), () {
       if (!mounted) return;
       Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (context) => const HomeScreen()));
+          context, _slideRoute(const HomeScreen()));
     });
   }
 
@@ -506,9 +608,7 @@ class _SplashScreenState extends State<SplashScreen> {
             left: 0,
             right: 0,
             child: Center(
-              child: CircularProgressIndicator(
-                color: Colors.white,
-              ),
+              child: CircularProgressIndicator(color: Colors.white),
             ),
           ),
         ],
@@ -520,9 +620,6 @@ class _SplashScreenState extends State<SplashScreen> {
 // ==========================================
 // 8. Home Screen
 // ==========================================
-// ==========================================
-// 8. Home Screen (המסך הראשי)
-// ==========================================
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -530,18 +627,52 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
+class _HomeScreenState extends State<HomeScreen>
+    with WidgetsBindingObserver, TickerProviderStateMixin {
+  late AnimationController _logoController;
+  late AnimationController _buttonsController;
+  late Animation<double> _logoScale;
+  late Animation<double> _logoFade;
+  late Animation<Offset> _hebrewSlide;
+  late Animation<Offset> _englishSlide;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    // ביטול התראות כשנכנסים למסך הבית
     NotificationManager().cancelNotifications();
+
+    // אנימציית לוגו
+    _logoController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 900));
+    _logoScale = Tween<double>(begin: 0.5, end: 1.0).animate(
+        CurvedAnimation(parent: _logoController, curve: Curves.elasticOut));
+    _logoFade = Tween<double>(begin: 0.0, end: 1.0).animate(
+        CurvedAnimation(parent: _logoController, curve: Curves.easeIn));
+
+    // אנימציית כפתורים
+    _buttonsController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 600));
+    _hebrewSlide =
+        Tween<Offset>(begin: const Offset(-1.5, 0), end: Offset.zero).animate(
+            CurvedAnimation(
+                parent: _buttonsController, curve: Curves.easeOutCubic));
+    _englishSlide =
+        Tween<Offset>(begin: const Offset(1.5, 0), end: Offset.zero).animate(
+            CurvedAnimation(
+                parent: _buttonsController, curve: Curves.easeOutCubic));
+
+    _logoController.forward();
+    Future.delayed(const Duration(milliseconds: 400), () {
+      if (mounted) _buttonsController.forward();
+    });
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _logoController.dispose();
+    _buttonsController.dispose();
     super.dispose();
   }
 
@@ -549,13 +680,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) async {
     final prefs = await SharedPreferences.getInstance();
     final int hours = prefs.getInt('determination_hours') ?? 24;
-
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.detached) {
-      print("App paused. Scheduling reminder for $hours hours.");
       await NotificationManager().scheduleInactivityNotification(hours);
     } else if (state == AppLifecycleState.resumed) {
-      print("App resumed. Canceling reminder.");
       await NotificationManager().cancelNotifications();
     }
   }
@@ -565,91 +693,167 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     bool isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF121212) : Colors.grey[200],
+      backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF0F4FF),
       body: SafeArea(
         child: Stack(
           children: [
+            // רקע עם עיגולים דקורטיביים
             Positioned(
-              top: 10,
-              left: 20,
-              child: IconButton(
-                icon: const Icon(Icons.settings),
-                color: isDark ? Colors.white : Colors.grey[800],
-                iconSize: 30,
-                onPressed: () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const SettingsScreen()));
-                },
+              top: -60,
+              right: -60,
+              child: Container(
+                width: 200,
+                height: 200,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.blue.withOpacity(isDark ? 0.08 : 0.12),
+                ),
               ),
             ),
+            Positioned(
+              bottom: -80,
+              left: -80,
+              child: Container(
+                width: 250,
+                height: 250,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.purple.withOpacity(isDark ? 0.06 : 0.08),
+                ),
+              ),
+            ),
+
+            // כפתור הגדרות
+            Positioned(
+              top: 10,
+              left: 10,
+              child: AnimatedButton(
+                onTap: () => Navigator.push(
+                    context, _slideRoute(const SettingsScreen())),
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? Colors.white.withOpacity(0.08)
+                        : Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.08),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
+                      )
+                    ],
+                  ),
+                  child: Icon(Icons.settings_rounded,
+                      color: isDark ? Colors.white70 : Colors.grey[700],
+                      size: 26),
+                ),
+              ),
+            ),
+
+            // תוכן מרכזי
             Padding(
-              padding: const EdgeInsets.all(30.0),
+              padding: const EdgeInsets.symmetric(horizontal: 30.0),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Spacer(),
-                  Container(
-                    height: 150,
-                    width: 150,
-                    decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
-                        )
-                      ],
+                  const Spacer(flex: 2),
+
+                  // לוגו עם אנימציה
+                  FadeTransition(
+                    opacity: _logoFade,
+                    child: ScaleTransition(
+                      scale: _logoScale,
+                      child: Container(
+                        height: 140,
+                        width: 140,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF4FC3F7), Color(0xFF1565C0)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.blue.withOpacity(0.4),
+                              blurRadius: 30,
+                              offset: const Offset(0, 12),
+                            )
+                          ],
+                        ),
+                        child: const Icon(Icons.school_rounded,
+                            size: 75, color: Colors.white),
+                      ),
                     ),
-                    child: const Icon(Icons.school_rounded,
-                        size: 80, color: Colors.blue),
                   ),
-                  const SizedBox(height: 30),
-                  Text(
-                    "מילומטרי",
-                    style: TextStyle(
-                        fontSize: 40,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : Colors.black87),
+
+                  const SizedBox(height: 25),
+
+                  FadeTransition(
+                    opacity: _logoFade,
+                    child: ShaderMask(
+                      shaderCallback: (bounds) => const LinearGradient(
+                        colors: [Color(0xFF1565C0), Color(0xFF7B1FA2)],
+                      ).createShader(bounds),
+                      child: const Text(
+                        "מילומטרי",
+                        style: TextStyle(
+                          fontSize: 42,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
                   ),
+
                   const Text(
                     "מילים לפסיכומטרי",
-                    style: TextStyle(fontSize: 20, color: Colors.grey),
+                    style: TextStyle(fontSize: 18, color: Colors.grey),
                   ),
-                  const Spacer(),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 80,
-                    child: _buildHomeButton(
+
+                  const Spacer(flex: 2),
+
+                  // כפתור עברית עם אנימציית כניסה
+                  SlideTransition(
+                    position: _hebrewSlide,
+                    child: GradientButton(
+                      text: "עברית",
+                      icon: Icons.translate_rounded,
+                      colors: isDark
+                          ? [const Color(0xFF37474F), const Color(0xFF263238)]
+                          : [const Color(0xFF424242), const Color(0xFF212121)],
+                      onTap: () => Navigator.push(
                         context,
-                        "עברית",
-                        isDark ? Colors.grey[800]! : Colors.black,
-                        () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const UnitSelectorScreen(
-                                    jsonPath: 'assets/hebrew.json',
-                                    title: 'עברית')))),
+                        _slideRoute(const UnitSelectorScreen(
+                            jsonPath: 'assets/hebrew.json',
+                            title: 'עברית')),
+                      ),
+                    ),
                   ),
+
                   const SizedBox(height: 20),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 80,
-                    child: _buildHomeButton(
+
+                  // כפתור אנגלית עם אנימציית כניסה
+                  SlideTransition(
+                    position: _englishSlide,
+                    child: GradientButton(
+                      text: "אנגלית",
+                      icon: Icons.language_rounded,
+                      colors: isDark
+                          ? [const Color(0xFF1B5E20), const Color(0xFF2E7D32)]
+                          : [const Color(0xFF00C853), const Color(0xFF1B5E20)],
+                      onTap: () => Navigator.push(
                         context,
-                        "אנגלית",
-                        isDark ? Colors.green[900]! : Colors.greenAccent[700]!,
-                        () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const UnitSelectorScreen(
-                                    jsonPath: 'assets/english.json',
-                                    title: 'אנגלית')))),
+                        _slideRoute(const UnitSelectorScreen(
+                            jsonPath: 'assets/english.json',
+                            title: 'אנגלית')),
+                      ),
+                    ),
                   ),
-                  const Spacer(),
+
+                  const Spacer(flex: 2),
                 ],
               ),
             ),
@@ -658,50 +862,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       ),
     );
   }
-
-  Widget _buildHomeButton(
-      BuildContext context, String title, Color color, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(25),
-          boxShadow: [
-            BoxShadow(
-                color: color.withOpacity(0.4),
-                blurRadius: 15,
-                offset: const Offset(0, 8))
-          ],
-        ),
-        child: Center(
-          child: Text(
-            title,
-            style: const TextStyle(
-                color: Colors.white,
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.2,
-                shadows: [
-                  Shadow(
-                      color: Colors.black26,
-                      offset: Offset(1, 1),
-                      blurRadius: 2)
-                ]),
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 // ==========================================
-// 9. Unit Selector (מסך בחירת יחידה)
+// 9. Unit Selector
 // ==========================================
 class UnitSelectorScreen extends StatefulWidget {
   final String jsonPath;
   final String title;
-
   const UnitSelectorScreen(
       {super.key, required this.jsonPath, required this.title});
 
@@ -735,13 +903,11 @@ class _UnitSelectorScreenState extends State<UnitSelectorScreen> {
       for (var word in allWords) {
         int u = word.unitNumber;
         if (u == 0) continue;
-
         if (!tempUnits.containsKey(u)) {
           tempUnits[u] = [];
           tempCounts[u] = 0;
         }
         tempUnits[u]!.add(word);
-
         var progress = ProgressManager().getWordProgress(word.uniqueId);
         if (progress != null) {
           int reps = progress['repetitions'] ?? 0;
@@ -759,10 +925,7 @@ class _UnitSelectorScreenState extends State<UnitSelectorScreen> {
       });
     } catch (e) {
       if (!mounted) return;
-      setState(() {
-        isLoading = false;
-      });
-      print("Error loading data: $e");
+      setState(() => isLoading = false);
     }
   }
 
@@ -772,101 +935,127 @@ class _UnitSelectorScreenState extends State<UnitSelectorScreen> {
     bool isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: AppBar(title: Text("בחר יחידה - ${widget.title}"), elevation: 0),
+      appBar: AppBar(title: Text("בחר יחידה - ${widget.title}")),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
               padding: const EdgeInsets.all(20),
               children: [
-                // --- כפתור חדש: חזרה על שגיאות (מעודן) ---
                 if (totalFailedCount > 0) ...[
-                  Card(
-                    // צבע הרבה יותר עדין (אדום/ורוד בהיר מאוד)
-                    color: const Color(0xFFFFEBEE),
-                    margin: const EdgeInsets.only(
-                        bottom: 20,
-                        left: 10,
-                        right: 10), // הקטנת רוחב ע"י מרג'ין
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                        side: BorderSide(color: Colors.red.shade200, width: 1)),
-                    elevation: 2, // פחות צל
-                    child: ListTile(
-                      // הקטנת ה-Padding כדי להקטין את גובה הכפתור
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 15, vertical: 8),
-                      leading: Icon(Icons.refresh_rounded,
-                          size: 30, color: Colors.red[800]), // אייקון קטן יותר
-                      title: Text(
-                        "חזרה על מילים שלא הכרת", // הטקסט החדש
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                            color: Colors.red[900]),
+                  AnimatedButton(
+                    onTap: () async {
+                      await Navigator.push(
+                          context,
+                          _slideRoute(FailedWordsSelectorScreen(
+                              jsonPath: widget.jsonPath)));
+                      loadAndOrganizeData();
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 20, left: 5, right: 5),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 15, vertical: 14),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Colors.red.shade300, Colors.red.shade700],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.red.withOpacity(0.35),
+                            blurRadius: 12,
+                            offset: const Offset(0, 6),
+                          )
+                        ],
                       ),
-                      subtitle: Text(
-                        "יש לך $totalFailedCount מילים לחיזוק",
-                        style: TextStyle(fontSize: 14, color: Colors.red[700]),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.refresh_rounded,
+                              size: 32, color: Colors.white),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text("חזרה על מילים שלא הכרת",
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 17,
+                                        color: Colors.white)),
+                                Text("יש לך $totalFailedCount מילים לחיזוק",
+                                    style: const TextStyle(
+                                        fontSize: 13,
+                                        color: Colors.white70)),
+                              ],
+                            ),
+                          ),
+                          const Icon(Icons.arrow_forward_ios,
+                              size: 16, color: Colors.white70),
+                        ],
                       ),
-                      trailing: Icon(Icons.arrow_forward_ios,
-                          size: 16, color: Colors.red[900]),
-                      onTap: () async {
-                        // ניווט למסך הבחירה החדש במקום ישר לתרגול
-                        await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => FailedWordsSelectorScreen(
-                                    jsonPath: widget.jsonPath)));
-                        loadAndOrganizeData(); // רענון כשחוזרים
-                      },
                     ),
                   ),
                 ],
-
-                // --- רשימת היחידות הרגילה (ללא שינוי) ---
                 ...sortedKeys.map((unitNum) {
                   int total = units[unitNum]!.length;
                   int learned = learnedCounts[unitNum]!;
                   double progress = total > 0 ? learned / total : 0.0;
                   Color unitColor = getUnitColor(unitNum, isDark);
-                  Color textColor = getTextColorForBackground(unitNum, isDark);
+                  Color textColor =
+                      getTextColorForBackground(unitNum, isDark);
 
-                  return Card(
-                    color: unitColor,
-                    margin: const EdgeInsets.only(bottom: 15),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15)),
-                    elevation: 3,
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.all(15),
-                      title: Text("יחידה $unitNum",
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                              color: textColor)),
-                      subtitle: Column(
+                  return AnimatedButton(
+                    onTap: () => _showOptionsDialog(context, unitNum),
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 14),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: unitColor,
+                        borderRadius: BorderRadius.circular(18),
+                        boxShadow: [
+                          BoxShadow(
+                            color: unitColor.withOpacity(0.4),
+                            blurRadius: 10,
+                            offset: const Offset(0, 5),
+                          )
+                        ],
+                      ),
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          Row(
+                            children: [
+                              Text("יחידה $unitNum",
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18,
+                                      color: textColor)),
+                              const Spacer(),
+                              Icon(Icons.arrow_forward_ios,
+                                  size: 16, color: textColor),
+                            ],
+                          ),
                           const SizedBox(height: 8),
                           Text("התקדמות: $learned / $total מילים",
-                              style:
-                                  TextStyle(color: textColor.withOpacity(0.8))),
-                          const SizedBox(height: 5),
-                          LinearProgressIndicator(
+                              style: TextStyle(
+                                  color: textColor.withOpacity(0.8),
+                                  fontSize: 13)),
+                          const SizedBox(height: 6),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: LinearProgressIndicator(
                               value: progress,
-                              backgroundColor: Colors.white.withOpacity(0.5),
+                              backgroundColor:
+                                  Colors.white.withOpacity(0.4),
                               color: textColor == Colors.white
                                   ? Colors.greenAccent
                                   : Colors.blue,
                               minHeight: 8,
-                              borderRadius: BorderRadius.circular(4))
+                            ),
+                          ),
                         ],
                       ),
-                      trailing: Icon(Icons.arrow_forward_ios,
-                          size: 16, color: textColor),
-                      onTap: () {
-                        _showOptionsDialog(context, unitNum);
-                      },
                     ),
                   );
                 }).toList(),
@@ -875,1585 +1064,10 @@ class _UnitSelectorScreenState extends State<UnitSelectorScreen> {
     );
   }
 
-  // פונקציית _showOptionsDialog נשארת אותו דבר...
   void _showOptionsDialog(BuildContext context, int unitNum) {
-    // תעתיק את הפונקציה הזו מהקוד הקודם שלך, היא לא השתנתה
     showDialog(
         context: context,
         builder: (ctx) => SimpleDialog(
-              title: Text("יחידה $unitNum", textAlign: TextAlign.center),
-              children: [
-                SimpleDialogOption(
-                  onPressed: () async {
-                    Navigator.pop(ctx);
-                    await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => LearningScreen(
-                                jsonPath: widget.jsonPath,
-                                unitFilter: unitNum)));
-                    loadAndOrganizeData();
-                  },
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 10),
-                    child: Row(children: [
-                      Icon(Icons.play_circle_fill,
-                          color: Colors.blue, size: 30),
-                      SizedBox(width: 15),
-                      Text("התחל תרגול", style: TextStyle(fontSize: 18))
-                    ]),
-                  ),
-                ),
-                const Divider(),
-                SimpleDialogOption(
-                  onPressed: () async {
-                    Navigator.pop(ctx);
-                    await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => VocabularyListScreen(
-                                jsonPath: widget.jsonPath,
-                                unitFilter: unitNum)));
-                    loadAndOrganizeData();
-                  },
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 10),
-                    child: Row(children: [
-                      Icon(Icons.list, color: Colors.black87, size: 30),
-                      SizedBox(width: 15),
-                      Text("רשימת מילים", style: TextStyle(fontSize: 18))
-                    ]),
-                  ),
-                ),
-              ],
-            ));
-  }
-}
-
-// ==========================================
-// 10. Vocabulary List Screen
-// ==========================================
-class VocabularyListScreen extends StatefulWidget {
-  final String jsonPath;
-  final int? unitFilter;
-
-  const VocabularyListScreen(
-      {super.key, required this.jsonPath, this.unitFilter});
-
-  @override
-  State<VocabularyListScreen> createState() => _VocabularyListScreenState();
-}
-
-class _VocabularyListScreenState extends State<VocabularyListScreen> {
-  List<Word> filteredWords = [];
-  Map<String, int> wordLevels = {};
-  bool isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    loadData();
-  }
-
-  Future<void> loadData() async {
-    final String response = await rootBundle.loadString(widget.jsonPath);
-    final data = await json.decode(response);
-    var list = data["words"] as List;
-    List<Word> allWords = list.map((w) => Word.fromJson(w)).toList();
-
-    Map<String, int> levels = {};
-
-    List<Word> relevantWords = [];
-    for (var w in allWords) {
-      if (widget.unitFilter != null && w.unitNumber != widget.unitFilter) {
-        continue;
-      }
-      relevantWords.add(w);
-
-      var progress = ProgressManager().getWordProgress(w.uniqueId);
-      if (progress != null) {
-        levels[w.uniqueId] = progress['repetitions'] ?? 0;
-      }
-    }
-
-    if (!mounted) return;
-    setState(() {
-      filteredWords = relevantWords;
-      wordLevels = levels;
-      isLoading = false;
-    });
-  }
-
-  Future<void> manuallyUpdateStatus(Word word, int newLevel) async {
-    if (newLevel == -1) {
-      await ProgressManager().resetWord(word.uniqueId);
-    } else if (newLevel == 0) {
-      await ProgressManager()
-          .updateWord(word.uniqueId, 0, 0, 2.5, DateTime.now());
-    } else {
-      await ProgressManager().updateWord(word.uniqueId, 1, 1, 2.5,
-          DateTime.now().add(const Duration(days: 1)));
-    }
-    loadData();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.unitFilter != null
-            ? "רשימה - יחידה ${widget.unitFilter}"
-            : "כל המילים"),
-        elevation: 0,
-      ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : ListView.separated(
-              itemCount: filteredWords.length,
-              separatorBuilder: (c, i) => const Divider(height: 1),
-              itemBuilder: (context, index) {
-                final word = filteredWords[index];
-
-                Icon statusIcon;
-                if (!wordLevels.containsKey(word.uniqueId)) {
-                  statusIcon = const Icon(Icons.remove_circle_outline,
-                      color: Colors.grey);
-                } else if (wordLevels[word.uniqueId]! > 0) {
-                  statusIcon =
-                      const Icon(Icons.check_circle, color: Colors.blue);
-                } else {
-                  statusIcon = const Icon(Icons.cancel, color: Colors.red);
-                }
-
-                return ListTile(
-                  leading: statusIcon,
-                  title: Hero(
-                    tag: word.uniqueId,
-                    child: Material(
-                      color: Colors.transparent,
-                      child: Directionality(
-                        textDirection: word.language == 'english'
-                            ? TextDirection.ltr
-                            : TextDirection.rtl,
-                        child: Text(
-                          word.term,
-                          textAlign: word.language == 'english'
-                              ? TextAlign.left
-                              : TextAlign.right,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 18),
-                        ),
-                      ),
-                    ),
-                  ),
-                  subtitle: Text(word.translation),
-                  onTap: () {
-                    showDialog(
-                        context: context,
-                        builder: (ctx) => SimpleDialog(
-                              title:
-                                  Text(word.term, textAlign: TextAlign.center),
-                              children: [
-                                SimpleDialogOption(
-                                  onPressed: () {
-                                    Navigator.pop(ctx);
-                                    Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (context) =>
-                                                SingleCardScreen(word: word)));
-                                  },
-                                  child: const Padding(
-                                    padding: EdgeInsets.symmetric(vertical: 10),
-                                    child: Row(children: [
-                                      Icon(Icons.visibility,
-                                          color: Colors.black),
-                                      SizedBox(width: 10),
-                                      Text("צפייה בכרטיסייה",
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.bold))
-                                    ]),
-                                  ),
-                                ),
-                                const Divider(),
-                                SimpleDialogOption(
-                                  onPressed: () {
-                                    Navigator.pop(ctx);
-                                    manuallyUpdateStatus(word, 1);
-                                  },
-                                  child: const Row(children: [
-                                    Icon(Icons.check_circle,
-                                        color: Colors.blue),
-                                    SizedBox(width: 10),
-                                    Text("סמן כ'יודע'")
-                                  ]),
-                                ),
-                                SimpleDialogOption(
-                                  onPressed: () {
-                                    Navigator.pop(ctx);
-                                    manuallyUpdateStatus(word, 0);
-                                  },
-                                  child: const Row(children: [
-                                    Icon(Icons.cancel, color: Colors.red),
-                                    SizedBox(width: 10),
-                                    Text("סמן כ'לא יודע'")
-                                  ]),
-                                ),
-                                SimpleDialogOption(
-                                  onPressed: () {
-                                    Navigator.pop(ctx);
-                                    manuallyUpdateStatus(word, -1);
-                                  },
-                                  child: const Row(children: [
-                                    Icon(Icons.remove_circle_outline,
-                                        color: Colors.grey),
-                                    SizedBox(width: 10),
-                                    Text("אפס (כאילו לא נלמד)")
-                                  ]),
-                                ),
-                              ],
-                            ));
-                  },
-                );
-              },
-            ),
-    );
-  }
-}
-
-// ==========================================
-// 11. Learning Screen
-// ==========================================
-
-class LearningScreen extends StatefulWidget {
-  final String jsonPath;
-  final int? unitFilter;
-  final bool onlyFailed; // משתנה חדש: האם זה מצב חזרה על שגיאות?
-
-  const LearningScreen({
-    super.key,
-    required this.jsonPath,
-    this.unitFilter,
-    this.onlyFailed = false, // ברירת מחדל: לא
-  });
-
-  @override
-  State<LearningScreen> createState() => _LearningScreenState();
-}
-
-class _LearningScreenState extends State<LearningScreen> {
-  List<Word> fullVocabulary = [];
-  List<Word> studySession = [];
-  bool isLoading = true;
-  bool isReviewMode = false;
-  int _currentIndex = 0;
-  final FlutterTts flutterTts = FlutterTts();
-
-  @override
-  void initState() {
-    super.initState();
-    loadJsonData();
-  }
-
-  Future<void> speak(String text) async {
-    final prefs = await SharedPreferences.getInstance();
-    double speed = prefs.getDouble('tts_speed') ?? 0.5;
-
-    await flutterTts.setLanguage("en-US");
-    await flutterTts.setSpeechRate(speed);
-    await flutterTts.speak(text);
-  }
-
-  Future<void> loadJsonData() async {
-    final String response = await rootBundle.loadString(widget.jsonPath);
-    final data = await json.decode(response);
-    var list = data["words"] as List;
-    List<Word> rawWords = list.map((w) => Word.fromJson(w)).toList();
-
-    List<Word> sessionWords = [];
-    List<Word> filteredTotal = [];
-
-    for (var w in rawWords) {
-      // --- תיקון הבאג: סינון לפי יחידה חייב להיות ראשון! ---
-      // זה מבטיח שגם אם אנחנו במצב "שגיאות", לא נתייחס למילים מיחידות אחרות
-      if (widget.unitFilter != null && w.unitNumber != widget.unitFilter) {
-        continue;
-      }
-
-      // טעינת התקדמות
-      var progress = ProgressManager().getWordProgress(w.uniqueId);
-      if (progress != null) {
-        w.repetitions = progress['repetitions'];
-        w.interval = progress['interval'];
-        w.easinessFactor = progress['easinessFactor'];
-        w.nextReview = progress['nextReview'];
-      }
-
-      // --- לוגיקה למצב "מילים שלא הכרת" (Only Failed) ---
-      if (widget.onlyFailed) {
-        // נוסיף רק אם המילה נלמדה (לא null) וגם הסטטוס שלה הוא 0
-        if (progress != null && w.repetitions == 0) {
-          sessionWords.add(w);
-          filteredTotal
-              .add(w); // מוסיפים גם לרשימה הכללית כדי שהפרוגרס-בר יהיה מדויק
-        }
-        continue; // עוברים למילה הבאה, לא ממשיכים ללוגיקה הרגילה
-      }
-
-      // --- לוגיקה רגילה (אימון יומי) ---
-      filteredTotal.add(w);
-      if (w.nextReview.isBefore(DateTime.now()) || w.repetitions == 0) {
-        sessionWords.add(w);
-      }
-    }
-
-    if (!mounted) return;
-
-    setState(() {
-      fullVocabulary = filteredTotal;
-      studySession = sessionWords;
-
-      if (widget.onlyFailed) {
-        studySession.shuffle(); // מערבבים רק במצב שגיאות
-      } else {
-        studySession.sort((a, b) => a.nextReview.compareTo(b.nextReview));
-      }
-
-      isLoading = false;
-      isReviewMode = false;
-      _currentIndex = 0;
-    });
-  }
-
-  void startReviewSession() {
-    List<Word> learnedWords =
-        fullVocabulary.where((w) => w.repetitions > 0).toList();
-    learnedWords.shuffle();
-    setState(() {
-      studySession = learnedWords;
-      isReviewMode = true;
-      _currentIndex = 0;
-    });
-  }
-
-  Future<void> resetAllProgress() async {
-    setState(() {
-      isLoading = true;
-    });
-    loadJsonData();
-  }
-
-  Future<void> updateWordProgress(bool knewIt) async {
-    if (studySession.isEmpty) return;
-
-    Word word = studySession[_currentIndex];
-
-    setState(() {
-      // אם אנחנו במצב "חזרה על שגיאות", אנחנו מתייחסים לזה כמו ללמידה רגילה
-      // (אם ידעת - זה יוצא מהאדום, אם לא - נשאר)
-
-      if (isReviewMode && !widget.onlyFailed) {
-        if (knewIt) {
-          studySession.removeAt(_currentIndex);
-        } else {
-          studySession.removeAt(_currentIndex);
-          studySession.add(word);
-        }
-      } else {
-        int quality = knewIt ? 4 : 0;
-
-        if (quality < 3) {
-          word.repetitions = 0;
-          word.interval = 1;
-        } else {
-          if (word.repetitions == 0) {
-            word.interval = 1;
-          } else if (word.repetitions == 1) {
-            word.interval = 6;
-          } else {
-            word.interval = (word.interval * word.easinessFactor).round();
-          }
-
-          word.repetitions++;
-          word.easinessFactor = word.easinessFactor +
-              (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02));
-          if (word.easinessFactor < 1.3) word.easinessFactor = 1.3;
-        }
-
-        word.nextReview = DateTime.now().add(Duration(days: word.interval));
-
-        ProgressManager().updateWord(word.uniqueId, word.repetitions,
-            word.interval, word.easinessFactor, word.nextReview);
-
-        if (knewIt) {
-          studySession.removeAt(_currentIndex);
-        } else {
-          // אם לא ידעת, המילה עוברת לסוף התור (גם בחזרה על שגיאות)
-          studySession.removeAt(_currentIndex);
-          studySession.add(word);
-        }
-      }
-
-      if (_currentIndex >= studySession.length) {
-        _currentIndex = studySession.isNotEmpty ? studySession.length - 1 : 0;
-      }
-    });
-  }
-
-  void _nextCard() {
-    if (_currentIndex < studySession.length - 1) {
-      setState(() {
-        _currentIndex++;
-      });
-    }
-  }
-
-  void _prevCard() {
-    if (_currentIndex > 0) {
-      setState(() {
-        _currentIndex--;
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
-
-    String titleText = widget.onlyFailed
-        ? "חזרה על שגיאות"
-        : "אימון - יחידה ${widget.unitFilter ?? 'כללי'}";
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(titleText),
-        elevation: 0,
-        centerTitle: true,
-      ),
-      body: studySession.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.check_circle, size: 80, color: Colors.green),
-                  const SizedBox(height: 20),
-                  Text(
-                      widget.onlyFailed
-                          ? "אין מילים אדומות!\nכל הכבוד!"
-                          : "סיימת את המילים להיום!",
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                          fontSize: 24, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 30),
-                  if (!widget.onlyFailed) // מציג כפתור חזרה רק באימון רגיל
-                    ElevatedButton.icon(
-                      onPressed: startReviewSession,
-                      icon: const Icon(Icons.refresh, color: Colors.white),
-                      label: const Text("תרגול מילים שלמדתי",
-                          style: TextStyle(color: Colors.white, fontSize: 18)),
-                      style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue),
-                    ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text("חזור לרשימה"),
-                  ),
-                ],
-              ),
-            )
-          : Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                children: [
-                  // --- Progress Bar ---
-                  Row(
-                    children: [
-                      Expanded(
-                        child: LinearProgressIndicator(
-                          // חישוב שונה לפרוגרס בר אם זה רק שגיאות
-                          value: widget.onlyFailed
-                              ? (studySession.isEmpty
-                                  ? 1.0
-                                  : 0.0) // פשוט מראה שיש עוד עבודה
-                              : 1 -
-                                  (studySession.length / fullVocabulary.length),
-                          color: widget.onlyFailed
-                              ? Colors.redAccent
-                              : Colors.blue,
-                          backgroundColor: Colors.grey[200],
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Text("${_currentIndex + 1}/${studySession.length}",
-                          style: const TextStyle(
-                              color: Colors.grey, fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-
-                  // --- The Card ---
-                  Expanded(
-                    flex: 10,
-                    child: Center(
-                      child: FlipCard(
-                        key: ValueKey(studySession[_currentIndex].id),
-                        front:
-                            _buildCardFace(studySession[_currentIndex], true),
-                        back:
-                            _buildCardFace(studySession[_currentIndex], false),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-
-                  // --- Arrows Navigation ---
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back_ios, size: 36),
-                        color: _currentIndex > 0
-                            ? Colors.grey[700]
-                            : Colors.grey[300],
-                        onPressed: _currentIndex > 0 ? _prevCard : null,
-                      ),
-                      const SizedBox(width: 40),
-                      IconButton(
-                        icon: const Icon(Icons.arrow_forward_ios, size: 36),
-                        color: _currentIndex < studySession.length - 1
-                            ? Colors.grey[700]
-                            : Colors.grey[300],
-                        onPressed: _currentIndex < studySession.length - 1
-                            ? _nextCard
-                            : null,
-                      ),
-                    ],
-                  ),
-                  const Spacer(),
-
-                  // --- Buttons ---
-                  Row(
-                    children: [
-                      Expanded(
-                          child: _buildButton("עוד לא", Colors.white,
-                              Colors.black, () => updateWordProgress(false))),
-                      const SizedBox(width: 15),
-                      Expanded(
-                          child: _buildButton(
-                              "ידעתי!",
-                              widget.onlyFailed
-                                  ? Colors.redAccent
-                                  : Colors.blue,
-                              Colors.white,
-                              () => updateWordProgress(true))),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-    );
-  }
-
-  // שאר הפונקציות (_buildCardFace, _buildButton) נשארות זהות...
-  // אבל צריך להעתיק אותן כדי שהמחלקה תהיה שלמה.
-  // אני מניח שאתה משתמש בקוד הקודם, אז הנה הן ליתר ביטחון:
-
-  Widget _buildCardFace(Word word, bool isFront) {
-    bool isDark = Theme.of(context).brightness == Brightness.dark;
-    Color unitColor = getUnitColor(word.unitNumber, isDark);
-    Color cardColor =
-        isFront ? unitColor : (isDark ? const Color(0xFF1E1E1E) : Colors.white);
-    Color textColor = isFront
-        ? getTextColorForBackground(word.unitNumber, isDark)
-        : (isDark ? Colors.white : Colors.black87);
-    Color iconColor = isFront
-        ? (textColor == Colors.white ? Colors.white : Colors.blue)
-        : Colors.blue;
-
-    if (!isFront && !isDark) {
-      cardColor = const Color(0xFFF5F5F5);
-    }
-
-    return Container(
-      width: double.infinity,
-      height: 450,
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-            color: isDark ? Colors.grey[800]! : Colors.grey.shade300, width: 1),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 5))
-        ],
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-              isFront
-                  ? (word.language == 'english' ? "🇬🇧 אנגלית" : "🇮🇱 עברית")
-                  : "תרגום",
-              style: TextStyle(color: textColor.withOpacity(0.6))),
-          const SizedBox(height: 20),
-          if (isFront) ...[
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              child: Directionality(
-                textDirection: word.language == 'english'
-                    ? TextDirection.ltr
-                    : TextDirection.rtl,
-                child: Text(word.term,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        fontSize: 36,
-                        fontWeight: FontWeight.bold,
-                        color: textColor)),
-              ),
-            ),
-            if (word.language == 'english')
-              IconButton(
-                  icon: Icon(Icons.volume_up, color: iconColor),
-                  onPressed: () => speak(word.term)),
-          ] else ...[
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 15),
-              child: Text(word.translation,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue)),
-            ),
-            const SizedBox(height: 15),
-            Padding(
-              padding: const EdgeInsets.all(15),
-              child: Directionality(
-                textDirection: word.language == 'english'
-                    ? TextDirection.ltr
-                    : TextDirection.rtl,
-                child: Text(word.example,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        fontStyle: FontStyle.italic,
-                        fontSize: 18,
-                        color: textColor)),
-              ),
-            ),
-          ]
-        ],
-      ),
-    );
-  }
-
-  Widget _buildButton(String text, Color bg, Color txt, VoidCallback onTap) {
-    return ElevatedButton(
-      onPressed: onTap,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: bg,
-        padding: const EdgeInsets.symmetric(vertical: 20),
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
-            side: BorderSide(color: Colors.grey.shade200)),
-      ),
-      child: Text(text,
-          style:
-              TextStyle(color: txt, fontWeight: FontWeight.bold, fontSize: 18)),
-    );
-  }
-}
-
-// ==========================================
-// 12. Single Card Screen
-// ==========================================
-class SingleCardScreen extends StatefulWidget {
-  final Word word;
-  const SingleCardScreen({super.key, required this.word});
-  @override
-  State<SingleCardScreen> createState() => _SingleCardScreenState();
-}
-
-class _SingleCardScreenState extends State<SingleCardScreen> {
-  final FlutterTts flutterTts = FlutterTts();
-  Future<void> speak(String text) async {
-    await flutterTts.setLanguage("en-US");
-    await flutterTts.speak(text);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-          backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
-          elevation: 0),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          children: [
-            const Spacer(),
-            Expanded(
-              flex: 4,
-              child: Center(
-                child: FlipCard(
-                  key: ValueKey(widget.word.id),
-                  front: _buildSingleCardFace(widget.word, true),
-                  back: _buildSingleCardFace(widget.word, false),
-                ),
-              ),
-            ),
-            const Spacer(),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context),
-              style: ElevatedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20))),
-              child: const Text("חזור לרשימה"),
-            ),
-            const SizedBox(height: 20),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSingleCardFace(Word word, bool isFront) {
-    bool isDark = Theme.of(context).brightness == Brightness.dark;
-
-    Color unitColor = getUnitColor(word.unitNumber, isDark);
-    Color cardColor;
-    if (isFront) {
-      cardColor = unitColor;
-    } else {
-      cardColor = isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF5F5F5);
-    }
-
-    Color textColor;
-    if (isFront) {
-      textColor = getTextColorForBackground(word.unitNumber, isDark);
-    } else {
-      textColor = isDark ? Colors.white : Colors.black87;
-    }
-
-    Color iconColor = isFront
-        ? (textColor == Colors.white ? Colors.white : Colors.blue)
-        : Colors.blue;
-
-    return Container(
-      width: double.infinity,
-      height: 400,
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-            color: isDark ? Colors.grey[800]! : Colors.grey.shade300, width: 1),
-        boxShadow: const [
-          BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 5))
-        ],
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-              isFront
-                  ? (word.language == 'english' ? "🇬🇧 אנגלית" : "🇮🇱 עברית")
-                  : "תרגום",
-              style: TextStyle(color: textColor.withOpacity(0.6))),
-          const SizedBox(height: 20),
-          if (isFront) ...[
-            Hero(
-              tag: word.uniqueId,
-              child: Material(
-                color: Colors.transparent,
-                child: Directionality(
-                  textDirection: word.language == 'english'
-                      ? TextDirection.ltr
-                      : TextDirection.rtl,
-                  child: Text(word.term,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          fontSize: 36,
-                          fontWeight: FontWeight.bold,
-                          color: textColor)),
-                ),
-              ),
-            ),
-            if (word.language == 'english')
-              IconButton(
-                  icon: Icon(Icons.volume_up, color: iconColor, size: 30),
-                  onPressed: () => speak(word.term)),
-          ] else ...[
-            Text(word.translation,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue)),
-            Padding(
-                padding: const EdgeInsets.all(20),
-                child: Directionality(
-                  textDirection: word.language == 'english'
-                      ? TextDirection.ltr
-                      : TextDirection.rtl,
-                  child: Text(word.example,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          fontStyle: FontStyle.italic,
-                          fontSize: 18,
-                          color: textColor)),
-                )),
-          ]
-        ],
-      ),
-    );
-  }
-}
-
-// ==========================================
-// 13. Flip Card Component
-// ==========================================
-class FlipCard extends StatefulWidget {
-  final Widget front;
-  final Widget back;
-  const FlipCard({super.key, required this.front, required this.back});
-  @override
-  State<FlipCard> createState() => _FlipCardState();
-}
-
-class _FlipCardState extends State<FlipCard>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
-  bool isFront = true;
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 600));
-    _animation = Tween<double>(begin: 0, end: 1).animate(
-        CurvedAnimation(parent: _controller, curve: Curves.easeInOutBack));
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _flip() {
-    if (isFront) {
-      _controller.forward();
-    } else {
-      _controller.reverse();
-    }
-    isFront = !isFront;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: _flip,
-      child: AnimatedBuilder(
-        animation: _animation,
-        builder: (context, child) {
-          final angle = _animation.value * 3.14159;
-          final isShowingFront = angle < 3.14159 / 2;
-          return Transform(
-            alignment: Alignment.center,
-            transform: Matrix4.identity()
-              ..setEntry(3, 2, 0.001)
-              ..rotateY(angle),
-            child: isShowingFront
-                ? widget.front
-                : Transform(
-                    alignment: Alignment.center,
-                    transform: Matrix4.identity()..rotateY(3.14159),
-                    child: widget.back),
-          );
-        },
-      ),
-    );
-  }
-}
-
-// ==========================================
-// 14. About Screen
-// ==========================================
-class AboutScreen extends StatelessWidget {
-  const AboutScreen({super.key});
-  @override
-  Widget build(BuildContext context) {
-    bool isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Scaffold(
-      appBar: AppBar(title: const Text("אודות"), elevation: 0),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(25.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                      color: isDark
-                          ? const Color(0xFF1E1E1E)
-                          : Colors.blue.shade50,
-                      shape: BoxShape.circle),
-                  child: const Icon(Icons.school_rounded,
-                      size: 60, color: Colors.blue)),
-              const SizedBox(height: 20),
-              const Text("מילומטרי",
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-              const Text("גרסה 1.0.1", style: TextStyle(color: Colors.grey)),
-              const SizedBox(height: 30),
-              const Text(
-                  "ברוכים הבאים לאפליקציית מילומטרי!\n\nהאפליקציה נועדה לעזור לכם ללמוד מילים לפסיכומטרי בצורה כיפית וקלה.\nתוכלו לתרגל מילים בעברית ובאנגלית ולעקוב אחרי ההתקדמות שלכם.\n\nפותח על ידי Pappo Studios.\nבהצלחה במבחן!",
-                  style: TextStyle(fontSize: 18, height: 1.5),
-                  textAlign: TextAlign.center),
-              const SizedBox(height: 40),
-              const Text("© 2026 כל הזכויות שמורות",
-                  style: TextStyle(fontSize: 12, color: Colors.grey)),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ==========================================
-// 15. Settings Screen (מסך הגדרות מעודכן)
-// ==========================================
-class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({super.key});
-
-  @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
-}
-
-class _SettingsScreenState extends State<SettingsScreen> {
-  double ttsSpeed = 0.5;
-  String _currentDetermination = ""; // משתנה להצגת המצב הנוכחי
-
-  // לינקים ליצירת קשר
-  final String _email = "pappostudios@gmail.com";
-
-  @override
-  void initState() {
-    super.initState();
-    _loadSettings();
-  }
-
-  Future<void> _loadSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    int hours = prefs.getInt('determination_hours') ?? 24;
-
-    // בדיקה איזה טקסט להציג לפי השעות השמורות
-    String determinationText;
-    switch (hours) {
-      case 8:
-        determinationText = "🏆 רואה את הניצחון (כל 8 שעות)";
-        break;
-      case 12:
-        determinationText = "🔥 מתקדם (כל 12 שעות)";
-        break;
-      default:
-        determinationText = "😎 ברגוע (כל 24 שעות)";
-    }
-
-    setState(() {
-      ttsSpeed = prefs.getDouble('tts_speed') ?? 0.5;
-      _currentDetermination = determinationText;
-    });
-  }
-
-  Future<void> _updateSpeed(double newSpeed) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble('tts_speed', newSpeed);
-    setState(() {
-      ttsSpeed = newSpeed;
-    });
-  }
-
-  void _showContactOptions() {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return SafeArea(
-          child: Wrap(
-            children: [
-              ListTile(
-                leading: const Icon(Icons.email_outlined, color: Colors.blue),
-                title: const Text("שלח אימייל"),
-                onTap: () {
-                  Navigator.pop(context);
-                  _launchEmail();
-                },
-              ),
-              ListTile(
-                leading:
-                    const Icon(Icons.camera_alt_outlined, color: Colors.purple),
-                title: const Text("הודעה באינסטגרם"),
-                onTap: () {
-                  Navigator.pop(context);
-                  _launchInstagram();
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Future<void> _launchEmail() async {
-    final Uri emailLaunchUri = Uri(
-      scheme: 'mailto',
-      path: _email,
-      query: 'subject=פניה בנושא אפליקציית מילומטרי',
-    );
-    if (!await launchUrl(emailLaunchUri)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("לא הצלחנו לפתוח את אפליקציית המייל")),
-      );
-    }
-  }
-
-  Future<void> _launchInstagram() async {
-    const String username = "pappo_studios";
-
-    // ניסיון 1: פקודה ישירה לאפליקציה (זה פותר את המסך האפור)
-    final Uri nativeUrl = Uri.parse("instagram://user?username=$username");
-
-    // ניסיון 2: גיבוי לדפדפן רגיל
-    final Uri webUrl = Uri.parse("https://www.instagram.com/$username");
-
-    try {
-      // מנסים לפתוח את האפליקציה
-      if (!await launchUrl(nativeUrl, mode: LaunchMode.externalApplication)) {
-        // אם זה מחזיר false, זורקים שגיאה כדי להגיע ל-catch
-        throw Exception('Could not launch native app');
-      }
-    } catch (e) {
-      // אם הגענו לפה (אין אפליקציה או שהקישור נכשל), פותחים בדפדפן
-      if (!await launchUrl(webUrl, mode: LaunchMode.externalApplication)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("לא הצלחנו לפתוח את האינסטגרם")),
-        );
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    bool isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Scaffold(
-      appBar: AppBar(title: const Text("הגדרות"), elevation: 0),
-      body: ListView(
-        children: [
-          const SizedBox(height: 20),
-
-          // --- מדור כללי ---
-          _buildSectionHeader("כללי"),
-          SwitchListTile(
-            title: const Text("מצב לילה"),
-            secondary: Icon(isDark ? Icons.dark_mode : Icons.light_mode),
-            value: isDark,
-            onChanged: (val) {
-              ThemeManager().toggleTheme();
-            },
-          ),
-
-          const Divider(),
-
-          // --- מדור חדש: נחישות ---
-          _buildSectionHeader("נחישות ותזכורות"),
-          ListTile(
-            leading: const Icon(Icons.psychology, color: Colors.orange),
-            title: const Text("הגדרת רמת נחישות"),
-            subtitle: Text(_currentDetermination), // מציג את המצב הנוכחי
-            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-            onTap: () {
-              // מעבר למסך הנחישות
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const DeterminationScreen()),
-              );
-            },
-          ),
-
-          const Divider(),
-
-          // --- מדור דיבור (TTS) ---
-          _buildSectionHeader("הקראת מילים (אנגלית)"),
-          ListTile(
-            leading: const Icon(Icons.speed),
-            title: const Text("מהירות דיבור"),
-            subtitle: Slider(
-              value: ttsSpeed,
-              min: 0.1,
-              max: 1.0,
-              divisions: 9,
-              label: ttsSpeed.toString(),
-              onChanged: (val) => _updateSpeed(val),
-            ),
-            trailing: Text("${(ttsSpeed * 100).toInt()}%"),
-          ),
-
-          const Divider(),
-
-          // --- יצירת קשר ---
-          _buildSectionHeader("צור קשר"),
-          ListTile(
-            leading: const Icon(Icons.chat_bubble_outline, color: Colors.blue),
-            title: const Text("דברו איתי"),
-            subtitle: const Text("דיווח על תקלות, הצעות או סתם דיבור"),
-            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-            onTap: _showContactOptions,
-          ),
-
-          const Divider(),
-
-          // --- מדור ניהול נתונים ---
-          _buildSectionHeader("ניהול נתונים"),
-          ListTile(
-            leading: const Icon(Icons.delete_forever, color: Colors.red),
-            title: const Text("איפוס התקדמות מלא",
-                style: TextStyle(color: Colors.red)),
-            subtitle: const Text("מוחק את כל המילים שלמדת"),
-            onTap: () {
-              showDialog(
-                  context: context,
-                  builder: (ctx) => AlertDialog(
-                        title: const Text("בטוח שרוצים לאפס?"),
-                        content: const Text(
-                            "פעולה זו תמחק את כל הזיכרון ולא ניתן לשחזר אותה."),
-                        actions: [
-                          TextButton(
-                              onPressed: () => Navigator.pop(ctx),
-                              child: const Text("ביטול")),
-                          TextButton(
-                              onPressed: () {
-                                Navigator.pop(ctx);
-                                ProgressManager().resetAll();
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                        content: Text("הנתונים אופסו בהצלחה")));
-                              },
-                              child: const Text("אפס הכל",
-                                  style: TextStyle(color: Colors.red))),
-                        ],
-                      ));
-            },
-          ),
-
-          const Divider(),
-
-          // --- מדור אודות ---
-          ListTile(
-            leading: const Icon(Icons.info_outline),
-            title: const Text("אודות האפליקציה"),
-            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-            onTap: () {
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => const AboutScreen()));
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSectionHeader(String title) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
-      child: Text(title,
-          style: TextStyle(
-              color: Theme.of(context).primaryColor,
-              fontWeight: FontWeight.bold)),
-    );
-  }
-}
-
-// --- מסך תנאי השימוש ---
-// --- מסך תנאי השימוש (מתוקן) ---
-class TermsOfServiceScreen extends StatefulWidget {
-  const TermsOfServiceScreen({super.key});
-
-  @override
-  State<TermsOfServiceScreen> createState() => _TermsOfServiceScreenState();
-}
-
-class _TermsOfServiceScreenState extends State<TermsOfServiceScreen> {
-  // משתנים הם בתוך המחלקה (State)
-  bool _isChecked = false;
-  final ScrollController _scrollController = ScrollController();
-
-  Future<void> _acceptTerms() async {
-    final prefs = await SharedPreferences.getInstance();
-
-    await prefs.setInt('accepted_terms_version', currentTermsVersion);
-
-    if (!mounted) return;
-
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (context) => const DeterminationScreen()),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('תנאי שימוש ופרטיות'),
-        centerTitle: true,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Expanded(
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Scrollbar(
-                  controller: _scrollController,
-                  thumbVisibility: true,
-                  child: SingleChildScrollView(
-                    controller: _scrollController,
-                    child: const Text(
-                      '''
-מדיניות פרטיות ותנאי שימוש – אפליקציית מילומטרי
-עדכון אחרון: 02/01/2026
-
-1.	כללי:
-a.	ברוכים הבאים לאפליקציית "מילומטרי", אשר פותחה על ידי Pappo" Studios"" הורדה ושימוש באפליקציה מהווים הסכמה מלאה ומחייבת לתנאים המפורטים במסמך זה.
-
-2.	מהות השירות:
-a.	האפליקציה נועדה לשמש ככלי עזר לתרגול, לימוד ושיפור אוצר המילים לקראת הבחינה הפסיכומטרית.
-b.	השימוש באפליקציה הוא באחריות המשתמש בלבד.
-c.	המפתח מבהיר כי השימוש באפליקציה אינו מבטיח קבלת ציון מסוים בבחינה ואינו מהווה תחליף לקורס פסיכומטרי מלא או לחומרים הרשמיים של המרכז הארצי לבחינות והערכה.
-
-3.	קניין רוחני:
-a.	כל זכויות הקניין הרוחני באפליקציה, לרבות העיצוב הגרפי, קוד המקור, הלוגו, בסיסי הנתונים והתכנים, הינם קניינו הבלעדי של המפתח (Pappo Studios).
-b.	אין להעתיק, לשכפל, להפיץ, לשווק או לעשות כל שימוש מסחרי בחלקים מהאפליקציה או בעיצובה ללא קבלת אישור מפורש ובכתב מהמפתח.
-
-4.	מדיניות פרטיות ואיסוף נתונים:
-אנו ב-Pappo Studios  מכבדים את פרטיותך.
-a.	איסוף נתונים אישיים: האפליקציה אינה אוספת מידע אישי מזהה (כגון שם, טלפון או מייל) באופן יזום ואינה מעבירה נתונים כאלו לשרתים שלנו.
-b.	אחסון מידע: נתוני ההתקדמות של המשתמש נשמרים באופן מקומי (Locally) על גבי מכשיר המשתמש. מחיקת האפליקציה תוביל למחיקת נתוני ההתקדמות.
-
-5.	פרסומות:
-a.	האפליקציה נכון להיום(תאריך עדכון המסמך) לא מציגה פרסומות. בקריאה ואישור של מסמך זה - הינך(המשתמש) מסכים לכך שבעתיד ייתכן וכי בזמן שימושך באפליקציה יופיעו פרסומות המוגשות ע"י צד שלישי.
-b.	ספקים אלו עשויים להשתמש במידע אנונימי, מזהי מכשיר (Device ID) או טכנולוגיות מעקב כגון "Cookies" על מנת להציג פרסומות המותאמות לתחומי העניין של המשתמש ולשפר את חווית השימוש. השימוש במידע זה כפוף למדיניות הפרטיות של אותם ספקי פרסום.
-
-6.	תמחור ושינויים עתידיים:
-a.	שינוי מודל התמחור: המפתח שומר לעצמו את הזכות הבלעדית לשנות את מודל התמחור של האפליקציה בכל עת.(המשתמש לא יחויב בהוצאות כאלה ואחרות ללא הסכמתו האישית).
-b.	העדר התחייבות למחיר: המשתמש מאשר כי ידוע לו שהאפליקציה עשויה להפוך לבת-תשלום בעתיד, או כי פיצ'רים מסוימים שכרגע ניתנים בחינם עשויים לדרוש תשלום בגרסאות הבאות. אין בהורדת האפליקציה שום התחייבות של המפתח למחיר קבוע או לחינמיות השירות לצמיתות.
-
-7.	הגבלת אחריות:
-a.	היוצר ו/או המפתח אינו אחראי לכל נזק, ישיר או עקיף, שייגרם למשתמש או לצד שלישי כלשהו כתוצאה משימוש באפליקציה, חוסר יכולת להשתמש בה, תקלות טכניות, או הסתמכות על התכנים המופיעים בה. השירות מסופק במתכונת "As Is".
-
-8.	יצירת קשר:
-a.	בכל שאלה, בקשה או דיווח על תקלה בנוגע לאפליקציה או למדיניות הפרטיות, ניתן לפנות אלינו בכתובת המייל [pappostudios@gmail.com].
-                      ''',
-                      style: TextStyle(fontSize: 16),
-                      textAlign: TextAlign.right,
-                      textDirection: TextDirection.rtl,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            CheckboxListTile(
-              title: const Text("קראתי ואני מסכים לתנאי השימוש"),
-              value: _isChecked,
-              onChanged: (bool? value) {
-                setState(() {
-                  _isChecked = value ?? false;
-                });
-              },
-              controlAffinity: ListTileControlAffinity.leading,
-            ),
-            const SizedBox(height: 10),
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                onPressed: _isChecked ? _acceptTerms : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _isChecked ? Colors.blue : Colors.grey,
-                ),
-                child: const Text(
-                  'המשך לאפליקציה',
-                  style: TextStyle(fontSize: 18, color: Colors.white),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ==========================================
-// 17. Determination Screen (מסך בחירת נחישות)
-// ==========================================
-class DeterminationScreen extends StatelessWidget {
-  const DeterminationScreen({super.key});
-
-  Future<void> _setDetermination(BuildContext context, int hours) async {
-    final prefs = await SharedPreferences.getInstance();
-    // שומרים את ההעדפה (24, 12, או 8)
-    await prefs.setInt('determination_hours', hours);
-    // מסמנים שהמשתמש בחר כבר רמת נחישות
-    await prefs.setBool('hasChosenDetermination', true);
-
-    if (!context.mounted) return;
-
-    // מעבר למסך הבית
-    Navigator.pushReplacement(
-        context, MaterialPageRoute(builder: (context) => const HomeScreen()));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(30.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.psychology, size: 80, color: Colors.blue),
-              const SizedBox(height: 30),
-              const Text(
-                "כמה אתה נחוש?",
-                style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 10),
-              const Text(
-                "בחר באיזו תדירות נזכיר לך ללמוד\nאם לא נכנסת לאפליקציה",
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 18, color: Colors.grey),
-              ),
-              const SizedBox(height: 50),
-              _buildOption(context, "🏆 רואה את הניצחון", "כל 8 שעות", 8,
-                  Colors.redAccent),
-              const SizedBox(height: 20),
-              _buildOption(
-                  context, "🔥 מתקדם", "כל 12 שעות", 12, Colors.orange),
-              const SizedBox(height: 20),
-              _buildOption(context, "😎 ברגוע", "כל 24 שעות", 24, Colors.green),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildOption(BuildContext context, String title, String subtitle,
-      int hours, Color color) {
-    // מחקנו את ה-SizedBox שעטף הכל וקבע גובה 80
-    return Container(
-      margin: const EdgeInsets.only(bottom: 20), // רווח בין הכפתורים
-      width: double.infinity,
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.white,
-            foregroundColor: Colors.black,
-            elevation: 5,
-            // כאן אנחנו מגדירים את הריווח הפנימי - זה מה שייצר את הגובה באופן דינמי
-            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 15),
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
-                side: BorderSide(color: color, width: 2))),
-        onPressed: () => _setDetermination(context, hours),
-        child: Row(
-          children: [
-            CircleAvatar(
-              backgroundColor: color.withOpacity(0.2),
-              child: Text("$hours",
-                  style: TextStyle(color: color, fontWeight: FontWeight.bold)),
-            ),
-            const SizedBox(width: 20),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                        fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 4), // רווח קטן בין הכותרת לתת-כותרת
-                  Text(
-                    subtitle,
-                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ==========================================
-// NEW: Failed Words Unit Selector (מסך בחירת יחידות לשגיאות)
-// ==========================================
-class FailedWordsSelectorScreen extends StatefulWidget {
-  final String jsonPath;
-  const FailedWordsSelectorScreen({super.key, required this.jsonPath});
-
-  @override
-  State<FailedWordsSelectorScreen> createState() =>
-      _FailedWordsSelectorScreenState();
-}
-
-class _FailedWordsSelectorScreenState extends State<FailedWordsSelectorScreen> {
-  Map<int, int> failedCountsPerUnit = {};
-  int totalFailed = 0;
-  bool isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    loadData();
-  }
-
-  Future<void> loadData() async {
-    final String response = await rootBundle.loadString(widget.jsonPath);
-    final data = await json.decode(response);
-    var list = data["words"] as List;
-    List<Word> allWords = list.map((w) => Word.fromJson(w)).toList();
-
-    Map<int, int> tempCounts = {};
-    int tempTotal = 0;
-
-    for (var w in allWords) {
-      var progress = ProgressManager().getWordProgress(w.uniqueId);
-      if (progress != null && progress['repetitions'] == 0) {
-        tempCounts[w.unitNumber] = (tempCounts[w.unitNumber] ?? 0) + 1;
-        tempTotal++;
-      }
-    }
-
-    if (!mounted) return;
-    setState(() {
-      failedCountsPerUnit = tempCounts;
-      totalFailed = tempTotal;
-      isLoading = false;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    var sortedUnits = failedCountsPerUnit.keys.toList()..sort();
-    bool isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Scaffold(
-      appBar: AppBar(title: const Text("בחירת תרגול"), elevation: 0),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: const EdgeInsets.all(20),
-              children: [
-                // כפתור תרגול הכל
-                Card(
-                  color: Colors.red[50],
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                      side: BorderSide(color: Colors.red.shade200)),
-                  elevation: 2,
-                  // הקטנת הכפתור ע"י הגדלת השוליים החיצוניים
-                  margin:
-                      const EdgeInsets.only(bottom: 25, left: 15, right: 15),
-                  child: ListTile(
-                    // הקטנת הגובה ע"י הקטנת ה-Padding הפנימי
-                    contentPadding: const EdgeInsets.symmetric(
-                        vertical: 10, horizontal: 15),
-                    leading:
-                        Icon(Icons.shuffle, color: Colors.red[800], size: 28),
-                    title: Text("תרגל הכל (ערבוב)",
-                        style: TextStyle(
-                            color: Colors.red[900],
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18)),
-                    // תיקון ניסוח: "כל 17 המילים"
-                    subtitle: Text("כל $totalFailed המילים מכל היחידות",
-                        style: TextStyle(color: Colors.red[700])),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                    onTap: () {
-                      Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => LearningScreen(
-                                  jsonPath: widget.jsonPath,
-                                  onlyFailed: true)));
-                    },
-                  ),
-                ),
-
-                // תיקון ניסוח: הורדת המילה "או"
-                const Text("בחר יחידה ספציפית:",
-                    style:
-                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 15),
-
-                // רשימת היחידות
-                ...sortedUnits.map((unitNum) {
-                  int count = failedCountsPerUnit[unitNum]!;
-                  Color unitColor = getUnitColor(unitNum, isDark);
-                  Color textColor = getTextColorForBackground(unitNum, isDark);
-
-                  return Card(
-                    color: unitColor,
-                    margin: const EdgeInsets.only(bottom: 10),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15)),
-                    child: ListTile(
-                      title: Text("יחידה $unitNum",
-                          style: TextStyle(
-                              color: textColor, fontWeight: FontWeight.bold)),
-                      // תיקון ניסוח: "לשנן" במקום "לחיזוק"
-                      subtitle: Text("יש לך $count מילים לשנן ביחידה זו",
-                          style: TextStyle(color: textColor.withOpacity(0.8))),
-                      trailing: Icon(Icons.arrow_forward_ios,
-                          color: textColor, size: 16),
-                      onTap: () {
-                        Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => LearningScreen(
-                                    jsonPath: widget.jsonPath,
-                                    onlyFailed: true,
-                                    unitFilter:
-                                        unitNum))); // מעביר את מספר היחידה לסינון
-                      },
-                    ),
-                  );
-                }).toList(),
-              ],
-            ),
-    );
-  }
-}
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20)),
+              title: Text("יחידה $
