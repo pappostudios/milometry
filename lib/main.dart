@@ -127,31 +127,53 @@ class ThemeManager {
 Color getUnitColor(int unit, bool isDark) {
   if (isDark) {
     switch (unit) {
-      case 1: return const Color(0xFF006064);
-      case 2: return const Color(0xFF00838F);
-      case 3: return const Color(0xFF0097A7);
-      case 4: return const Color(0xFF00ACC1);
-      case 5: return const Color(0xFF00BCD4);
-      case 6: return const Color(0xFFF57F17);
-      case 7: return const Color(0xFFE65100);
-      case 8: return const Color(0xFFBF360C);
-      case 9: return const Color(0xFF3E2723);
-      case 10: return const Color(0xFFB71C1C);
-      default: return const Color(0xFF424242);
+      case 1:
+        return const Color(0xFF006064);
+      case 2:
+        return const Color(0xFF00838F);
+      case 3:
+        return const Color(0xFF0097A7);
+      case 4:
+        return const Color(0xFF00ACC1);
+      case 5:
+        return const Color(0xFF00BCD4);
+      case 6:
+        return const Color(0xFFF57F17);
+      case 7:
+        return const Color(0xFFE65100);
+      case 8:
+        return const Color(0xFFBF360C);
+      case 9:
+        return const Color(0xFF3E2723);
+      case 10:
+        return const Color(0xFFB71C1C);
+      default:
+        return const Color(0xFF424242);
     }
   } else {
     switch (unit) {
-      case 1: return const Color(0xFFE0F7FA);
-      case 2: return const Color(0xFFB2EBF2);
-      case 3: return const Color(0xFF80DEEA);
-      case 4: return const Color(0xFF4DD0E1);
-      case 5: return const Color(0xFF26C6DA);
-      case 6: return const Color(0xFFFFD54F);
-      case 7: return const Color(0xFFFFB74D);
-      case 8: return const Color(0xFFFF8A65);
-      case 9: return const Color(0xFFF4511E);
-      case 10: return const Color(0xFFB71C1C);
-      default: return Colors.white;
+      case 1:
+        return const Color(0xFFE0F7FA);
+      case 2:
+        return const Color(0xFFB2EBF2);
+      case 3:
+        return const Color(0xFF80DEEA);
+      case 4:
+        return const Color(0xFF4DD0E1);
+      case 5:
+        return const Color(0xFF26C6DA);
+      case 6:
+        return const Color(0xFFFFD54F);
+      case 7:
+        return const Color(0xFFFFB74D);
+      case 8:
+        return const Color(0xFFFF8A65);
+      case 9:
+        return const Color(0xFFF4511E);
+      case 10:
+        return const Color(0xFFB71C1C);
+      default:
+        return Colors.white;
     }
   }
 }
@@ -297,8 +319,7 @@ class ProgressManager {
           'repetitions': int.parse(parts[1]),
           'interval': int.parse(parts[2]),
           'easinessFactor': double.parse(parts[3]),
-          'nextReview':
-              DateTime.fromMillisecondsSinceEpoch(int.parse(parts[4]))
+          'nextReview': DateTime.fromMillisecondsSinceEpoch(int.parse(parts[4]))
         };
       } else if (parts.length == 3) {
         int lvl = int.parse(parts[1]);
@@ -577,14 +598,12 @@ class _HomeScreenState extends State<HomeScreen>
 
     _buttonsController = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 600));
-    _hebrewSlide =
-        Tween<Offset>(begin: const Offset(-1.5, 0), end: Offset.zero).animate(
-            CurvedAnimation(
-                parent: _buttonsController, curve: Curves.easeOutCubic));
-    _englishSlide =
-        Tween<Offset>(begin: const Offset(1.5, 0), end: Offset.zero).animate(
-            CurvedAnimation(
-                parent: _buttonsController, curve: Curves.easeOutCubic));
+    _hebrewSlide = Tween<Offset>(begin: const Offset(-1.5, 0), end: Offset.zero)
+        .animate(CurvedAnimation(
+            parent: _buttonsController, curve: Curves.easeOutCubic));
+    _englishSlide = Tween<Offset>(begin: const Offset(1.5, 0), end: Offset.zero)
+        .animate(CurvedAnimation(
+            parent: _buttonsController, curve: Curves.easeOutCubic));
 
     _logoController.forward();
     Future.delayed(const Duration(milliseconds: 400), () {
@@ -653,14 +672,13 @@ class _HomeScreenState extends State<HomeScreen>
               top: 10,
               left: 10,
               child: AnimatedButton(
-                onTap: () =>
-                    Navigator.push(context, _slideRoute(const SettingsScreen())),
+                onTap: () => Navigator.push(
+                    context, _slideRoute(const SettingsScreen())),
                 child: Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: isDark
-                        ? Colors.white.withOpacity(0.08)
-                        : Colors.white,
+                    color:
+                        isDark ? Colors.white.withOpacity(0.08) : Colors.white,
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
@@ -928,16 +946,13 @@ class _UnitSelectorScreenState extends State<UnitSelectorScreen> {
                       loadAndOrganizeData();
                     },
                     child: Container(
-                      margin: const EdgeInsets.only(
-                          bottom: 20, left: 5, right: 5),
+                      margin:
+                          const EdgeInsets.only(bottom: 20, left: 5, right: 5),
                       padding: const EdgeInsets.symmetric(
                           horizontal: 15, vertical: 14),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [
-                            Colors.red.shade300,
-                            Colors.red.shade700
-                          ],
+                          colors: [Colors.red.shade300, Colors.red.shade700],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
@@ -964,11 +979,9 @@ class _UnitSelectorScreenState extends State<UnitSelectorScreen> {
                                         fontWeight: FontWeight.bold,
                                         fontSize: 17,
                                         color: Colors.white)),
-                                Text(
-                                    "יש לך $totalFailedCount מילים לחיזוק",
+                                Text("יש לך $totalFailedCount מילים לחיזוק",
                                     style: const TextStyle(
-                                        fontSize: 13,
-                                        color: Colors.white70)),
+                                        fontSize: 13, color: Colors.white70)),
                               ],
                             ),
                           ),
@@ -984,8 +997,7 @@ class _UnitSelectorScreenState extends State<UnitSelectorScreen> {
                   int learned = learnedCounts[unitNum]!;
                   double progress = total > 0 ? learned / total : 0.0;
                   Color unitColor = getUnitColor(unitNum, isDark);
-                  Color textColor =
-                      getTextColorForBackground(unitNum, isDark);
+                  Color textColor = getTextColorForBackground(unitNum, isDark);
 
                   return AnimatedButton(
                     onTap: () => _showOptionsDialog(context, unitNum),
@@ -1028,8 +1040,7 @@ class _UnitSelectorScreenState extends State<UnitSelectorScreen> {
                             borderRadius: BorderRadius.circular(4),
                             child: LinearProgressIndicator(
                               value: progress,
-                              backgroundColor:
-                                  Colors.white.withOpacity(0.4),
+                              backgroundColor: Colors.white.withOpacity(0.4),
                               color: textColor == Colors.white
                                   ? Colors.greenAccent
                                   : Colors.blue,
@@ -1060,8 +1071,7 @@ class _UnitSelectorScreenState extends State<UnitSelectorScreen> {
                     await Navigator.push(
                         context,
                         _slideRoute(LearningScreen(
-                            jsonPath: widget.jsonPath,
-                            unitFilter: unitNum)));
+                            jsonPath: widget.jsonPath, unitFilter: unitNum)));
                     loadAndOrganizeData();
                   },
                   child: const Padding(
@@ -1079,9 +1089,9 @@ class _UnitSelectorScreenState extends State<UnitSelectorScreen> {
                   onPressed: () async {
                     Navigator.pop(ctx);
                     await Navigator.push(
-                        context, _slideRoute(VocabularyListScreen(
-                            jsonPath: widget.jsonPath,
-                            unitFilter: unitNum)));
+                        context,
+                        _slideRoute(VocabularyListScreen(
+                            jsonPath: widget.jsonPath, unitFilter: unitNum)));
                     loadAndOrganizeData();
                   },
                   child: const Padding(
@@ -1154,7 +1164,8 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
     if (newLevel == -1) {
       await ProgressManager().resetWord(word.uniqueId);
     } else if (newLevel == 0) {
-      await ProgressManager().updateWord(word.uniqueId, 0, 0, 2.5, DateTime.now());
+      await ProgressManager()
+          .updateWord(word.uniqueId, 0, 0, 2.5, DateTime.now());
     } else {
       await ProgressManager().updateWord(word.uniqueId, 1, 1, 2.5,
           DateTime.now().add(const Duration(days: 1)));
@@ -1179,9 +1190,11 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
                 final word = filteredWords[index];
                 Icon statusIcon;
                 if (!wordLevels.containsKey(word.uniqueId)) {
-                  statusIcon = const Icon(Icons.remove_circle_outline, color: Colors.grey);
+                  statusIcon = const Icon(Icons.remove_circle_outline,
+                      color: Colors.grey);
                 } else if (wordLevels[word.uniqueId]! > 0) {
-                  statusIcon = const Icon(Icons.check_circle, color: Colors.blue);
+                  statusIcon =
+                      const Icon(Icons.check_circle, color: Colors.blue);
                 } else {
                   statusIcon = const Icon(Icons.cancel, color: Colors.red);
                 }
@@ -1214,21 +1227,26 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
                         builder: (ctx) => SimpleDialog(
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(20)),
-                              title: Text(word.term, textAlign: TextAlign.center),
+                              title:
+                                  Text(word.term, textAlign: TextAlign.center),
                               children: [
                                 SimpleDialogOption(
                                   onPressed: () {
                                     Navigator.pop(ctx);
-                                    Navigator.push(context,
-                                        _slideRoute(SingleCardScreen(word: word)));
+                                    Navigator.push(
+                                        context,
+                                        _slideRoute(
+                                            SingleCardScreen(word: word)));
                                   },
                                   child: const Padding(
                                     padding: EdgeInsets.symmetric(vertical: 10),
                                     child: Row(children: [
-                                      Icon(Icons.visibility, color: Colors.black),
+                                      Icon(Icons.visibility,
+                                          color: Colors.black),
                                       SizedBox(width: 10),
                                       Text("צפייה בכרטיסייה",
-                                          style: TextStyle(fontWeight: FontWeight.bold))
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold))
                                     ]),
                                   ),
                                 ),
@@ -1239,7 +1257,8 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
                                     manuallyUpdateStatus(word, 1);
                                   },
                                   child: const Row(children: [
-                                    Icon(Icons.check_circle, color: Colors.blue),
+                                    Icon(Icons.check_circle,
+                                        color: Colors.blue),
                                     SizedBox(width: 10),
                                     Text("סמן כ'יודע'")
                                   ]),
@@ -1261,7 +1280,8 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
                                     manuallyUpdateStatus(word, -1);
                                   },
                                   child: const Row(children: [
-                                    Icon(Icons.remove_circle_outline, color: Colors.grey),
+                                    Icon(Icons.remove_circle_outline,
+                                        color: Colors.grey),
                                     SizedBox(width: 10),
                                     Text("אפס (כאילו לא נלמד)")
                                   ]),
@@ -1532,7 +1552,9 @@ class _LearningScreenState extends State<LearningScreen> {
                           child: LinearProgressIndicator(
                             value: widget.onlyFailed
                                 ? 0.0
-                                : 1 - (studySession.length / fullVocabulary.length),
+                                : 1 -
+                                    (studySession.length /
+                                        fullVocabulary.length),
                             color: widget.onlyFailed
                                 ? Colors.redAccent
                                 : Colors.blue,
@@ -1553,8 +1575,10 @@ class _LearningScreenState extends State<LearningScreen> {
                     child: Center(
                       child: FlipCard(
                         key: ValueKey(studySession[_currentIndex].id),
-                        front: _buildCardFace(studySession[_currentIndex], true),
-                        back: _buildCardFace(studySession[_currentIndex], false),
+                        front:
+                            _buildCardFace(studySession[_currentIndex], true),
+                        back:
+                            _buildCardFace(studySession[_currentIndex], false),
                       ),
                     ),
                   ),
@@ -1591,7 +1615,9 @@ class _LearningScreenState extends State<LearningScreen> {
                       Expanded(
                           child: _buildButton(
                               "ידעתי!",
-                              widget.onlyFailed ? Colors.redAccent : Colors.blue,
+                              widget.onlyFailed
+                                  ? Colors.redAccent
+                                  : Colors.blue,
                               Colors.white,
                               () => updateWordProgress(true))),
                     ],
@@ -1605,8 +1631,9 @@ class _LearningScreenState extends State<LearningScreen> {
   Widget _buildCardFace(Word word, bool isFront) {
     bool isDark = Theme.of(context).brightness == Brightness.dark;
     Color unitColor = getUnitColor(word.unitNumber, isDark);
-    Color cardColor =
-        isFront ? unitColor : (isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF5F5F5));
+    Color cardColor = isFront
+        ? unitColor
+        : (isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF5F5F5));
     Color textColor = isFront
         ? getTextColorForBackground(word.unitNumber, isDark)
         : (isDark ? Colors.white : Colors.black87);
@@ -1890,7 +1917,8 @@ class FlipCard extends StatefulWidget {
   State<FlipCard> createState() => _FlipCardState();
 }
 
-class _FlipCardState extends State<FlipCard> with SingleTickerProviderStateMixin {
+class _FlipCardState extends State<FlipCard>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
   bool isFront = true;
@@ -2060,7 +2088,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.camera_alt_outlined, color: Colors.purple),
+                leading:
+                    const Icon(Icons.camera_alt_outlined, color: Colors.purple),
                 title: const Text("הודעה באינסטגרם"),
                 onTap: () {
                   Navigator.pop(context);
@@ -2130,7 +2159,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 context, _slideRoute(const DeterminationScreen())),
           ),
           const Divider(),
-          _buildSectionHeader("קראת מילים (אנגלית)"),
+          _buildSectionHeader("הקראת מילים (אנגלית)"),
           ListTile(
             leading: const Icon(Icons.speed),
             title: const Text("מהירות דיבור"),
@@ -2192,8 +2221,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             leading: const Icon(Icons.info_outline),
             title: const Text("אודות האפליקציה"),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-            onTap: () => Navigator.push(
-                context, _slideRoute(const AboutScreen())),
+            onTap: () =>
+                Navigator.push(context, _slideRoute(const AboutScreen())),
           ),
         ],
       ),
@@ -2399,7 +2428,8 @@ class DeterminationScreen extends StatelessWidget {
                     )
                   ],
                 ),
-                child: const Icon(Icons.psychology, size: 60, color: Colors.white),
+                child:
+                    const Icon(Icons.psychology, size: 60, color: Colors.white),
               ),
               const SizedBox(height: 30),
               const Text(
@@ -2470,8 +2500,8 @@ class DeterminationScreen extends StatelessWidget {
                           color: Colors.white)),
                   const SizedBox(height: 4),
                   Text(subtitle,
-                      style: const TextStyle(
-                          fontSize: 14, color: Colors.white70)),
+                      style:
+                          const TextStyle(fontSize: 14, color: Colors.white70)),
                 ],
               ),
             ),
@@ -2496,8 +2526,7 @@ class FailedWordsSelectorScreen extends StatefulWidget {
       _FailedWordsSelectorScreenState();
 }
 
-class _FailedWordsSelectorScreenState
-    extends State<FailedWordsSelectorScreen> {
+class _FailedWordsSelectorScreenState extends State<FailedWordsSelectorScreen> {
   Map<int, int> failedCountsPerUnit = {};
   int totalFailed = 0;
   bool isLoading = true;
@@ -2553,7 +2582,8 @@ class _FailedWordsSelectorScreenState
                             jsonPath: widget.jsonPath, onlyFailed: true)));
                   },
                   child: Container(
-                    margin: const EdgeInsets.only(bottom: 25, left: 5, right: 5),
+                    margin:
+                        const EdgeInsets.only(bottom: 25, left: 5, right: 5),
                     padding: const EdgeInsets.symmetric(
                         horizontal: 15, vertical: 14),
                     decoration: BoxDecoration(
@@ -2598,7 +2628,8 @@ class _FailedWordsSelectorScreenState
                   ),
                 ),
                 const Text("בחר יחידה ספציפית:",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    style:
+                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 15),
                 ...sortedUnits.map((unitNum) {
                   int count = failedCountsPerUnit[unitNum]!;
