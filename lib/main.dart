@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -14,6 +16,188 @@ import 'package:url_launcher/url_launcher.dart';
 // הגדרות גלובליות
 // ==========================================
 const int currentTermsVersion = 2;
+
+// ==========================================
+// הגדרות רכישה
+// ==========================================
+const String kFullVersionProductId = 'milometry_full_version';
+
+// ==========================================
+// PURCHASE MANAGER
+// ==========================================
+class PurchaseManager {
+  static final PurchaseManager _instance = PurchaseManager._internal();
+  factory PurchaseManager() => _instance;
+  PurchaseManager._internal();
+
+  final ValueNotifier<bool> isPro = ValueNotifier(false);
+  StreamSubscription<List<PurchaseDetails>>? _subscription;
+  ProductDetails? _productDetails;
+
+  Future<void> init() async {
+    final prefs = await SharedPreferences.getInstance();
+    isPro.value = prefs.getBool('is_pro') ?? false;
+
+    final bool available = await InAppPurchase.instance.isAvailable();
+    if (!available) return;
+
+    // האזנה לעדכוני רכישה
+    _subscription = InAppPurchase.instance.purchaseStream.listen(
+      _onPurchaseUpdate,
+      onError: (error) => print('Purchase stream error: $error'),
+    );
+
+    // טעינת פרטי המוצר מהחנות
+    await _loadProductDetails();
+  }
+
+  Future<void> _loadProductDetails() async {
+    final ProductDetailsResponse response = await InAppPurchase.instance
+        .queryProductDetails({kFullVersionProductId});
+    if (response.productDetails.isNotEmpty) {
+      _productDetails = response.productDetails.first;
+    }
+  }
+
+  ProductDetails? get productDetails => _productDetails;
+
+  Future<void> _onPurchaseUpdate(List<PurchaseDetails> purchases) async {
+    for (final purchase in purchases) {
+      if (purchase.productID == kFullVersionProductId) {
+        if (purchase.status == PurchaseStatus.purchased ||
+            purchase.status == PurchaseStatus.restored) {
+          await _setPro(true);
+        } else if (purchase.status == PurchaseStatus.error) {
+          print('Purchase error: ${purchase.error}');
+        }
+        if (purchase.pendingCompletePurchase) {
+          await InAppPurchase.instance.completePurchase(purchase);
+        }
+      }
+    }
+  }
+
+  Future<void> _setPro(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('is_pro', value);
+    isPro.value = value;
+  }
+
+  /// מפעיל את תהליך הרכישה
+  Future<bool> buyFullVersion(BuildContext context) async {
+    final bool available = await InAppPurchase.instance.isAvailable();
+    if (!available) {
+      _showError(context, 'החנות אינה זמינה כרגע. נסה שוב מאוחר יותר.');
+      return false;
+    }
+    if (_productDetails == null) {
+      await _loadProductDetails();
+    }
+    if (_productDetails == null) {
+      _showError(context, 'לא הצלחנו לטעון את פרטי הרכישה. נסה שוב.');
+      return false;
+    }
+    final PurchaseParam param = PurchaseParam(productDetails: _productDetails!);
+    return await InAppPurchase.instance.buyNonConsumable(purchaseParam: param);
+  }
+
+  /// שחזור רכישות קודמות
+  Future<void> restorePurchases(BuildContext context) async {
+    final bool available = await InAppPurchase.instance.isAvailable();
+    if (!available) {
+      _showError(context, 'החנות אינה זמינה כרגע.');
+      return;
+    }
+    await InAppPurchase.instance.restorePurchases();
+  }
+
+  void _showError(BuildContext context, String message) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  void dispose() {
+    _subscription?.cancel();
+  }
+}
+
+// ==========================================
+// STREAK MANAGER
+// ==========================================
+class StreakManager {
+  static final StreakManager _instance = StreakManager._internal();
+  factory StreakManager() => _instance;
+  StreakManager._internal();
+
+  final ValueNotifier<int> currentStreak = ValueNotifier(0);
+  int longestStreak = 0;
+  int todayWordsStudied = 0;
+
+  Future<void> init() async {
+    final prefs = await SharedPreferences.getInstance();
+    currentStreak.value = prefs.getInt('streak_current') ?? 0;
+    longestStreak = prefs.getInt('streak_longest') ?? 0;
+
+    final String today = _dateKey(DateTime.now());
+    final String yesterday =
+        _dateKey(DateTime.now().subtract(const Duration(days: 1)));
+    final String? lastDate = prefs.getString('streak_last_date');
+
+    // אם עברו יותר מיום — מאפסים את הרצף
+    if (lastDate != null && lastDate != today && lastDate != yesterday) {
+      currentStreak.value = 0;
+      await prefs.setInt('streak_current', 0);
+    }
+
+    todayWordsStudied = prefs.getInt('streak_today_$today') ?? 0;
+  }
+
+  Future<void> recordStudySession(int wordsStudied) async {
+    if (wordsStudied <= 0) return;
+    final prefs = await SharedPreferences.getInstance();
+    final String today = _dateKey(DateTime.now());
+    final String yesterday =
+        _dateKey(DateTime.now().subtract(const Duration(days: 1)));
+    final String? lastDate = prefs.getString('streak_last_date');
+
+    // עדכון מספר מילים היום
+    final int updatedCount =
+        (prefs.getInt('streak_today_$today') ?? 0) + wordsStudied;
+    await prefs.setInt('streak_today_$today', updatedCount);
+    todayWordsStudied = updatedCount;
+
+    // עדכון רצף
+    if (lastDate == today) {
+      // כבר למד היום — לא משנים את הרצף
+    } else if (lastDate == null || lastDate == yesterday) {
+      // למד אתמול (או ראשון בכלל) — מגדילים רצף
+      final int newStreak = currentStreak.value + 1;
+      currentStreak.value = newStreak;
+      await prefs.setInt('streak_current', newStreak);
+      if (newStreak > longestStreak) {
+        longestStreak = newStreak;
+        await prefs.setInt('streak_longest', longestStreak);
+      }
+    } else {
+      // פספס יום — מאפסים לרצף של 1
+      currentStreak.value = 1;
+      await prefs.setInt('streak_current', 1);
+    }
+
+    await prefs.setString('streak_last_date', today);
+  }
+
+  Future<List<bool>> getLast7DaysActivity() async {
+    final prefs = await SharedPreferences.getInstance();
+    return List.generate(7, (i) {
+      final date = _dateKey(DateTime.now().subtract(Duration(days: 6 - i)));
+      return (prefs.getInt('streak_today_$date') ?? 0) > 0;
+    });
+  }
+
+  String _dateKey(DateTime d) =>
+      '${d.year}${d.month.toString().padLeft(2, '0')}${d.day.toString().padLeft(2, '0')}';
+}
 
 // ==========================================
 // ANIMATION HELPER: כפתור עם אפקט לחיצה
@@ -124,54 +308,58 @@ class ThemeManager {
 // ==========================================
 // 2. Color Palette Helper
 // ==========================================
+// Unit colors use a categorical (non-sequential) palette so no unit
+// reads as "harder" or "easier" than another based on color alone.
+// Hue order: Indigo → Teal → Pink → Blue → DeepOrange →
+//            Purple → Green → Amber → Cyan → Brown
 Color getUnitColor(int unit, bool isDark) {
   if (isDark) {
     switch (unit) {
       case 1:
-        return const Color(0xFF006064);
+        return const Color(0xFF303F9F); // Indigo 700
       case 2:
-        return const Color(0xFF00838F);
+        return const Color(0xFF00796B); // Teal 700
       case 3:
-        return const Color(0xFF0097A7);
+        return const Color(0xFFAD1457); // Pink 800
       case 4:
-        return const Color(0xFF00ACC1);
+        return const Color(0xFF1565C0); // Blue 800
       case 5:
-        return const Color(0xFF00BCD4);
+        return const Color(0xFFE64A19); // Deep Orange 700
       case 6:
-        return const Color(0xFFF57F17);
+        return const Color(0xFF6A1B9A); // Purple 800
       case 7:
-        return const Color(0xFFE65100);
+        return const Color(0xFF2E7D32); // Green 800
       case 8:
-        return const Color(0xFFBF360C);
+        return const Color(0xFFF9A825); // Amber 800
       case 9:
-        return const Color(0xFF3E2723);
+        return const Color(0xFF00838F); // Cyan 700
       case 10:
-        return const Color(0xFFB71C1C);
+        return const Color(0xFF4E342E); // Brown 800
       default:
         return const Color(0xFF424242);
     }
   } else {
     switch (unit) {
       case 1:
-        return const Color(0xFFE0F7FA);
+        return const Color(0xFFC5CAE9); // Indigo 100
       case 2:
-        return const Color(0xFFB2EBF2);
+        return const Color(0xFFB2DFDB); // Teal 100
       case 3:
-        return const Color(0xFF80DEEA);
+        return const Color(0xFFF8BBD0); // Pink 100
       case 4:
-        return const Color(0xFF4DD0E1);
+        return const Color(0xFFBBDEFB); // Blue 100
       case 5:
-        return const Color(0xFF26C6DA);
+        return const Color(0xFFFFCCBC); // Deep Orange 100
       case 6:
-        return const Color(0xFFFFD54F);
+        return const Color(0xFFE1BEE7); // Purple 100
       case 7:
-        return const Color(0xFFFFB74D);
+        return const Color(0xFFC8E6C9); // Green 100
       case 8:
-        return const Color(0xFFFF8A65);
+        return const Color(0xFFFFECB3); // Amber 100
       case 9:
-        return const Color(0xFFF4511E);
+        return const Color(0xFFB2EBF2); // Cyan 100
       case 10:
-        return const Color(0xFFB71C1C);
+        return const Color(0xFFD7CCC8); // Brown 100
       default:
         return Colors.white;
     }
@@ -180,7 +368,7 @@ Color getUnitColor(int unit, bool isDark) {
 
 Color getTextColorForBackground(int unit, bool isDark) {
   if (isDark) return Colors.white;
-  if (unit >= 9) return Colors.white;
+  // All light-theme pastels (100-range) are light enough for black text
   return Colors.black87;
 }
 
@@ -328,7 +516,9 @@ class ProgressManager {
             'repetitions': lvl,
             'interval': 1,
             'easinessFactor': 2.5,
-            'nextReview': DateTime.now()
+            // Fix: use a future date so known words don't immediately
+            // reappear in practice after loading from legacy format.
+            'nextReview': DateTime.now().add(const Duration(days: 1))
           };
         }
       }
@@ -337,6 +527,11 @@ class ProgressManager {
 
   Map<String, dynamic>? getWordProgress(String uniqueId) {
     return _cache[uniqueId];
+  }
+
+  /// מחזיר עותק של כל ההתקדמות השמורה
+  Map<String, Map<String, dynamic>> getAllProgress() {
+    return Map.unmodifiable(_cache);
   }
 
   Future<void> updateWord(String uniqueId, int reps, int interval, double ef,
@@ -423,6 +618,8 @@ void main() async {
   await ThemeManager().init();
   await ProgressManager().init();
   await NotificationManager().init();
+  await PurchaseManager().init();
+  await StreakManager().init();
 
   final prefs = await SharedPreferences.getInstance();
   final int userAcceptedVersion = prefs.getInt('accepted_terms_version') ?? 0;
@@ -691,6 +888,62 @@ class _HomeScreenState extends State<HomeScreen>
                   child: Icon(Icons.settings_rounded,
                       color: isDark ? Colors.white70 : Colors.grey[700],
                       size: 26),
+                ),
+              ),
+            ),
+
+            // כפתור רצף (למעלה ימין)
+            Positioned(
+              top: 10,
+              right: 10,
+              child: ValueListenableBuilder<int>(
+                valueListenable: StreakManager().currentStreak,
+                builder: (context, streak, _) => AnimatedButton(
+                  onTap: () {
+                    if (PurchaseManager().isPro.value) {
+                      Navigator.push(
+                          context, _slideRoute(const StreakScreen()));
+                    } else {
+                      Navigator.push(
+                          context, _slideRoute(const PaywallScreen()));
+                    }
+                  },
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: streak > 0
+                          ? Colors.orange.withOpacity(isDark ? 0.25 : 0.15)
+                          : (isDark
+                              ? Colors.white.withOpacity(0.08)
+                              : Colors.white),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.08),
+                          blurRadius: 10,
+                          offset: const Offset(0, 3),
+                        )
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('🔥', style: TextStyle(fontSize: 18)),
+                        const SizedBox(width: 4),
+                        Text(
+                          '$streak',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: streak > 0
+                                ? Colors.orange
+                                : (isDark ? Colors.white54 : Colors.grey[500]),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -1321,6 +1574,8 @@ class _LearningScreenState extends State<LearningScreen> {
   bool isLoading = true;
   bool isReviewMode = false;
   int _currentIndex = 0;
+  int _wordsStudiedThisSession = 0;
+  bool _sessionRecorded = false;
   final FlutterTts flutterTts = FlutterTts();
 
   @override
@@ -1435,6 +1690,7 @@ class _LearningScreenState extends State<LearningScreen> {
             word.interval, word.easinessFactor, word.nextReview);
 
         if (knewIt) {
+          _wordsStudiedThisSession++;
           studySession.removeAt(_currentIndex);
         } else {
           studySession.removeAt(_currentIndex);
@@ -1446,6 +1702,12 @@ class _LearningScreenState extends State<LearningScreen> {
         _currentIndex = studySession.isNotEmpty ? studySession.length - 1 : 0;
       }
     });
+
+    // רישום הסשן לרצף כשנגמרות המילים
+    if (studySession.isEmpty && !isReviewMode && !_sessionRecorded) {
+      _sessionRecorded = true;
+      StreakManager().recordStudySession(_wordsStudiedThisSession);
+    }
   }
 
   void _nextCard() {
@@ -2023,7 +2285,970 @@ class AboutScreen extends StatelessWidget {
 }
 
 // ==========================================
-// 15. Settings Screen
+// 15. Stats Screen
+// ==========================================
+class StatsScreen extends StatefulWidget {
+  const StatsScreen({super.key});
+  @override
+  State<StatsScreen> createState() => _StatsScreenState();
+}
+
+class _StatsScreenState extends State<StatsScreen> {
+  bool _isLoading = true;
+
+  // סיכום כללי
+  int _totalWords = 0;
+  int _studiedWords = 0; // repetitions > 0
+  int _masteredWords = 0; // repetitions >= 3
+  int _weakWords = 0; // easinessFactor < 2.0 OR (progress!=null && reps==0)
+
+  // לפי שפה
+  int _hebrewTotal = 0, _hebrewStudied = 0;
+  int _englishTotal = 0, _englishStudied = 0;
+
+  // מילים חלשות
+  List<Map<String, dynamic>> _weakWordsList = [];
+
+  // 7 ימים אחרונים
+  List<int> _last7DaysCounts = List.filled(7, 0);
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStats();
+  }
+
+  Future<void> _loadStats() async {
+    final allProgress = ProgressManager().getAllProgress();
+
+    // טעינת שתי שפות
+    final hebrewData = await _loadJson('assets/hebrew.json', 'hebrew');
+    final englishData = await _loadJson('assets/english.json', 'english');
+    final allWords = [...hebrewData, ...englishData];
+
+    int total = 0, studied = 0, mastered = 0, weak = 0;
+    int hTotal = 0, hStudied = 0, eTotal = 0, eStudied = 0;
+    List<Map<String, dynamic>> weakList = [];
+
+    for (final w in allWords) {
+      total++;
+      final bool isHebrew = w['lang'] == 'hebrew';
+      if (isHebrew)
+        hTotal++;
+      else
+        eTotal++;
+
+      final progress = allProgress[w['uniqueId']];
+      if (progress == null) continue;
+
+      final int reps = progress['repetitions'] as int;
+      final double ef = progress['easinessFactor'] as double;
+
+      if (reps > 0) {
+        studied++;
+        if (isHebrew)
+          hStudied++;
+        else
+          eStudied++;
+      }
+      if (reps >= 3) mastered++;
+
+      final bool isWeak = (reps == 0) || (ef < 2.0);
+      if (isWeak) {
+        weak++;
+        weakList.add({
+          'term': w['term'],
+          'translation': w['translation'],
+          'ef': ef,
+          'reps': reps,
+          'lang': w['lang'],
+        });
+      }
+    }
+
+    // מיון מילים חלשות — הכי קשה ראשון (EF הכי נמוך)
+    weakList.sort((a, b) => (a['ef'] as double).compareTo(b['ef'] as double));
+
+    // 7 ימים אחרונים מ-SharedPreferences
+    final prefs = await SharedPreferences.getInstance();
+    final last7 = List.generate(7, (i) {
+      final d = DateTime.now().subtract(Duration(days: 6 - i));
+      final key =
+          'streak_today_${d.year}${d.month.toString().padLeft(2, '0')}${d.day.toString().padLeft(2, '0')}';
+      return prefs.getInt(key) ?? 0;
+    });
+
+    if (!mounted) return;
+    setState(() {
+      _totalWords = total;
+      _studiedWords = studied;
+      _masteredWords = mastered;
+      _weakWords = weak;
+      _hebrewTotal = hTotal;
+      _hebrewStudied = hStudied;
+      _englishTotal = eTotal;
+      _englishStudied = eStudied;
+      _weakWordsList = weakList;
+      _last7DaysCounts = last7;
+      _isLoading = false;
+    });
+  }
+
+  Future<List<Map<String, dynamic>>> _loadJson(String path, String lang) async {
+    try {
+      final raw = await rootBundle.loadString(path);
+      final data = json.decode(raw);
+      final list = data['words'] as List;
+      return list
+          .map((w) => {
+                'uniqueId': '${lang}_${w['id']}',
+                'term': w['term'] ?? '',
+                'translation': w['translation'] ?? '',
+                'lang': lang,
+              })
+          .toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    final int maxDay = _last7DaysCounts.isEmpty
+        ? 1
+        : (_last7DaysCounts.reduce((a, b) => a > b ? a : b)).clamp(1, 999);
+    final List<String> dayLabels = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳'];
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('סטטיסטיקות'), centerTitle: true),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : ListView(
+              padding: const EdgeInsets.all(20),
+              children: [
+                // ── כרטיסי סיכום ──────────────────────────
+                Row(children: [
+                  _statCard(
+                      isDark, '📖', '$_studiedWords', 'נלמדו', Colors.blue),
+                  const SizedBox(width: 10),
+                  _statCard(
+                      isDark, '⭐', '$_masteredWords', 'הושלמו', Colors.green),
+                  const SizedBox(width: 10),
+                  _statCard(
+                      isDark, '⚠️', '$_weakWords', 'חלשות', Colors.orange),
+                ]),
+
+                const SizedBox(height: 20),
+
+                // ── התקדמות לפי שפה ──────────────────────
+                _sectionTitle('התקדמות לפי שפה', isDark),
+                const SizedBox(height: 10),
+                _languageBar(isDark, 'עברית', _hebrewStudied, _hebrewTotal,
+                    const Color(0xFF424242)),
+                const SizedBox(height: 10),
+                _languageBar(isDark, 'אנגלית', _englishStudied, _englishTotal,
+                    const Color(0xFF1B5E20)),
+
+                const SizedBox(height: 24),
+
+                // ── 7 ימים אחרונים ────────────────────────
+                _sectionTitle('מילים שלמדת — 7 ימים אחרונים', isDark),
+                const SizedBox(height: 12),
+                _card(
+                  isDark,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: List.generate(7, (i) {
+                      final count = _last7DaysCounts[i];
+                      final heightFrac = count / maxDay;
+                      final dayIdx = (DateTime.now()
+                              .subtract(Duration(days: 6 - i))
+                              .weekday) %
+                          7;
+                      final isToday = i == 6;
+                      return Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 3),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                count > 0 ? '$count' : '',
+                                style: TextStyle(
+                                    fontSize: 10,
+                                    color: isDark
+                                        ? Colors.white54
+                                        : Colors.black45),
+                              ),
+                              const SizedBox(height: 2),
+                              Container(
+                                height: (60 * heightFrac).clamp(4.0, 60.0),
+                                decoration: BoxDecoration(
+                                  color: isToday
+                                      ? Colors.orange
+                                      : (count > 0
+                                          ? Colors.blue
+                                          : (isDark
+                                              ? Colors.white12
+                                              : Colors.grey.shade200)),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                dayLabels[dayIdx],
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: isToday
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                    color: isToday
+                                        ? Colors.orange
+                                        : (isDark
+                                            ? Colors.white54
+                                            : Colors.grey)),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                // ── מילים לחיזוק ─────────────────────────
+                _sectionTitle(
+                    'מילים לחיזוק (${_weakWordsList.length})', isDark),
+                const SizedBox(height: 10),
+
+                if (_weakWordsList.isEmpty)
+                  _card(
+                    isDark,
+                    child: const Row(children: [
+                      Text('💪', style: TextStyle(fontSize: 28)),
+                      SizedBox(width: 12),
+                      Expanded(
+                          child: Text('אין מילים חלשות — כל הכבוד!',
+                              style: TextStyle(fontSize: 15))),
+                    ]),
+                  )
+                else
+                  ..._weakWordsList.take(50).map((w) {
+                    final double ef = w['ef'] as double;
+                    final int reps = w['reps'] as int;
+                    final Color dot = ef < 1.6
+                        ? Colors.red
+                        : ef < 2.0
+                            ? Colors.orange
+                            : Colors.amber;
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? Colors.white.withOpacity(0.06)
+                            : Colors.white,
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: isDark
+                            ? []
+                            : [
+                                BoxShadow(
+                                    color: Colors.black.withOpacity(0.05),
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 2))
+                              ],
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 10,
+                            height: 10,
+                            margin: const EdgeInsets.only(left: 10),
+                            decoration: BoxDecoration(
+                                color: dot, shape: BoxShape.circle),
+                          ),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(w['term'] as String,
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 15)),
+                                Text(w['translation'] as String,
+                                    style: TextStyle(
+                                        fontSize: 13,
+                                        color: isDark
+                                            ? Colors.white54
+                                            : Colors.black54)),
+                              ],
+                            ),
+                          ),
+                          Text(
+                            reps == 0 ? 'נכשל' : 'EF ${ef.toStringAsFixed(1)}',
+                            style: TextStyle(
+                                fontSize: 12,
+                                color: dot,
+                                fontWeight: FontWeight.w600),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+
+                if (_weakWordsList.length > 50)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      '+ ${_weakWordsList.length - 50} מילים נוספות',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          color: isDark ? Colors.white38 : Colors.black38,
+                          fontSize: 13),
+                    ),
+                  ),
+
+                const SizedBox(height: 20),
+              ],
+            ),
+    );
+  }
+
+  Widget _statCard(
+      bool isDark, String emoji, String value, String label, Color color) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+        decoration: BoxDecoration(
+          color: isDark ? Colors.white.withOpacity(0.06) : Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: isDark
+              ? []
+              : [
+                  BoxShadow(
+                      color: Colors.black.withOpacity(0.06),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3))
+                ],
+        ),
+        child: Column(children: [
+          Text(emoji, style: const TextStyle(fontSize: 24)),
+          const SizedBox(height: 4),
+          Text(value,
+              style: TextStyle(
+                  fontSize: 22, fontWeight: FontWeight.bold, color: color)),
+          Text(label,
+              style: TextStyle(
+                  fontSize: 12,
+                  color: isDark ? Colors.white54 : Colors.black45)),
+        ]),
+      ),
+    );
+  }
+
+  Widget _languageBar(
+      bool isDark, String label, int studied, int total, Color color) {
+    final double frac = total > 0 ? studied / total : 0.0;
+    return _card(
+      isDark,
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Text(label,
+              style:
+                  const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+          const Spacer(),
+          Text('$studied / $total',
+              style: TextStyle(
+                  fontSize: 13,
+                  color: isDark ? Colors.white54 : Colors.black45)),
+        ]),
+        const SizedBox(height: 8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(6),
+          child: LinearProgressIndicator(
+            value: frac,
+            backgroundColor: isDark ? Colors.white12 : Colors.grey.shade200,
+            color: color,
+            minHeight: 10,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text('${(frac * 100).toStringAsFixed(1)}% הושלמו',
+            style: TextStyle(
+                fontSize: 12, color: isDark ? Colors.white38 : Colors.black38)),
+      ]),
+    );
+  }
+
+  Widget _sectionTitle(String title, bool isDark) => Text(
+        title,
+        style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white70 : Colors.black87),
+      );
+
+  Widget _card(bool isDark, {required Widget child}) => Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isDark ? Colors.white.withOpacity(0.06) : Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: isDark
+              ? []
+              : [
+                  BoxShadow(
+                      color: Colors.black.withOpacity(0.06),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3))
+                ],
+        ),
+        child: child,
+      );
+}
+
+// ==========================================
+// 16. Streak Screen
+// ==========================================
+class StreakScreen extends StatefulWidget {
+  const StreakScreen({super.key});
+  @override
+  State<StreakScreen> createState() => _StreakScreenState();
+}
+
+class _StreakScreenState extends State<StreakScreen> {
+  List<bool> _activity = List.filled(7, false);
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final activity = await StreakManager().getLast7DaysActivity();
+    if (mounted) setState(() => _activity = activity);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    bool isDark = Theme.of(context).brightness == Brightness.dark;
+    final streak = StreakManager().currentStreak.value;
+    final longest = StreakManager().longestStreak;
+    final todayWords = StreakManager().todayWordsStudied;
+
+    final List<String> dayLabels = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳'];
+    final today = DateTime.now().weekday % 7; // 0=Sun
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('הרצף שלי'), centerTitle: true),
+      body: ListView(
+        padding: const EdgeInsets.all(24),
+        children: [
+          // כרטיס רצף ראשי
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 24),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFFFF6F00), Color(0xFFFF8F00)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.orange.withOpacity(0.4),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                )
+              ],
+            ),
+            child: Column(
+              children: [
+                const Text('🔥', style: TextStyle(fontSize: 56)),
+                const SizedBox(height: 8),
+                Text(
+                  '$streak',
+                  style: const TextStyle(
+                    fontSize: 64,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    height: 1,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'ימי רצף',
+                  style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.white70,
+                      fontWeight: FontWeight.w500),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          // שורת סטטיסטיקות
+          Row(
+            children: [
+              Expanded(
+                  child: _statCard(
+                isDark: isDark,
+                icon: Icons.emoji_events_rounded,
+                iconColor: Colors.amber,
+                label: 'שיא אישי',
+                value: '$longest ימים',
+              )),
+              const SizedBox(width: 14),
+              Expanded(
+                  child: _statCard(
+                isDark: isDark,
+                icon: Icons.menu_book_rounded,
+                iconColor: Colors.blue,
+                label: 'מילים היום',
+                value: '$todayWords',
+              )),
+            ],
+          ),
+
+          const SizedBox(height: 24),
+
+          // 7 ימים אחרונים
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: isDark ? Colors.white.withOpacity(0.06) : Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: isDark
+                  ? []
+                  : [
+                      BoxShadow(
+                          color: Colors.black.withOpacity(0.06),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4))
+                    ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  '7 הימים האחרונים',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: List.generate(7, (i) {
+                    final active = _activity[i];
+                    final dayIndex = (DateTime.now()
+                            .subtract(Duration(days: 6 - i))
+                            .weekday) %
+                        7;
+                    final isToday = i == 6;
+                    return Column(
+                      children: [
+                        Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: active
+                                ? Colors.orange
+                                : (isDark
+                                    ? Colors.white12
+                                    : Colors.grey.shade200),
+                            border: isToday
+                                ? Border.all(color: Colors.orange, width: 2)
+                                : null,
+                          ),
+                          child: Center(
+                            child: active
+                                ? const Text('🔥',
+                                    style: TextStyle(fontSize: 16))
+                                : Icon(Icons.circle,
+                                    size: 8,
+                                    color: isDark
+                                        ? Colors.white24
+                                        : Colors.grey.shade400),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          dayLabels[dayIndex],
+                          style: TextStyle(
+                              fontSize: 12,
+                              color: isToday
+                                  ? Colors.orange
+                                  : (isDark ? Colors.white54 : Colors.grey)),
+                        ),
+                      ],
+                    );
+                  }),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          // הודעת עידוד
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? Colors.white.withOpacity(0.06)
+                  : Colors.orange.shade50,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              children: [
+                const Text('💪', style: TextStyle(fontSize: 28)),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    streak == 0
+                        ? 'התחל ללמוד היום כדי לפתוח רצף!'
+                        : streak < 3
+                            ? 'כל מסע מתחיל בצעד אחד. המשך כך!'
+                            : streak < 7
+                                ? 'רצף של $streak ימים — אתה בדרך הנכונה!'
+                                : 'מדהים! $streak ימים ברצף — אתה מכור ללמידה!',
+                    style: TextStyle(
+                        fontSize: 14,
+                        color:
+                            isDark ? Colors.white70 : Colors.orange.shade800),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 14),
+
+          // כפתור סטטיסטיקות מלאות
+          AnimatedButton(
+            onTap: () =>
+                Navigator.push(context, _slideRoute(const StatsScreen())),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 15),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? Colors.white.withOpacity(0.08)
+                    : Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(16),
+                border:
+                    Border.all(color: Colors.blue.withOpacity(0.3), width: 1),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.bar_chart_rounded,
+                      color: Colors.blue.shade400, size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    'ראה סטטיסטיקות מלאות',
+                    style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.blue.shade400),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _statCard({
+    required bool isDark,
+    required IconData icon,
+    required Color iconColor,
+    required String label,
+    required String value,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withOpacity(0.06) : Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: isDark
+            ? []
+            : [
+                BoxShadow(
+                    color: Colors.black.withOpacity(0.06),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4))
+              ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: iconColor, size: 28),
+          const SizedBox(height: 8),
+          Text(value,
+              style:
+                  const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+          Text(label,
+              style: TextStyle(
+                  fontSize: 12, color: isDark ? Colors.white54 : Colors.grey)),
+        ],
+      ),
+    );
+  }
+}
+
+// ==========================================
+// 16. Paywall Screen
+// ==========================================
+class PaywallScreen extends StatefulWidget {
+  const PaywallScreen({super.key});
+
+  @override
+  State<PaywallScreen> createState() => _PaywallScreenState();
+}
+
+class _PaywallScreenState extends State<PaywallScreen> {
+  bool _isLoading = false;
+
+  Future<void> _handlePurchase() async {
+    setState(() => _isLoading = true);
+    try {
+      await PurchaseManager().buyFullVersion(context);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _handleRestore() async {
+    setState(() => _isLoading = true);
+    try {
+      await PurchaseManager().restorePurchases(context);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('בודק רכישות קודמות...')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    bool isDark = Theme.of(context).brightness == Brightness.dark;
+    final productDetails = PurchaseManager().productDetails;
+    final priceText = productDetails?.price ?? '—';
+
+    return Scaffold(
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+          child: Column(
+            children: [
+              // כפתור סגירה
+              Align(
+                alignment: Alignment.centerLeft,
+                child: IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ),
+              const SizedBox(height: 8),
+              // לוגו / אמוג'י
+              Container(
+                width: 90,
+                height: 90,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF00BCD4), Color(0xFF006064)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: const Center(
+                  child: Text('📚', style: TextStyle(fontSize: 44)),
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'מילומטרי פרו',
+                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'פתח את כל היחידות ולמד בלי מגבלות',
+                style: TextStyle(
+                    fontSize: 16,
+                    color: isDark ? Colors.white70 : Colors.black54),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 32),
+              // תכולת גרסה חינמית
+              _buildTierCard(
+                isDark: isDark,
+                title: 'חינמי',
+                icon: Icons.lock_open_rounded,
+                color: isDark ? Colors.grey.shade700 : Colors.grey.shade200,
+                textColor: isDark ? Colors.white70 : Colors.black54,
+                features: const [
+                  'כל היחידות והמילים',
+                  'כל מצבי הלמידה',
+                  'מעקב התקדמות בסיסי',
+                ],
+              ),
+              const SizedBox(height: 14),
+              // תכולת גרסה מלאה
+              _buildTierCard(
+                isDark: isDark,
+                title: 'גרסה מלאה',
+                icon: Icons.workspace_premium_rounded,
+                color: const Color(0xFF006064),
+                textColor: Colors.white,
+                features: const [
+                  'רצף ימים + שיא אישי 🔥',
+                  'סטטיסטיקות: נלמדו, הושלמו, חלשות',
+                  'גרף 7 ימים + רשימת מילים חלשות',
+                  'רשימות מילים אישיות (בקרוב)',
+                  'תשלום חד-פעמי, לנצח',
+                ],
+                highlighted: true,
+              ),
+              const SizedBox(height: 36),
+              // כפתור רכישה
+              AnimatedButton(
+                onTap: _isLoading ? () {} : _handlePurchase,
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF00BCD4), Color(0xFF006064)],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
+                    borderRadius: BorderRadius.circular(18),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF006064).withOpacity(0.4),
+                        blurRadius: 14,
+                        offset: const Offset(0, 6),
+                      )
+                    ],
+                  ),
+                  child: _isLoading
+                      ? const Center(
+                          child: SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2.5,
+                            ),
+                          ),
+                        )
+                      : Text(
+                          priceText != '—'
+                              ? 'פתח גרסה מלאה — $priceText'
+                              : 'פתח גרסה מלאה',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              // שחזור רכישה
+              TextButton(
+                onPressed: _isLoading ? null : _handleRestore,
+                child: const Text(
+                  'שחזר רכישה קיימת',
+                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'תשלום חד-פעמי. ללא מנוי.',
+                style: TextStyle(
+                    fontSize: 12,
+                    color: isDark ? Colors.white38 : Colors.black38),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTierCard({
+    required bool isDark,
+    required String title,
+    required IconData icon,
+    required Color color,
+    required Color textColor,
+    required List<String> features,
+    bool highlighted = false,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(18),
+        border: highlighted
+            ? Border.all(color: const Color(0xFF00BCD4), width: 2)
+            : null,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: textColor, size: 22),
+              const SizedBox(width: 8),
+              Text(title,
+                  style: TextStyle(
+                      color: textColor,
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...features.map((f) => Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Row(
+                  children: [
+                    Icon(Icons.check_circle_outline,
+                        color: highlighted ? Colors.greenAccent : textColor,
+                        size: 18),
+                    const SizedBox(width: 8),
+                    Text(f, style: TextStyle(color: textColor, fontSize: 14)),
+                  ],
+                ),
+              )),
+        ],
+      ),
+    );
+  }
+}
+
+// ==========================================
+// 16. Settings Screen
 // ==========================================
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -2141,6 +3366,95 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: ListView(
         children: [
           const SizedBox(height: 20),
+          // --- שדרוג לגרסה מלאה ---
+          ValueListenableBuilder<bool>(
+            valueListenable: PurchaseManager().isPro,
+            builder: (context, isPro, _) {
+              if (isPro) {
+                return Column(children: [
+                  ListTile(
+                    leading: const Icon(Icons.workspace_premium_rounded,
+                        color: Colors.amber),
+                    title: const Text("גרסה מלאה פעילה ✓",
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: const Text("תודה על התמיכה!"),
+                  ),
+                  ListTile(
+                    leading:
+                        const Icon(Icons.bar_chart_rounded, color: Colors.blue),
+                    title: const Text("סטטיסטיקות"),
+                    subtitle: const Text("מילים נלמדו, חלשות, התקדמות"),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                    onTap: () => Navigator.push(
+                        context, _slideRoute(const StatsScreen())),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.local_fire_department,
+                        color: Colors.orange),
+                    title: const Text("רצף"),
+                    subtitle: const Text("הרצף היומי והשיא שלך"),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                    onTap: () => Navigator.push(
+                        context, _slideRoute(const StreakScreen())),
+                  ),
+                ]);
+              }
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    child: AnimatedButton(
+                      onTap: () => Navigator.push(
+                          context, _slideRoute(const PaywallScreen())),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF00BCD4), Color(0xFF006064)],
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                          ),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.workspace_premium_rounded,
+                                color: Colors.white),
+                            SizedBox(width: 8),
+                            Text(
+                              'שדרג לגרסה מלאה',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.restore, color: Colors.grey),
+                    title: const Text("שחזר רכישה"),
+                    subtitle: const Text("רכשת בעבר? שחזר כאן"),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                    onTap: () async {
+                      await PurchaseManager().restorePurchases(context);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text('בודק רכישות קודמות...')));
+                      }
+                    },
+                  ),
+                ],
+              );
+            },
+          ),
+          const Divider(),
           _buildSectionHeader("כללי"),
           SwitchListTile(
             title: const Text("מצב לילה"),
