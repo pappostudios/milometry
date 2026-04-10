@@ -497,7 +497,18 @@ class ProgressManager {
   }
 
   void _loadFromDisk() {
-    List<String> rawData = _prefs?.getStringList('userprogress') ?? [];
+    List<String>? rawData = _prefs?.getStringList('userprogress');
+    // Migrate from old key 'user_progress' if new key has no data
+    if (rawData == null || rawData.isEmpty) {
+      final legacyData = _prefs?.getStringList('user_progress');
+      if (legacyData != null && legacyData.isNotEmpty) {
+        rawData = legacyData;
+        // Migrate to new key and remove old one
+        _prefs?.setStringList('userprogress', rawData);
+        _prefs?.remove('user_progress');
+      }
+    }
+    rawData ??= [];
     _cache.clear();
     for (String record in rawData) {
       List<String> parts = record.split(':');
@@ -1628,18 +1639,49 @@ class _LearningScreenState extends State<LearningScreen> {
       }
     }
 
+    // Sort before setState so we can compute the restore index
+    if (widget.onlyFailed) {
+      sessionWords.shuffle();
+    } else {
+      sessionWords.sort((a, b) => a.nextReview.compareTo(b.nextReview));
+    }
+
+    // Restore session position: find where the user left off
+    int startIndex = 0;
+    if (!widget.onlyFailed) {
+      final prefs = await SharedPreferences.getInstance();
+      final String? lastWordId = prefs.getString('last_session_word_id');
+      if (lastWordId != null && sessionWords.isNotEmpty) {
+        // Exact match: user closed mid-card, word still in session
+        final exactIdx = sessionWords.indexWhere((w) => w.uniqueId == lastWordId);
+        if (exactIdx >= 0) {
+          startIndex = exactIdx;
+        } else {
+          // Word was answered and removed — find the next unseen word after it
+          final lastVocabPos = filteredTotal.indexWhere((w) => w.uniqueId == lastWordId);
+          if (lastVocabPos >= 0) {
+            final vocabPosMap = {
+              for (int i = 0; i < filteredTotal.length; i++) filteredTotal[i].uniqueId: i
+            };
+            for (int i = 0; i < sessionWords.length; i++) {
+              final vp = vocabPosMap[sessionWords[i].uniqueId] ?? -1;
+              if (sessionWords[i].repetitions == 0 && vp > lastVocabPos) {
+                startIndex = i;
+                break;
+              }
+            }
+          }
+        }
+      }
+    }
+
     if (!mounted) return;
     setState(() {
       fullVocabulary = filteredTotal;
       studySession = sessionWords;
-      if (widget.onlyFailed) {
-        studySession.shuffle();
-      } else {
-        studySession.sort((a, b) => a.nextReview.compareTo(b.nextReview));
-      }
       isLoading = false;
       isReviewMode = false;
-      _currentIndex = 0;
+      _currentIndex = startIndex;
     });
   }
 
@@ -1657,6 +1699,10 @@ class _LearningScreenState extends State<LearningScreen> {
   Future<void> updateWordProgress(bool knewIt) async {
     if (studySession.isEmpty) return;
     Word word = studySession[_currentIndex];
+
+    // Persist current position so the session can be resumed after restart
+    SharedPreferences.getInstance()
+        .then((prefs) => prefs.setString('last_session_word_id', word.uniqueId));
 
     setState(() {
       if (isReviewMode && !widget.onlyFailed) {
@@ -2267,7 +2313,7 @@ class AboutScreen extends StatelessWidget {
               const SizedBox(height: 20),
               const Text("מילומטרי",
                   style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-              const Text("גרסה 1.0.1", style: TextStyle(color: Colors.grey)),
+              const Text("גרסה 1.0.2", style: TextStyle(color: Colors.grey)),
               const SizedBox(height: 30),
               const Text(
                   "ברוכים הבאים לאפליקציית מילומטרי!\n\nהאפליקציה נועדה לעזור לכם ללמוד מילים לפסיכומטרי בצורה כיפית וקלה.\nתוכלו לתרגל מילים בעברית ובאנגלית ולעקוב אחרי ההתקדמות שלכם.\n\nפותח על ידי Pappo Studios.\nבהצלחה במבחן!",
@@ -3082,7 +3128,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
               ),
               const SizedBox(height: 20),
               const Text(
-                'מילומטרי פרו',
+                '(בקרוב)מילומטרי פרו',
                 style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),
@@ -3118,8 +3164,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 textColor: Colors.white,
                 features: const [
                   'רצף ימים + שיא אישי 🔥',
-                  'סטטיסטיקות: נלמדו, הושלמו, חלשות',
-                  'גרף 7 ימים + רשימת מילים חלשות',
+                  'סטטיסטיקות: תדעו מה בדיוק צריך לחזק',
                   'רשימות מילים אישיות (בקרוב)',
                   'תשלום חד-פעמי, לנצח',
                 ],
@@ -3128,7 +3173,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
               const SizedBox(height: 36),
               // כפתור רכישה
               AnimatedButton(
-                onTap: _isLoading ? () {} : _handlePurchase,
+                onTap: () {},
                 child: Container(
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 18),
@@ -3164,7 +3209,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                               : 'פתח גרסה מלאה',
                           textAlign: TextAlign.center,
                           style: const TextStyle(
-                            color: Colors.white,
+                            color: Colors.white70,
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
@@ -3174,7 +3219,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
               const SizedBox(height: 16),
               // שחזור רכישה
               TextButton(
-                onPressed: _isLoading ? null : _handleRestore,
+                onPressed: null,
                 child: const Text(
                   'שחזר רכישה קיימת',
                   style: TextStyle(fontSize: 14, color: Colors.grey),
@@ -3436,7 +3481,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ),
                   ),
-                  ListTile(
+                  /*ListTile(
                     leading: const Icon(Icons.restore, color: Colors.grey),
                     title: const Text("שחזר רכישה"),
                     subtitle: const Text("רכשת בעבר? שחזר כאן"),
@@ -3449,7 +3494,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 content: Text('בודק רכישות קודמות...')));
                       }
                     },
-                  ),
+                  ),*/
                 ],
               );
             },
