@@ -4,10 +4,16 @@ workflows:
     instance_type: mac_mini_m2
     max_build_duration: 120
 
+    integrations:
+      app_store_connect: Erez Pappo Apple Dev
+
     environment:
       flutter: stable
       xcode: latest
       cocoapods: default
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.pappostudios.milometry
       vars:
         BUNDLE_ID: "com.pappostudios.milometry"
 
@@ -15,8 +21,9 @@ workflows:
       events:
         - push
       branch:
-        include:
-          - main
+        patterns:
+          - pattern: "main"
+            include: true
 
     scripts:
       - name: Get Flutter dependencies
@@ -24,26 +31,19 @@ workflows:
 
       - name: Build Flutter for iOS
         script: |
-          flutter build ios \
-            --debug \
-            --flavor ios-production \
-            -t lib/main_prod.dart
+          flutter build ipa \
+            --release \
+            --export-options-plist=/Users/builder/export_options.plist
 
       - name: Build Flutter for Android
         script: |
           flutter build appbundle \
-            --debug \
-            --flavor android-production \
-            -t lib/main_prod.dart
+            --release
 
     artifacts:
-      - build/ios/iphoneos/*.app
-      - build/app/outputs/bundle/androidProductionRelease/app-android-production-release.aab
-
-    integrations:
-      app_store_connect: $APP_STORE_CONNECT_API_KEY
+      - build/ios/ipa/*.ipa
+      - build/app/outputs/bundle/release/*.aab
 
     publishing:
       app_store_connect:
-        bundle_id: com.pappostudios.milometry
-        ipa_location: build/ios/iphoneos/Runner.ipa
+        auth: integration
