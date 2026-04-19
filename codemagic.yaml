@@ -1,6 +1,6 @@
 workflows:
-  ios-workflow:
-    name: iOS Workflow
+  default-workflow:
+    name: Default Workflow
     instance_type: mac_mini_m2
     max_build_duration: 120
 
@@ -8,68 +8,42 @@ workflows:
       flutter: stable
       xcode: latest
       cocoapods: default
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.pappostudios.milometry
       vars:
         BUNDLE_ID: "com.pappostudios.milometry"
-        APP_NAME: "Milometry"
 
     triggering:
       events:
         - push
       branch:
-        pattern: "main"
-        include: true
+        include:
+          - main
 
     scripts:
       - name: Get Flutter dependencies
         script: flutter pub get
 
-      - name: Build iOS release
+      - name: Build Flutter for iOS
         script: |
-          flutter build ipa \
-            --release \
-            --export-options-plist=/Users/builder/export_options.plist
+          flutter build ios \
+            --debug \
+            --flavor ios-production \
+            -t lib/main_prod.dart
+
+      - name: Build Flutter for Android
+        script: |
+          flutter build appbundle \
+            --debug \
+            --flavor android-production \
+            -t lib/main_prod.dart
 
     artifacts:
-      - build/ios/ipa/*.ipa
+      - build/ios/iphoneos/*.app
+      - build/app/outputs/bundle/androidProductionRelease/app-android-production-release.aab
+
+    integrations:
+      app_store_connect: $APP_STORE_CONNECT_API_KEY
 
     publishing:
       app_store_connect:
-        auth: integration
-
-  android-workflow:
-    name: Android Workflow
-    instance_type: mac_mini_m2
-    max_build_duration: 120
-
-    environment:
-      flutter: stable
-      vars:
-        APP_NAME: "Milometry"
-
-    triggering:
-      events:
-        - push
-      branch:
-        pattern: "main"
-        include: true
-
-    scripts:
-      - name: Get Flutter dependencies
-        script: flutter pub get
-
-      - name: Build Android App Bundle
-        script: |
-          flutter build appbundle \
-            --release
-
-    artifacts:
-      - build/app/outputs/bundle/release/*.aab
-
-    publishing:
-      google_play:
-        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
-        track: internal
-        submit_as_draft: true
+        bundle_id: com.pappostudios.milometry
+        ipa_location: build/ios/iphoneos/Runner.ipa
