@@ -17,14 +17,6 @@ workflows:
       vars:
         BUNDLE_ID: "com.pappostudios.milometry"
 
-    triggering:
-      events:
-        - push
-      branch:
-        patterns:
-          - pattern: "main"
-            include: true
-
     scripts:
       - name: Get Flutter dependencies
         script: flutter pub get
