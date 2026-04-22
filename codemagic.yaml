@@ -9,7 +9,7 @@ workflows:
 
     environment:
       flutter: stable
-      xcode: latest
+      xcode: 16.2
       cocoapods: default
       ios_signing:
         distribution_type: app_store
