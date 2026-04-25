@@ -10,6 +10,8 @@
 	<false/>
 	<key>GADApplicationIdentifier</key>
 	<string>ca-app-pub-3533479369162122~2268107708</string>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>האפליקציה משתמשת במזהה המכשיר להצגת פרסומות מותאמות אישית.</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
