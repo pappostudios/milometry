@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_tts/flutter_tts.dart';
@@ -119,6 +121,153 @@ class PurchaseManager {
   void dispose() {
     _subscription?.cancel();
   }
+
+  /// FOR TESTING ONLY – instantly simulates paid/free state without going
+  /// through the store.  Guarded by [kDebugMode] so the tree-shaker removes
+  /// it entirely from release builds.
+  Future<void> setProDebug(bool value) async {
+    if (!kDebugMode) return;
+    await _setPro(value);
+  }
+}
+
+// ==========================================
+// AD MANAGER
+// ==========================================
+
+class _AdIds {
+  // 🔧 Set to false when AdMob account is approved (24–48h after creation)
+  static const bool _useTestIds = true;
+
+  static const String androidBanner = _useTestIds
+      ? 'ca-app-pub-3940256099942544/6300978111' // Google test ID
+      : 'ca-app-pub-3533479369162122/2030356445'; // real ID
+  static const String androidInterstitial = _useTestIds
+      ? 'ca-app-pub-3940256099942544/1033173712' // Google test ID
+      : 'ca-app-pub-3533479369162122/1180309203'; // real ID
+  static const String iosBanner = _useTestIds
+      ? 'ca-app-pub-3940256099942544/2934735716' // Google test ID
+      : 'ca-app-pub-3940256099942544/2934735716'; // TODO: real iOS ID
+  static const String iosInterstitial = _useTestIds
+      ? 'ca-app-pub-3940256099942544/4411468910' // Google test ID
+      : 'ca-app-pub-3940256099942544/4411468910'; // TODO: real iOS ID
+
+  static String get banner =>
+      defaultTargetPlatform == TargetPlatform.iOS ? iosBanner : androidBanner;
+  static String get interstitial => defaultTargetPlatform == TargetPlatform.iOS
+      ? iosInterstitial
+      : androidInterstitial;
+}
+
+class AdManager {
+  static final AdManager _instance = AdManager._internal();
+  factory AdManager() => _instance;
+  AdManager._internal();
+
+  InterstitialAd? _interstitialAd;
+  bool _interstitialReady = false;
+
+  Future<void> init() async {
+    await MobileAds.instance.initialize();
+    _loadInterstitial();
+  }
+
+  bool get _adsEnabled => !PurchaseManager().isPro.value;
+
+  // ── באנר ──────────────────────────────────────────────────────
+  /// מחזיר ווידג'ט באנר עם ניהול מחזור חיים תקין.
+  Widget buildBanner() {
+    if (!_adsEnabled) return const SizedBox.shrink();
+    return const _BannerAdWidget();
+  }
+
+  // ── אינטרסטיציאל ──────────────────────────────────────────────
+  void _loadInterstitial() {
+    InterstitialAd.load(
+      adUnitId: _AdIds.interstitial,
+      request: const AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (ad) {
+          _interstitialAd = ad;
+          _interstitialReady = true;
+          ad.fullScreenContentCallback = FullScreenContentCallback(
+            onAdDismissedFullScreenContent: (ad) {
+              ad.dispose();
+              _interstitialReady = false;
+              _loadInterstitial(); // טעינה מחדש לסשן הבא
+            },
+            onAdFailedToShowFullScreenContent: (ad, error) {
+              ad.dispose();
+              _interstitialReady = false;
+              _loadInterstitial();
+            },
+          );
+        },
+        onAdFailedToLoad: (error) {
+          print('Interstitial failed to load: $error');
+          _interstitialReady = false;
+        },
+      ),
+    );
+  }
+
+  /// מציג אינטרסטיציאל אם יש מודעה מוכנה ו-isPro=false
+  void showInterstitial() {
+    if (!_adsEnabled || !_interstitialReady || _interstitialAd == null) return;
+    _interstitialAd!.show();
+    _interstitialReady = false;
+  }
+
+  void dispose() {
+    _interstitialAd?.dispose();
+  }
+}
+
+// ── ווידג'ט באנר עם ניהול מחזור חיים ──────────────────────────
+class _BannerAdWidget extends StatefulWidget {
+  const _BannerAdWidget();
+  @override
+  State<_BannerAdWidget> createState() => _BannerAdWidgetState();
+}
+
+class _BannerAdWidgetState extends State<_BannerAdWidget> {
+  BannerAd? _ad;
+  bool _loaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _ad = BannerAd(
+      adUnitId: _AdIds.banner,
+      size: AdSize.banner,
+      request: const AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (_) {
+          if (mounted) setState(() => _loaded = true);
+        },
+        onAdFailedToLoad: (ad, error) {
+          ad.dispose();
+          print('Banner failed to load: $error');
+        },
+      ),
+    )..load();
+  }
+
+  @override
+  void dispose() {
+    _ad?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_loaded || _ad == null) return const SizedBox.shrink();
+    return SizedBox(
+      width: _ad!.size.width.toDouble(),
+      height: _ad!.size.height.toDouble(),
+      child: AdWidget(ad: _ad!),
+    );
+  }
 }
 
 // ==========================================
@@ -130,13 +279,18 @@ class StreakManager {
   StreakManager._internal();
 
   final ValueNotifier<int> currentStreak = ValueNotifier(0);
+  final ValueNotifier<int> dailyGoalNotifier = ValueNotifier(10);
+  final ValueNotifier<int> todayWordsNotifier = ValueNotifier(0);
   int longestStreak = 0;
   int todayWordsStudied = 0;
+  int dailyGoal = 10;
 
   Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
     currentStreak.value = prefs.getInt('streak_current') ?? 0;
     longestStreak = prefs.getInt('streak_longest') ?? 0;
+    dailyGoal = prefs.getInt('daily_goal') ?? 10;
+    dailyGoalNotifier.value = dailyGoal;
 
     final String today = _dateKey(DateTime.now());
     final String yesterday =
@@ -150,6 +304,14 @@ class StreakManager {
     }
 
     todayWordsStudied = prefs.getInt('streak_today_$today') ?? 0;
+    todayWordsNotifier.value = todayWordsStudied;
+  }
+
+  Future<void> setDailyGoal(int goal) async {
+    dailyGoal = goal;
+    dailyGoalNotifier.value = goal;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('daily_goal', goal);
   }
 
   Future<void> recordStudySession(int wordsStudied) async {
@@ -165,6 +327,7 @@ class StreakManager {
         (prefs.getInt('streak_today_$today') ?? 0) + wordsStudied;
     await prefs.setInt('streak_today_$today', updatedCount);
     todayWordsStudied = updatedCount;
+    todayWordsNotifier.value = updatedCount;
 
     // עדכון רצף
     if (lastDate == today) {
@@ -396,9 +559,9 @@ class NotificationManager {
         AndroidInitializationSettings('@mipmap/launcher_icon');
     const DarwinInitializationSettings initializationSettingsDarwin =
         DarwinInitializationSettings(
-      requestSoundPermission: true,
-      requestBadgePermission: true,
-      requestAlertPermission: true,
+      requestSoundPermission: false,
+      requestBadgePermission: false,
+      requestAlertPermission: false,
     );
     const InitializationSettings initializationSettings =
         InitializationSettings(
@@ -625,28 +788,39 @@ class Word {
 // 6. Main Entry Point
 // ==========================================
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await ThemeManager().init();
-  await ProgressManager().init();
-  await NotificationManager().init();
-  await PurchaseManager().init();
-  await StreakManager().init();
+  await runZonedGuarded(() async {
+    WidgetsFlutterBinding.ensureInitialized();
 
-  final prefs = await SharedPreferences.getInstance();
-  final int userAcceptedVersion = prefs.getInt('accepted_terms_version') ?? 0;
-  final bool hasChosenDetermination =
-      prefs.getBool('hasChosenDetermination') ?? false;
+    FlutterError.onError = (FlutterErrorDetails details) {
+      FlutterError.presentError(details);
+      debugPrint('FlutterError: ${details.exception}');
+    };
 
-  Widget firstScreen;
-  if (userAcceptedVersion != currentTermsVersion) {
-    firstScreen = const TermsOfServiceScreen();
-  } else if (!hasChosenDetermination) {
-    firstScreen = const DeterminationScreen();
-  } else {
-    firstScreen = const HomeScreen();
-  }
+    try { await ThemeManager().init(); } catch (e) { debugPrint('ThemeManager init error: $e'); }
+    try { await ProgressManager().init(); } catch (e) { debugPrint('ProgressManager init error: $e'); }
+    try { await NotificationManager().init(); } catch (e) { debugPrint('NotificationManager init error: $e'); }
+    try { await PurchaseManager().init(); } catch (e) { debugPrint('PurchaseManager init error: $e'); }
+    try { await AdManager().init(); } catch (e) { debugPrint('AdManager init error: $e'); }
+    try { await StreakManager().init(); } catch (e) { debugPrint('StreakManager init error: $e'); }
 
-  runApp(PsychoApp(startScreen: firstScreen));
+    final prefs = await SharedPreferences.getInstance();
+    final int userAcceptedVersion = prefs.getInt('accepted_terms_version') ?? 0;
+    final bool hasChosenDetermination =
+        prefs.getBool('hasChosenDetermination') ?? false;
+
+    Widget firstScreen;
+    if (userAcceptedVersion != currentTermsVersion) {
+      firstScreen = const TermsOfServiceScreen();
+    } else if (!hasChosenDetermination) {
+      firstScreen = const DeterminationScreen();
+    } else {
+      firstScreen = const HomeScreen();
+    }
+
+    runApp(PsychoApp(startScreen: firstScreen));
+  }, (error, stack) {
+    debugPrint('Uncaught zone error: $error\n$stack');
+  });
 }
 
 class PsychoApp extends StatelessWidget {
@@ -1069,6 +1243,12 @@ class _HomeScreenState extends State<HomeScreen>
             ),
           ],
         ),
+      ),
+      // באנר מודעה בתחתית — נעלם אוטומטית לגרסה פרו
+      bottomNavigationBar: ValueListenableBuilder<bool>(
+        valueListenable: PurchaseManager().isPro,
+        builder: (context, isPro, _) =>
+            isPro ? const SizedBox.shrink() : AdManager().buildBanner(),
       ),
     );
   }
@@ -1653,15 +1833,18 @@ class _LearningScreenState extends State<LearningScreen> {
       final String? lastWordId = prefs.getString('last_session_word_id');
       if (lastWordId != null && sessionWords.isNotEmpty) {
         // Exact match: user closed mid-card, word still in session
-        final exactIdx = sessionWords.indexWhere((w) => w.uniqueId == lastWordId);
+        final exactIdx =
+            sessionWords.indexWhere((w) => w.uniqueId == lastWordId);
         if (exactIdx >= 0) {
           startIndex = exactIdx;
         } else {
           // Word was answered and removed — find the next unseen word after it
-          final lastVocabPos = filteredTotal.indexWhere((w) => w.uniqueId == lastWordId);
+          final lastVocabPos =
+              filteredTotal.indexWhere((w) => w.uniqueId == lastWordId);
           if (lastVocabPos >= 0) {
             final vocabPosMap = {
-              for (int i = 0; i < filteredTotal.length; i++) filteredTotal[i].uniqueId: i
+              for (int i = 0; i < filteredTotal.length; i++)
+                filteredTotal[i].uniqueId: i
             };
             for (int i = 0; i < sessionWords.length; i++) {
               final vp = vocabPosMap[sessionWords[i].uniqueId] ?? -1;
@@ -1701,8 +1884,8 @@ class _LearningScreenState extends State<LearningScreen> {
     Word word = studySession[_currentIndex];
 
     // Persist current position so the session can be resumed after restart
-    SharedPreferences.getInstance()
-        .then((prefs) => prefs.setString('last_session_word_id', word.uniqueId));
+    SharedPreferences.getInstance().then(
+        (prefs) => prefs.setString('last_session_word_id', word.uniqueId));
 
     setState(() {
       if (isReviewMode && !widget.onlyFailed) {
@@ -1738,6 +1921,8 @@ class _LearningScreenState extends State<LearningScreen> {
         if (knewIt) {
           _wordsStudiedThisSession++;
           studySession.removeAt(_currentIndex);
+          // Count each known word immediately toward the daily goal
+          StreakManager().recordStudySession(1);
         } else {
           studySession.removeAt(_currentIndex);
           studySession.add(word);
@@ -1749,10 +1934,10 @@ class _LearningScreenState extends State<LearningScreen> {
       }
     });
 
-    // רישום הסשן לרצף כשנגמרות המילים
+    // הצגת מודעה כשנגמרות המילים
     if (studySession.isEmpty && !isReviewMode && !_sessionRecorded) {
       _sessionRecorded = true;
-      StreakManager().recordStudySession(_wordsStudiedThisSession);
+      AdManager().showInterstitial();
     }
   }
 
@@ -2780,12 +2965,99 @@ class _StreakScreenState extends State<StreakScreen> {
     if (mounted) setState(() => _activity = activity);
   }
 
+  void _showGoalPicker(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return ValueListenableBuilder<int>(
+          valueListenable: StreakManager().dailyGoalNotifier,
+          builder: (_, currentGoal, __) {
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 40),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'יעד יומי',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'כמה מילים תרצה ללמוד כל יום?',
+                    style: TextStyle(fontSize: 14, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 20),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    children: [5, 10, 20, 30].map((goal) {
+                      final selected = goal == currentGoal;
+                      return GestureDetector(
+                        onTap: () async {
+                          await StreakManager().setDailyGoal(goal);
+                          if (mounted) setState(() {});
+                          if (ctx.mounted) Navigator.pop(ctx);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 28, vertical: 14),
+                          decoration: BoxDecoration(
+                            color: selected
+                                ? Colors.orange
+                                : Colors.orange.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: selected
+                                  ? Colors.orange
+                                  : Colors.orange.withOpacity(0.3),
+                              width: 2,
+                            ),
+                          ),
+                          child: Column(
+                            children: [
+                              Text(
+                                '$goal',
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: selected
+                                      ? Colors.white
+                                      : Colors.orange.shade700,
+                                ),
+                              ),
+                              Text(
+                                'מילים',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: selected
+                                      ? Colors.white70
+                                      : Colors.orange.shade400,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     bool isDark = Theme.of(context).brightness == Brightness.dark;
     final streak = StreakManager().currentStreak.value;
     final longest = StreakManager().longestStreak;
-    final todayWords = StreakManager().todayWordsStudied;
 
     final List<String> dayLabels = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳'];
     final today = DateTime.now().weekday % 7; // 0=Sun
@@ -2854,13 +3126,12 @@ class _StreakScreenState extends State<StreakScreen> {
               )),
               const SizedBox(width: 14),
               Expanded(
-                  child: _statCard(
-                isDark: isDark,
-                icon: Icons.menu_book_rounded,
-                iconColor: Colors.blue,
-                label: 'מילים היום',
-                value: '$todayWords',
-              )),
+                child: ValueListenableBuilder<int>(
+                  valueListenable: StreakManager().todayWordsNotifier,
+                  builder: (_, todayWords, __) =>
+                      _goalCard(isDark: isDark, todayWords: todayWords),
+                ),
+              ),
             ],
           ),
 
@@ -3051,6 +3322,82 @@ class _StreakScreenState extends State<StreakScreen> {
       ),
     );
   }
+
+  Widget _goalCard({required bool isDark, required int todayWords}) {
+    return ValueListenableBuilder<int>(
+      valueListenable: StreakManager().dailyGoalNotifier,
+      builder: (_, goal, __) {
+        final progress = (todayWords / goal).clamp(0.0, 1.0);
+        final done = todayWords >= goal;
+        return GestureDetector(
+          onTap: () => _showGoalPicker(context),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: isDark ? Colors.white.withOpacity(0.06) : Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: isDark
+                  ? []
+                  : [
+                      BoxShadow(
+                          color: Colors.black.withOpacity(0.06),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4))
+                    ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    SizedBox(
+                      width: 28,
+                      height: 28,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          CircularProgressIndicator(
+                            value: progress,
+                            strokeWidth: 3,
+                            backgroundColor: isDark
+                                ? Colors.white12
+                                : Colors.orange.shade100,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                                done ? Colors.green : Colors.orange),
+                          ),
+                          if (done)
+                            const Center(
+                              child: Icon(Icons.check,
+                                  size: 14, color: Colors.green),
+                            ),
+                        ],
+                      ),
+                    ),
+                    const Spacer(),
+                    Icon(Icons.edit_rounded,
+                        size: 14,
+                        color: isDark ? Colors.white38 : Colors.grey.shade400),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '$todayWords/$goal',
+                  style: const TextStyle(
+                      fontSize: 22, fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  'יעד יומי',
+                  style: TextStyle(
+                      fontSize: 12,
+                      color: isDark ? Colors.white54 : Colors.grey),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
 
 // ==========================================
@@ -3152,6 +3499,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   'כל היחידות והמילים',
                   'כל מצבי הלמידה',
                   'מעקב התקדמות בסיסי',
+                  'מודעות פרסום',
                 ],
               ),
               const SizedBox(height: 14),
@@ -3163,9 +3511,10 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 color: const Color(0xFF006064),
                 textColor: Colors.white,
                 features: const [
+                  'ללא מודעות פרסום 🚫',
                   'רצף ימים + שיא אישי 🔥',
-                  'סטטיסטיקות: תדעו מה בדיוק צריך לחזק',
-                  'רשימות מילים אישיות (בקרוב)',
+                  'סטטיסטיקות: נלמדו, הושלמו, חלשות',
+                  'גרף 7 ימים + רשימת מילים חלשות',
                   'תשלום חד-פעמי, לנצח',
                 ],
                 highlighted: true,
@@ -3583,6 +3932,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onTap: () =>
                 Navigator.push(context, _slideRoute(const AboutScreen())),
           ),
+
+          // ── Debug-only: toggle paid / free mode without the store ──────────
+          if (kDebugMode) ...[
+            const Divider(thickness: 2, color: Colors.red),
+            _buildSectionHeader('🛠 Debug Testing'),
+            ValueListenableBuilder<bool>(
+              valueListenable: PurchaseManager().isPro,
+              builder: (context, isPro, _) => SwitchListTile(
+                secondary: Icon(
+                  isPro ? Icons.workspace_premium : Icons.money_off,
+                  color: isPro ? Colors.amber : Colors.grey,
+                ),
+                title: Text(isPro ? 'Paid Mode ✓' : 'Free Mode'),
+                subtitle: const Text('Simulate purchase state (debug only)'),
+                value: isPro,
+                onChanged: (val) async {
+                  await PurchaseManager().setProDebug(val);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text(val
+                          ? '✅ Paid Mode – ads hidden'
+                          : '🔓 Free Mode – ads visible'),
+                      backgroundColor: val ? Colors.green : Colors.orange,
+                    ));
+                  }
+                },
+              ),
+            ),
+          ],
         ],
       ),
     );
