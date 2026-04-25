@@ -1,45 +1,4 @@
 workflows:
-  default-workflow:
-    name: Default Workflow
-    instance_type: mac_mini_m2
-    max_build_duration: 120
-
-    integrations:
-      app_store_connect: Erez Pappo Apple Dev
-
-    environment:
-      flutter: beta
-      xcode: latest
-      cocoapods: default
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.pappostudios.milometry
-      vars:
-        BUNDLE_ID: "com.pappostudios.milometry"
-
-    scripts:
-      - name: Get Flutter dependencies
-        script: flutter pub get
-
-      - name: Build Flutter for iOS
-        script: |
-          flutter build ipa \
-            --release \
-            --export-options-plist=/Users/builder/export_options.plist
-
-      - name: Build Flutter for Android
-        script: |
-          flutter build appbundle \
-            --release
-
-    artifacts:
-      - build/ios/ipa/*.ipa
-      - build/app/outputs/bundle/release/*.aab
-
-    publishing:
-      app_store_connect:
-        auth: integration
-
   simulator-test:
     name: Simulator Test Build
     instance_type: mac_mini_m2
