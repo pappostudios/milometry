@@ -558,9 +558,9 @@ class NotificationManager {
         AndroidInitializationSettings('@mipmap/launcher_icon');
     const DarwinInitializationSettings initializationSettingsDarwin =
         DarwinInitializationSettings(
-      requestSoundPermission: false,
-      requestBadgePermission: false,
-      requestAlertPermission: false,
+      requestSoundPermission: true,
+      requestBadgePermission: true,
+      requestAlertPermission: true,
     );
     const InitializationSettings initializationSettings =
         InitializationSettings(
@@ -596,6 +596,11 @@ class NotificationManager {
           priority: Priority.high,
           icon: '@mipmap/launcher_icon',
         ),
+        iOS: DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+        ),
       ),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time,
@@ -620,6 +625,11 @@ class NotificationManager {
           importance: Importance.max,
           priority: Priority.high,
           icon: '@mipmap/launcher_icon',
+        ),
+        iOS: DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
         ),
       ),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
@@ -1774,10 +1784,10 @@ class _LearningScreenState extends State<LearningScreen> {
     loadJsonData();
   }
 
-  Future<void> speak(String text) async {
+  Future<void> speak(String text, String language) async {
     final prefs = await SharedPreferences.getInstance();
     double speed = prefs.getDouble('tts_speed') ?? 0.5;
-    await flutterTts.setLanguage("en-US");
+    await flutterTts.setLanguage(language == 'hebrew' ? 'he-IL' : 'en-US');
     await flutterTts.setSpeechRate(speed);
     await flutterTts.speak(text);
   }
@@ -2175,7 +2185,7 @@ class _LearningScreenState extends State<LearningScreen> {
             if (word.language == 'english')
               IconButton(
                   icon: Icon(Icons.volume_up, color: iconColor),
-                  onPressed: () => speak(word.term)),
+                  onPressed: () => speak(word.term, word.language)),
           ] else ...[
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -2250,8 +2260,8 @@ class SingleCardScreen extends StatefulWidget {
 class _SingleCardScreenState extends State<SingleCardScreen> {
   final FlutterTts flutterTts = FlutterTts();
 
-  Future<void> speak(String text) async {
-    await flutterTts.setLanguage("en-US");
+  Future<void> speak(String text, String language) async {
+    await flutterTts.setLanguage(language == 'hebrew' ? 'he-IL' : 'en-US');
     await flutterTts.speak(text);
   }
 
@@ -2369,7 +2379,7 @@ class _SingleCardScreenState extends State<SingleCardScreen> {
             if (word.language == 'english')
               IconButton(
                   icon: Icon(Icons.volume_up, color: iconColor, size: 30),
-                  onPressed: () => speak(word.term)),
+                  onPressed: () => speak(word.term, word.language)),
           ] else ...[
             Text(word.translation,
                 textAlign: TextAlign.center,
@@ -3521,7 +3531,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
               const SizedBox(height: 36),
               // כפתור רכישה
               AnimatedButton(
-                onTap: () {},
+                onTap: _handlePurchase,
                 child: Container(
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 18),
@@ -3567,7 +3577,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
               const SizedBox(height: 16),
               // שחזור רכישה
               TextButton(
-                onPressed: null,
+                onPressed: _handleRestore,
                 child: const Text(
                   'שחזר רכישה קיימת',
                   style: TextStyle(fontSize: 14, color: Colors.grey),
