@@ -19,6 +19,9 @@ import 'package:url_launcher/url_launcher.dart';
 // ==========================================
 const int currentTermsVersion = 2;
 
+// Set to true once real iOS AdMob unit IDs are added to _AdIds
+const bool kAdsEnabled = false;
+
 // ==========================================
 // הגדרות רכישה
 // ==========================================
@@ -171,7 +174,7 @@ class AdManager {
     _loadInterstitial();
   }
 
-  bool get _adsEnabled => !PurchaseManager().isPro.value;
+  bool get _adsEnabled => kAdsEnabled && !PurchaseManager().isPro.value;
 
   // ── באנר ──────────────────────────────────────────────────────
   /// מחזיר ווידג'ט באנר עם ניהול מחזור חיים תקין.
