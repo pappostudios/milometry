@@ -1,25 +1,39 @@
 workflows:
-  simulator-test:
-    name: Simulator Test Build
+  ios-release:
+    name: iOS Release Build
     instance_type: mac_mini_m2
     max_build_duration: 60
 
+    integrations:
+      app_store_connect: Erez Pappo Apple Dev  # Name this whatever you saved in Codemagic
+
     environment:
-      flutter: beta
+      flutter: stable
       xcode: latest
       cocoapods: default
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.pappostudios.milometry
 
     scripts:
       - name: Get Flutter dependencies
         script: flutter pub get
 
-      - name: Build iOS Simulator
+      - name: Install CocoaPods dependencies
         script: |
-          flutter build ios \
-            --simulator \
-            --debug
-          cd build/ios/iphonesimulator
-          zip -r milometry_simulator.zip Runner.app
+          cd ios
+          pod install
+
+      - name: Build iOS release IPA
+        script: |
+          flutter build ipa \
+            --release \
+            --export-options-plist=/Users/builder/export_options.plist
 
     artifacts:
-      - build/ios/iphonesimulator/milometry_simulator.zip
+      - build/ios/ipa/*.ipa
+
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
