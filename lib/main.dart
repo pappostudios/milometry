@@ -136,8 +136,7 @@ class PurchaseManager {
 // ==========================================
 
 class _AdIds {
-  // 🔧 Set to false when AdMob account is approved (24–48h after creation)
-  static const bool _useTestIds = true;
+  static const bool _useTestIds = false;
 
   static const String androidBanner = _useTestIds
       ? 'ca-app-pub-3940256099942544/6300978111' // Google test ID
