@@ -4,6 +4,10 @@
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>instagram</string>
+	</array>
 	<key>CFBundleDisplayName</key>
 	<string>מילומטרי</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
