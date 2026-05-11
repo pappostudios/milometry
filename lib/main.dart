@@ -170,6 +170,7 @@ class AdManager {
   bool _interstitialReady = false;
 
   Future<void> init() async {
+    if (!kAdsEnabled) return;
     await MobileAds.instance.initialize();
     _loadInterstitial();
   }
