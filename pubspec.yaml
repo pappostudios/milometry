@@ -1,7 +1,7 @@
 name: psycho_app
 description: A new Flutter project.
 publish_to: 'none'
-version: 1.0.2+24
+version: 1.0.2+25
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -12,16 +12,15 @@ dependencies:
   # ספריות חיצוניות
   cupertino_icons: ^1.0.8
   shared_preferences: ^2.2.0
-  flutter_tts: ^4.2.4
+  flutter_tts: ^4.0.0
   change_app_package_name: ^1.5.0
   flutter_localizations:
     sdk: flutter
   timezone: ^0.10.1
-  flutter_local_notifications: 19.5.0
+  flutter_local_notifications: ^19.0.0
   url_launcher: ^6.3.0
-  in_app_review: ^2.0.9
   in_app_purchase: ^3.2.0
-  google_mobile_ads: ^5.1.0
+  # google_mobile_ads: ^5.1.0  # Re-add when kAdsEnabled = true and real iOS ad unit IDs are set
 
 dev_dependencies:
   flutter_test:

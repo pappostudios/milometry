@@ -4,7 +4,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
+// import 'package:google_mobile_ads/google_mobile_ads.dart'; // Re-enable with kAdsEnabled
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_tts/flutter_tts.dart';
@@ -135,142 +135,21 @@ class PurchaseManager {
 }
 
 // ==========================================
-// AD MANAGER
+// AD MANAGER — stubbed out while kAdsEnabled = false.
+// To re-enable: uncomment google_mobile_ads in pubspec.yaml,
+// uncomment the import above, fill in real iOS ad unit IDs,
+// and restore the full AdManager implementation.
 // ==========================================
-
-class _AdIds {
-  static const bool _useTestIds = false;
-
-  static const String androidBanner = _useTestIds
-      ? 'ca-app-pub-3940256099942544/6300978111' // Google test ID
-      : 'ca-app-pub-3533479369162122/2030356445'; // real ID
-  static const String androidInterstitial = _useTestIds
-      ? 'ca-app-pub-3940256099942544/1033173712' // Google test ID
-      : 'ca-app-pub-3533479369162122/1180309203'; // real ID
-  static const String iosBanner = _useTestIds
-      ? 'ca-app-pub-3940256099942544/2934735716' // Google test ID
-      : 'ca-app-pub-3940256099942544/2934735716'; // TODO: real iOS ID
-  static const String iosInterstitial = _useTestIds
-      ? 'ca-app-pub-3940256099942544/4411468910' // Google test ID
-      : 'ca-app-pub-3940256099942544/4411468910'; // TODO: real iOS ID
-
-  static String get banner =>
-      defaultTargetPlatform == TargetPlatform.iOS ? iosBanner : androidBanner;
-  static String get interstitial => defaultTargetPlatform == TargetPlatform.iOS
-      ? iosInterstitial
-      : androidInterstitial;
-}
 
 class AdManager {
   static final AdManager _instance = AdManager._internal();
   factory AdManager() => _instance;
   AdManager._internal();
 
-  InterstitialAd? _interstitialAd;
-  bool _interstitialReady = false;
-
-  Future<void> init() async {
-    if (!kAdsEnabled) return;
-    await MobileAds.instance.initialize();
-    _loadInterstitial();
-  }
-
-  bool get _adsEnabled => kAdsEnabled && !PurchaseManager().isPro.value;
-
-  // ── באנר ──────────────────────────────────────────────────────
-  /// מחזיר ווידג'ט באנר עם ניהול מחזור חיים תקין.
-  Widget buildBanner() {
-    if (!_adsEnabled) return const SizedBox.shrink();
-    return const _BannerAdWidget();
-  }
-
-  // ── אינטרסטיציאל ──────────────────────────────────────────────
-  void _loadInterstitial() {
-    InterstitialAd.load(
-      adUnitId: _AdIds.interstitial,
-      request: const AdRequest(),
-      adLoadCallback: InterstitialAdLoadCallback(
-        onAdLoaded: (ad) {
-          _interstitialAd = ad;
-          _interstitialReady = true;
-          ad.fullScreenContentCallback = FullScreenContentCallback(
-            onAdDismissedFullScreenContent: (ad) {
-              ad.dispose();
-              _interstitialReady = false;
-              _loadInterstitial(); // טעינה מחדש לסשן הבא
-            },
-            onAdFailedToShowFullScreenContent: (ad, error) {
-              ad.dispose();
-              _interstitialReady = false;
-              _loadInterstitial();
-            },
-          );
-        },
-        onAdFailedToLoad: (error) {
-          print('Interstitial failed to load: $error');
-          _interstitialReady = false;
-        },
-      ),
-    );
-  }
-
-  /// מציג אינטרסטיציאל אם יש מודעה מוכנה ו-isPro=false
-  void showInterstitial() {
-    if (!_adsEnabled || !_interstitialReady || _interstitialAd == null) return;
-    _interstitialAd!.show();
-    _interstitialReady = false;
-  }
-
-  void dispose() {
-    _interstitialAd?.dispose();
-  }
-}
-
-// ── ווידג'ט באנר עם ניהול מחזור חיים ──────────────────────────
-class _BannerAdWidget extends StatefulWidget {
-  const _BannerAdWidget();
-  @override
-  State<_BannerAdWidget> createState() => _BannerAdWidgetState();
-}
-
-class _BannerAdWidgetState extends State<_BannerAdWidget> {
-  BannerAd? _ad;
-  bool _loaded = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _ad = BannerAd(
-      adUnitId: _AdIds.banner,
-      size: AdSize.banner,
-      request: const AdRequest(),
-      listener: BannerAdListener(
-        onAdLoaded: (_) {
-          if (mounted) setState(() => _loaded = true);
-        },
-        onAdFailedToLoad: (ad, error) {
-          ad.dispose();
-          print('Banner failed to load: $error');
-        },
-      ),
-    )..load();
-  }
-
-  @override
-  void dispose() {
-    _ad?.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (!_loaded || _ad == null) return const SizedBox.shrink();
-    return SizedBox(
-      width: _ad!.size.width.toDouble(),
-      height: _ad!.size.height.toDouble(),
-      child: AdWidget(ad: _ad!),
-    );
-  }
+  Future<void> init() async {}
+  Widget buildBanner() => const SizedBox.shrink();
+  void showInterstitial() {}
+  void dispose() {}
 }
 
 // ==========================================
