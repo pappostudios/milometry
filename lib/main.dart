@@ -7,7 +7,7 @@ import 'package:flutter/services.dart';
 // import 'package:google_mobile_ads/google_mobile_ads.dart'; // Re-enable with kAdsEnabled
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-// import 'package:flutter_tts/flutter_tts.dart'; // temporarily disabled - iOS 26 crash isolation
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
@@ -1659,6 +1659,8 @@ class _LearningScreenState extends State<LearningScreen> {
   int _currentIndex = 0;
   int _wordsStudiedThisSession = 0;
   bool _sessionRecorded = false;
+  final FlutterTts flutterTts = FlutterTts();
+
   @override
   void initState() {
     super.initState();
@@ -1666,8 +1668,6 @@ class _LearningScreenState extends State<LearningScreen> {
   }
 
   Future<void> speak(String text, String language) async {
-    // flutter_tts temporarily disabled for iOS 26 crash isolation
-    return;
     final prefs = await SharedPreferences.getInstance();
     double speed = prefs.getDouble('tts_speed') ?? 0.5;
     await flutterTts.setLanguage(language == 'hebrew' ? 'he-IL' : 'en-US');
@@ -2141,8 +2141,11 @@ class SingleCardScreen extends StatefulWidget {
 }
 
 class _SingleCardScreenState extends State<SingleCardScreen> {
+  final FlutterTts flutterTts = FlutterTts();
+
   Future<void> speak(String text, String language) async {
-    // flutter_tts temporarily disabled for iOS 26 crash isolation
+    await flutterTts.setLanguage(language == 'hebrew' ? 'he-IL' : 'en-US');
+    await flutterTts.speak(text);
   }
 
   @override
