@@ -31,6 +31,7 @@ workflows:
       - name: Install CocoaPods dependencies
         script: |
           cd ios
+          pod cache clean --all
           pod install
 
       - name: Build iOS release IPA
