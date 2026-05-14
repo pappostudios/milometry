@@ -14,8 +14,10 @@ import ObjectiveC
     if #available(iOS 26, *) {
       AppDelegate.swizzleFlutterVSyncClient()
     }
-    GeneratedPluginRegistrant.register(with: self)
+    // Call super first so FlutterViewController is created before plugin registration.
+    // On iOS 26, registrarForPlugin: returns nil if called before the ViewController exists.
     let launched = super.application(application, didFinishLaunchingWithOptions: launchOptions)
+    GeneratedPluginRegistrant.register(with: self)
     setupTtsChannel()
     return launched
   }
