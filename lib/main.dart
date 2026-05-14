@@ -4,15 +4,40 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-// import 'package:google_mobile_ads/google_mobile_ads.dart'; // Re-enable with kAdsEnabled
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_tts/flutter_tts.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:url_launcher/url_launcher.dart';
+
+// ==========================================
+// Native TTS — replaces flutter_tts which crashes on iOS 26.
+// AVSpeechSynthesizer is called via a method channel to AppDelegate.swift.
+// ==========================================
+class _NativeTts {
+  static const _channel = MethodChannel('com.pappostudios.milometry/tts');
+  String _language = 'en-US';
+  double _rate = 0.5;
+
+  Future<void> setLanguage(String lang) async { _language = lang; }
+  Future<void> setSpeechRate(double rate) async { _rate = rate; }
+
+  Future<void> speak(String text) async {
+    try {
+      await _channel.invokeMethod('speak', {
+        'text': text,
+        'language': _language,
+        'rate': _rate,
+      });
+    } catch (_) {}
+  }
+
+  Future<void> stop() async {
+    try { await _channel.invokeMethod('stop'); } catch (_) {}
+  }
+}
 
 // ==========================================
 // הגדרות גלובליות
@@ -1659,7 +1684,7 @@ class _LearningScreenState extends State<LearningScreen> {
   int _currentIndex = 0;
   int _wordsStudiedThisSession = 0;
   bool _sessionRecorded = false;
-  final FlutterTts flutterTts = FlutterTts();
+  final _NativeTts flutterTts = _NativeTts();
 
   @override
   void initState() {
@@ -2141,7 +2166,7 @@ class SingleCardScreen extends StatefulWidget {
 }
 
 class _SingleCardScreenState extends State<SingleCardScreen> {
-  final FlutterTts flutterTts = FlutterTts();
+  final _NativeTts flutterTts = _NativeTts();
 
   Future<void> speak(String text, String language) async {
     await flutterTts.setLanguage(language == 'hebrew' ? 'he-IL' : 'en-US');
