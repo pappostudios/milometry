@@ -8,7 +8,10 @@ workflows:
       app_store_connect: Erez Pappo Apple Dev  # Name this whatever you saved in Codemagic
 
     environment:
-      flutter: master
+      # Pinned to an exact iOS 26-capable stable release. Do NOT use `master` —
+      # Codemagic serves a stale pre-baked master snapshot whose bundled engine
+      # predates iOS 26 and crashes on launch (registrarForPlugin: returns nil).
+      flutter: 3.41.5
       xcode: latest
       cocoapods: default
       ios_signing:
@@ -16,6 +19,12 @@ workflows:
         bundle_identifier: com.pappostudios.milometry
 
     scripts:
+      - name: Refresh Flutter engine artifacts for iOS 26
+        script: |
+          flutter --version
+          flutter precache --ios --force --verbose
+          flutter --version
+
       - name: Get Flutter dependencies
         script: flutter pub get
 
