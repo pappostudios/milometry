@@ -6,6 +6,10 @@ import ObjectiveC
 @main
 @objc class AppDelegate: FlutterAppDelegate {
   private lazy var synthesizer = AVSpeechSynthesizer()
+  // Explicit engine so registrarForPlugin: works immediately on iOS 26.
+  // FlutterAppDelegate.registrarForPlugin: returns nil until a FlutterViewController
+  // attaches an engine, which is too late during didFinishLaunchingWithOptions.
+  private let engine = FlutterEngine(name: "milometry")
 
   override func application(
     _ application: UIApplication,
@@ -14,12 +18,21 @@ import ObjectiveC
     if #available(iOS 26, *) {
       AppDelegate.swizzleFlutterVSyncClient()
     }
-    // Call super first so FlutterViewController is created before plugin registration.
-    // On iOS 26, registrarForPlugin: returns nil if called before the ViewController exists.
-    let launched = super.application(application, didFinishLaunchingWithOptions: launchOptions)
-    GeneratedPluginRegistrant.register(with: self)
+    engine.run()
+    GeneratedPluginRegistrant.register(with: engine)
+
+    // Call super for Flutter lifecycle delegate setup.
+    // UIMainStoryboardFile is removed from Info.plist so super does not
+    // create a storyboard FlutterViewController that would conflict.
+    let result = super.application(application, didFinishLaunchingWithOptions: launchOptions)
+
+    let flutterVC = FlutterViewController(engine: engine, nibName: nil, bundle: nil)
+    window = UIWindow(frame: UIScreen.main.bounds)
+    window?.rootViewController = flutterVC
+    window?.makeKeyAndVisible()
+
     setupTtsChannel()
-    return launched
+    return result
   }
 
   private func setupTtsChannel() {
