@@ -3437,51 +3437,57 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 highlighted: true,
               ),
               const SizedBox(height: 36),
-              // כפתור רכישה
-              AnimatedButton(
-                onTap: _handlePurchase,
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 18),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF00BCD4), Color(0xFF006064)],
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                    ),
-                    borderRadius: BorderRadius.circular(18),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF006064).withOpacity(0.4),
-                        blurRadius: 14,
-                        offset: const Offset(0, 6),
-                      )
-                    ],
+              // כפתור רכישה — מוצג רק לאחר שפרטי המוצר נטענו
+              if (productDetails == null)
+                const SizedBox(
+                  height: 60,
+                  child: Center(
+                    child: CircularProgressIndicator(strokeWidth: 2.5),
                   ),
-                  child: _isLoading
-                      ? const Center(
-                          child: SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2.5,
+                )
+              else
+                AnimatedButton(
+                  onTap: _handlePurchase,
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF00BCD4), Color(0xFF006064)],
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                      ),
+                      borderRadius: BorderRadius.circular(18),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF006064).withOpacity(0.4),
+                          blurRadius: 14,
+                          offset: const Offset(0, 6),
+                        )
+                      ],
+                    ),
+                    child: _isLoading
+                        ? const Center(
+                            child: SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2.5,
+                              ),
+                            ),
+                          )
+                        : Text(
+                            'פתח גרסה מלאה — $priceText',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                        )
-                      : Text(
-                          priceText != '—'
-                              ? 'פתח גרסה מלאה — $priceText'
-                              : 'פתח גרסה מלאה',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                  ),
                 ),
-              ),
               const SizedBox(height: 16),
               // שחזור רכישה
               TextButton(
