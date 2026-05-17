@@ -91,6 +91,8 @@ class PurchaseManager {
 
   ProductDetails? get productDetails => _productDetails;
 
+  Future<void> reloadProductDetails() => _loadProductDetails();
+
   Future<void> _onPurchaseUpdate(List<PurchaseDetails> purchases) async {
     for (final purchase in purchases) {
       if (purchase.productID == kFullVersionProductId) {
@@ -3329,6 +3331,24 @@ class PaywallScreen extends StatefulWidget {
 
 class _PaywallScreenState extends State<PaywallScreen> {
   bool _isLoading = false;
+  bool _productLoadTimedOut = false;
+  Timer? _productLoadTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    if (PurchaseManager().productDetails == null) {
+      _productLoadTimer = Timer(const Duration(seconds: 10), () {
+        if (mounted) setState(() => _productLoadTimedOut = true);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _productLoadTimer?.cancel();
+    super.dispose();
+  }
 
   Future<void> _handlePurchase() async {
     setState(() => _isLoading = true);
@@ -3437,12 +3457,25 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 highlighted: true,
               ),
               const SizedBox(height: 36),
-              // כפתור רכישה — מוצג רק לאחר שפרטי המוצר נטענו
-              if (productDetails == null)
+              // כפתור רכישה
+              if (productDetails == null && !_productLoadTimedOut)
                 const SizedBox(
                   height: 60,
                   child: Center(
                     child: CircularProgressIndicator(strokeWidth: 2.5),
+                  ),
+                )
+              else if (productDetails == null && _productLoadTimedOut)
+                SizedBox(
+                  width: double.infinity,
+                  height: 60,
+                  child: OutlinedButton(
+                    onPressed: () async {
+                      setState(() => _productLoadTimedOut = false);
+                      await PurchaseManager().reloadProductDetails();
+                      if (mounted) setState(() {});
+                    },
+                    child: const Text('טעינה מחדש'),
                   ),
                 )
               else
