@@ -3335,46 +3335,9 @@ class PaywallScreen extends StatefulWidget {
 }
 
 class _PaywallScreenState extends State<PaywallScreen> {
-  bool _isLoading = false;
-
-  @override
-  void initState() {
-    super.initState();
-    if (PurchaseManager().productDetails == null) {
-      PurchaseManager().reloadProductDetails().then((_) {
-        if (mounted) setState(() {});
-      });
-    }
-  }
-
-  Future<void> _handlePurchase() async {
-    setState(() => _isLoading = true);
-    try {
-      await PurchaseManager().buyFullVersion(context);
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _handleRestore() async {
-    setState(() => _isLoading = true);
-    try {
-      await PurchaseManager().restorePurchases(context);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('בודק רכישות קודמות...')),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    bool isDark = Theme.of(context).brightness == Brightness.dark;
-    final productDetails = PurchaseManager().productDetails;
-    final priceText = productDetails?.price ?? '—';
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       body: SafeArea(
@@ -3382,7 +3345,6 @@ class _PaywallScreenState extends State<PaywallScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
           child: Column(
             children: [
-              // כפתור סגירה
               Align(
                 alignment: Alignment.centerLeft,
                 child: IconButton(
@@ -3391,7 +3353,6 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              // לוגו / אמוג'י
               Container(
                 width: 90,
                 height: 90,
@@ -3409,20 +3370,19 @@ class _PaywallScreenState extends State<PaywallScreen> {
               ),
               const SizedBox(height: 20),
               const Text(
-                '(בקרוב)מילומטרי פרו',
+                'מילומטרי פרו — בקרוב',
                 style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
               Text(
-                'פתח את כל היחידות ולמד בלי מגבלות',
+                'השדרוג המלא יגיע בקרוב',
                 style: TextStyle(
                     fontSize: 16,
                     color: isDark ? Colors.white70 : Colors.black54),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 32),
-              // תכולת גרסה חינמית
               _buildTierCard(
                 isDark: isDark,
                 title: 'חינמי',
@@ -3437,7 +3397,6 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 ],
               ),
               const SizedBox(height: 14),
-              // תכולת גרסה מלאה
               _buildTierCard(
                 isDark: isDark,
                 title: 'גרסה מלאה',
@@ -3453,69 +3412,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 ],
                 highlighted: true,
               ),
-              const SizedBox(height: 36),
-              // כפתור רכישה — תמיד מוצג, המחיר מתעדכן כשנטען
-              AnimatedButton(
-                onTap: _handlePurchase,
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 18),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF00BCD4), Color(0xFF006064)],
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                    ),
-                    borderRadius: BorderRadius.circular(18),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF006064).withOpacity(0.4),
-                        blurRadius: 14,
-                        offset: const Offset(0, 6),
-                      )
-                    ],
-                  ),
-                  child: _isLoading
-                      ? const Center(
-                          child: SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2.5,
-                            ),
-                          ),
-                        )
-                      : Text(
-                          priceText != '—'
-                              ? 'פתח גרסה מלאה — $priceText'
-                              : 'פתח גרסה מלאה',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              // שחזור רכישה
-              TextButton(
-                onPressed: _handleRestore,
-                child: const Text(
-                  'שחזר רכישה קיימת',
-                  style: TextStyle(fontSize: 14, color: Colors.grey),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'תשלום חד-פעמי. ללא מנוי.',
-                style: TextStyle(
-                    fontSize: 12,
-                    color: isDark ? Colors.white38 : Colors.black38),
-                textAlign: TextAlign.center,
-              ),
+              const SizedBox(height: 24),
             ],
           ),
         ),
