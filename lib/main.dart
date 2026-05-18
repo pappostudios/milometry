@@ -82,10 +82,15 @@ class PurchaseManager {
   }
 
   Future<void> _loadProductDetails() async {
-    final ProductDetailsResponse response = await InAppPurchase.instance
-        .queryProductDetails({kFullVersionProductId});
-    if (response.productDetails.isNotEmpty) {
-      _productDetails = response.productDetails.first;
+    try {
+      final ProductDetailsResponse response = await InAppPurchase.instance
+          .queryProductDetails({kFullVersionProductId})
+          .timeout(const Duration(seconds: 8));
+      if (response.productDetails.isNotEmpty) {
+        _productDetails = response.productDetails.first;
+      }
+    } catch (_) {
+      // timed out or store unavailable — _productDetails stays null
     }
   }
 
@@ -3331,23 +3336,15 @@ class PaywallScreen extends StatefulWidget {
 
 class _PaywallScreenState extends State<PaywallScreen> {
   bool _isLoading = false;
-  bool _productLoadTimedOut = false;
-  Timer? _productLoadTimer;
 
   @override
   void initState() {
     super.initState();
     if (PurchaseManager().productDetails == null) {
-      _productLoadTimer = Timer(const Duration(seconds: 10), () {
-        if (mounted) setState(() => _productLoadTimedOut = true);
+      PurchaseManager().reloadProductDetails().then((_) {
+        if (mounted) setState(() {});
       });
     }
-  }
-
-  @override
-  void dispose() {
-    _productLoadTimer?.cancel();
-    super.dispose();
   }
 
   Future<void> _handlePurchase() async {
@@ -3457,70 +3454,51 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 highlighted: true,
               ),
               const SizedBox(height: 36),
-              // כפתור רכישה
-              if (productDetails == null && !_productLoadTimedOut)
-                const SizedBox(
-                  height: 60,
-                  child: Center(
-                    child: CircularProgressIndicator(strokeWidth: 2.5),
-                  ),
-                )
-              else if (productDetails == null && _productLoadTimedOut)
-                SizedBox(
+              // כפתור רכישה — תמיד מוצג, המחיר מתעדכן כשנטען
+              AnimatedButton(
+                onTap: _handlePurchase,
+                child: Container(
                   width: double.infinity,
-                  height: 60,
-                  child: OutlinedButton(
-                    onPressed: () async {
-                      setState(() => _productLoadTimedOut = false);
-                      await PurchaseManager().reloadProductDetails();
-                      if (mounted) setState(() {});
-                    },
-                    child: const Text('טעינה מחדש'),
-                  ),
-                )
-              else
-                AnimatedButton(
-                  onTap: _handlePurchase,
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 18),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF00BCD4), Color(0xFF006064)],
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                      ),
-                      borderRadius: BorderRadius.circular(18),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF006064).withOpacity(0.4),
-                          blurRadius: 14,
-                          offset: const Offset(0, 6),
-                        )
-                      ],
+                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF00BCD4), Color(0xFF006064)],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
                     ),
-                    child: _isLoading
-                        ? const Center(
-                            child: SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2.5,
-                              ),
-                            ),
-                          )
-                        : Text(
-                            'פתח גרסה מלאה — $priceText',
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              color: Colors.white70,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
+                    borderRadius: BorderRadius.circular(18),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF006064).withOpacity(0.4),
+                        blurRadius: 14,
+                        offset: const Offset(0, 6),
+                      )
+                    ],
+                  ),
+                  child: _isLoading
+                      ? const Center(
+                          child: SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2.5,
                             ),
                           ),
-                  ),
+                        )
+                      : Text(
+                          priceText != '—'
+                              ? 'פתח גרסה מלאה — $priceText'
+                              : 'פתח גרסה מלאה',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
+              ),
               const SizedBox(height: 16),
               // שחזור רכישה
               TextButton(
