@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -8,6 +9,7 @@ import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:in_app_review/in_app_review.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:url_launcher/url_launcher.dart';
@@ -51,6 +53,7 @@ const bool kAdsEnabled = false;
 // הגדרות רכישה
 // ==========================================
 const String kFullVersionProductId = 'milometry_full_version';
+const String kAppStoreId = '6762563156';
 
 // ==========================================
 // PURCHASE MANAGER
@@ -450,6 +453,21 @@ Color getTextColorForBackground(int unit, bool isDark) {
 }
 
 // ==========================================
+// DESIGN SYSTEM CONSTANTS
+// ==========================================
+const Color kBgCream       = Color(0xFFFAF3EA);
+const Color kBluePrimary   = Color(0xFF3D8BFD);
+const Color kPurplePrimary = Color(0xFF7A3DFD);
+const Color kDarkButton    = Color(0xFF1A1A2E);
+const Color kDarkShadow    = Color(0xFF0A0A14);
+const Color kGreenButton   = Color(0xFF1AA84A);
+const Color kGreenShadow   = Color(0xFF0C6B29);
+const Color kAgainRed      = Color(0xFFE14F4F);
+const Color kHardOrange    = Color(0xFFFF8C3D);
+const Color kGoodBlue      = Color(0xFF3D8BFD);
+const Color kEasyGreen     = Color(0xFF1AA84A);
+
+// ==========================================
 // 3. NotificationManager
 // ==========================================
 class NotificationManager {
@@ -568,6 +586,50 @@ class NotificationManager {
 }
 
 // ==========================================
+// REVIEW MANAGER
+// Shows the native App Store / Play Store rating dialog after the user
+// completes 3 study sessions, then no more than once every 30 days.
+// ==========================================
+class ReviewManager {
+  static final ReviewManager _instance = ReviewManager._internal();
+  factory ReviewManager() => _instance;
+  ReviewManager._internal();
+
+  static const String _keySessionCount = 'review_session_count';
+  static const String _keyLastRequested = 'review_last_requested_ms';
+  static const int _sessionsBeforeFirstAsk = 3;
+  static const int _daysBetweenAsks = 30;
+
+  Future<void> recordSessionAndMaybeAsk() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // Increment session counter
+    final int count = (prefs.getInt(_keySessionCount) ?? 0) + 1;
+    await prefs.setInt(_keySessionCount, count);
+
+    // Too few sessions? Skip.
+    if (count < _sessionsBeforeFirstAsk) return;
+
+    // Asked too recently? Skip.
+    final int lastMs = prefs.getInt(_keyLastRequested) ?? 0;
+    final DateTime lastDate =
+        DateTime.fromMillisecondsSinceEpoch(lastMs, isUtc: true);
+    final int daysSince = DateTime.now().toUtc().difference(lastDate).inDays;
+    if (daysSince < _daysBetweenAsks) return;
+
+    // Ask for a review
+    final InAppReview inAppReview = InAppReview.instance;
+    if (await inAppReview.isAvailable()) {
+      await inAppReview.requestReview();
+      if (!kDebugMode) {
+        await prefs.setInt(
+            _keyLastRequested, DateTime.now().toUtc().millisecondsSinceEpoch);
+      }
+    }
+  }
+}
+
+// ==========================================
 // 4. Progress Manager
 // ==========================================
 class ProgressManager {
@@ -676,6 +738,7 @@ class Word {
   final String translation;
   final String example;
   final int unitNumber;
+  final int difficulty; // 1 (easiest) – 10 (hardest)
   DateTime nextReview;
   int repetitions;
   int interval;
@@ -688,6 +751,7 @@ class Word {
     required this.translation,
     required this.example,
     required this.unitNumber,
+    this.difficulty = 5,
     DateTime? nextReview,
     this.repetitions = 0,
     this.interval = 0,
@@ -702,6 +766,7 @@ class Word {
       translation: json['translation'],
       example: json['example'],
       unitNumber: json['unit'] ?? 0,
+      difficulty: json['difficulty'] ?? 5,
     );
   }
 
@@ -871,6 +936,504 @@ class _SplashScreenState extends State<SplashScreen> {
 }
 
 // ==========================================
+// NEW DESIGN WIDGETS
+// ==========================================
+
+// ── MiliCharacter ──────────────────────────────────────────────────────────
+class _MiliPainter extends CustomPainter {
+  final double bobOffset;
+  _MiliPainter(this.bobOffset);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final double s = size.width / 200.0; // scale from 200×200 viewbox
+
+    canvas.save();
+    canvas.translate(0, bobOffset * s);
+
+    // Drop shadow
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(100 * s, 182 * s), width: 112 * s, height: 14 * s),
+      Paint()..color = Colors.black.withOpacity(0.10),
+    );
+    // Body
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(100 * s, 105 * s), width: 144 * s, height: 136 * s),
+      Paint()..color = kBluePrimary,
+    );
+    // Highlight
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(75 * s, 78 * s), width: 44 * s, height: 28 * s),
+      Paint()..color = Colors.white.withOpacity(0.22),
+    );
+    // Left eye
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(78 * s, 100 * s), width: 22 * s, height: 26 * s),
+      Paint()..color = const Color(0xFF1A1A2E),
+    );
+    // Right eye
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(122 * s, 100 * s), width: 22 * s, height: 26 * s),
+      Paint()..color = const Color(0xFF1A1A2E),
+    );
+    // Eye sparkles
+    canvas.drawCircle(Offset(82 * s, 95 * s), 3.5 * s, Paint()..color = Colors.white);
+    canvas.drawCircle(Offset(126 * s, 95 * s), 3.5 * s, Paint()..color = Colors.white);
+    canvas.drawCircle(Offset(75 * s, 106 * s), 2 * s, Paint()..color = Colors.white);
+    canvas.drawCircle(Offset(119 * s, 106 * s), 2 * s, Paint()..color = Colors.white);
+    // Cheeks
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(64 * s, 125 * s), width: 20 * s, height: 14 * s),
+      Paint()..color = Colors.pink.withOpacity(0.35),
+    );
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(136 * s, 125 * s), width: 20 * s, height: 14 * s),
+      Paint()..color = Colors.pink.withOpacity(0.35),
+    );
+    // Smile
+    final smilePath = Path()
+      ..moveTo(86 * s, 135 * s)
+      ..quadraticBezierTo(100 * s, 150 * s, 114 * s, 135 * s);
+    canvas.drawPath(
+      smilePath,
+      Paint()
+        ..color = const Color(0xFF1A1A2E)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.5 * s
+        ..strokeCap = StrokeCap.round,
+    );
+    // Waving hand (small ellipses off right side)
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(166 * s, 118 * s), width: 24 * s, height: 20 * s),
+      Paint()..color = kBluePrimary,
+    );
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(170 * s, 110 * s), width: 14 * s, height: 12 * s),
+      Paint()..color = kBluePrimary,
+    );
+
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(_MiliPainter old) => old.bobOffset != bobOffset;
+}
+
+class MiliCharacter extends StatefulWidget {
+  final double size;
+  const MiliCharacter({super.key, this.size = 104});
+
+  @override
+  State<MiliCharacter> createState() => _MiliCharacterState();
+}
+
+class _MiliCharacterState extends State<MiliCharacter>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  late Animation<double> _bob;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 3200),
+    )..repeat(reverse: true);
+    _bob = Tween<double>(begin: 0, end: -6).animate(
+      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _bob,
+      builder: (_, __) => CustomPaint(
+        size: Size(widget.size, widget.size),
+        painter: _MiliPainter(_bob.value),
+      ),
+    );
+  }
+}
+
+// ── SpeechBubble ──────────────────────────────────────────────────────────
+class SpeechBubble extends StatefulWidget {
+  const SpeechBubble({super.key});
+
+  @override
+  State<SpeechBubble> createState() => _SpeechBubbleState();
+}
+
+class _SpeechBubbleState extends State<SpeechBubble> {
+  static const List<String> _messages = [
+    'כל מילה חדשה — עוד נקודה בפסיכומטרי 🎯',
+    '5 דקות ביום שוות יותר מ-2 שעות בשבוע ⏱️',
+    'המוח שלך מתחזק עם כל חזרה 💪',
+    'אתה בדרך הנכונה! המשך כך ✨',
+    'כל חזרה מחזקת את הזיכרון שלך 🧠',
+  ];
+
+  int _index = 0;
+  double _opacity = 1.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _startTimer();
+  }
+
+  void _startTimer() {
+    Future.delayed(const Duration(seconds: 7), () {
+      if (!mounted) return;
+      setState(() => _opacity = 0.0);
+      Future.delayed(const Duration(milliseconds: 350), () {
+        if (!mounted) return;
+        setState(() {
+          _index = (_index + 1) % _messages.length;
+          _opacity = 1.0;
+        });
+        _startTimer();
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return AnimatedOpacity(
+      opacity: _opacity,
+      duration: const Duration(milliseconds: 300),
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+          border: Border.all(
+            color: isDark ? Colors.white12 : const Color(0xFFE6EEFB),
+          ),
+        ),
+        child: Text(
+          _messages[_index],
+          textAlign: TextAlign.right,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: isDark ? Colors.white70 : const Color(0xFF444444),
+            height: 1.4,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── ProgressSegments ──────────────────────────────────────────────────────
+class ProgressSegments extends StatelessWidget {
+  final int total;
+  final int currentIndex;
+  final List<String> outcomes;
+
+  const ProgressSegments({
+    super.key,
+    required this.total,
+    required this.currentIndex,
+    required this.outcomes,
+  });
+
+  Color _color(String state) {
+    switch (state) {
+      case 'again':   return kAgainRed;
+      case 'hard':    return kHardOrange;
+      case 'good':    return kGoodBlue;
+      case 'easy':    return kEasyGreen;
+      case 'current': return kPurplePrimary;
+      default:        return const Color(0xFFE4E7EE);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: List.generate(total, (i) {
+        String state;
+        if (i < outcomes.length) {
+          state = outcomes[i];
+        } else if (i == currentIndex) {
+          state = 'current';
+        } else {
+          state = 'todo';
+        }
+        return Expanded(
+          child: Container(
+            height: 6,
+            margin: EdgeInsets.only(right: i < total - 1 ? 3 : 0),
+            decoration: BoxDecoration(
+              color: _color(state),
+              borderRadius: BorderRadius.circular(3),
+            ),
+          ),
+        );
+      }),
+    );
+  }
+}
+
+// ── SRSButton ──────────────────────────────────────────────────────────────
+class SRSButton extends StatelessWidget {
+  final String label;
+  final String sublabel;
+  final Color color;
+  final VoidCallback onTap;
+
+  const SRSButton({
+    super.key,
+    required this.label,
+    required this.sublabel,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return AnimatedButton(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: color, width: 1.6),
+          boxShadow: [
+            BoxShadow(color: color, offset: const Offset(0, 3), blurRadius: 0),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(label,
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                    color: color)),
+            const SizedBox(height: 2),
+            Text(sublabel,
+                style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey[500])),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── MascotCheer ────────────────────────────────────────────────────────────
+class MascotCheer extends StatefulWidget {
+  final String message;
+  final VoidCallback onDismiss;
+
+  const MascotCheer({
+    super.key,
+    required this.message,
+    required this.onDismiss,
+  });
+
+  @override
+  State<MascotCheer> createState() => _MascotCheerState();
+}
+
+class _MascotCheerState extends State<MascotCheer>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  late Animation<double> _scale;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 400));
+    _scale = Tween<double>(begin: 0.0, end: 1.0).animate(
+        CurvedAnimation(parent: _ctrl, curve: Curves.elasticOut));
+    _ctrl.forward();
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) widget.onDismiss();
+    });
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Positioned(
+      bottom: 100,
+      left: 16,
+      right: 16,
+      child: ScaleTransition(
+        scale: _scale,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: [
+              BoxShadow(
+                color: kBluePrimary.withOpacity(0.18),
+                blurRadius: 20,
+                offset: const Offset(0, 6),
+              ),
+            ],
+            border: Border.all(
+              color: isDark ? Colors.white12 : const Color(0xFFE6EEFB),
+              width: 1.5,
+            ),
+          ),
+          child: Row(
+            children: [
+              const MiliCharacter(size: 64),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  widget.message,
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? Colors.white : const Color(0xFF1A1A2E),
+                    height: 1.4,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Confetti ───────────────────────────────────────────────────────────────
+class _ConfettiParticle {
+  final double x;
+  final double size;
+  final double speed;
+  final double delay;
+  final Color color;
+  final double rotation;
+
+  const _ConfettiParticle({
+    required this.x,
+    required this.size,
+    required this.speed,
+    required this.delay,
+    required this.color,
+    required this.rotation,
+  });
+}
+
+class _ConfettiPainter extends CustomPainter {
+  final double progress;
+  final List<_ConfettiParticle> particles;
+
+  _ConfettiPainter(this.progress, this.particles);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint();
+    for (final p in particles) {
+      final t = ((progress + p.delay) % 1.0);
+      final x = p.x * size.width;
+      final y = t * (size.height + 60) - 20;
+      canvas.save();
+      canvas.translate(x, y);
+      canvas.rotate(p.rotation + progress * 6.28 * p.speed);
+      paint.color = p.color;
+      canvas.drawRect(
+        Rect.fromCenter(center: Offset.zero, width: p.size, height: p.size * 0.45),
+        paint,
+      );
+      canvas.restore();
+    }
+  }
+
+  @override
+  bool shouldRepaint(_ConfettiPainter old) => old.progress != progress;
+}
+
+class Confetti extends StatefulWidget {
+  const Confetti({super.key});
+
+  @override
+  State<Confetti> createState() => _ConfettiState();
+}
+
+class _ConfettiState extends State<Confetti> with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  late List<_ConfettiParticle> _particles;
+
+  static const _colors = [
+    kBluePrimary, kPurplePrimary, kAgainRed, kEasyGreen, Colors.amber, Colors.pink,
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    final rng = math.Random();
+    _particles = List.generate(50, (i) => _ConfettiParticle(
+      x: rng.nextDouble(),
+      size: 7 + rng.nextDouble() * 6,
+      speed: 0.8 + rng.nextDouble() * 0.6,
+      delay: rng.nextDouble(),
+      color: _colors[i % _colors.length],
+      rotation: rng.nextDouble() * 6.28,
+    ));
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 4),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: AnimatedBuilder(
+        animation: _ctrl,
+        builder: (_, __) => CustomPaint(
+          size: Size.infinite,
+          painter: _ConfettiPainter(_ctrl.value, _particles),
+        ),
+      ),
+    );
+  }
+}
+
+// ==========================================
 // 8. Home Screen
 // ==========================================
 class HomeScreen extends StatefulWidget {
@@ -882,6 +1445,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen>
     with WidgetsBindingObserver, TickerProviderStateMixin {
+  // Logo + button entry animations (kept from original)
   late AnimationController _logoController;
   late AnimationController _buttonsController;
   late Animation<double> _logoScale;
@@ -889,12 +1453,25 @@ class _HomeScreenState extends State<HomeScreen>
   late Animation<Offset> _hebrewSlide;
   late Animation<Offset> _englishSlide;
 
+  // Animated background blobs
+  late AnimationController _blob1Ctrl;
+  late AnimationController _blob2Ctrl;
+  late AnimationController _blob3Ctrl;
+  late Animation<Offset> _blob1Anim;
+  late Animation<Offset> _blob2Anim;
+  late Animation<Offset> _blob3Anim;
+
+  // Streak chip pulse
+  late AnimationController _streakPulseCtrl;
+  late Animation<double> _streakPulseAnim;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     NotificationManager().cancelNotifications();
 
+    // Logo
     _logoController = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 900));
     _logoScale = Tween<double>(begin: 0.5, end: 1.0).animate(
@@ -902,6 +1479,7 @@ class _HomeScreenState extends State<HomeScreen>
     _logoFade = Tween<double>(begin: 0.0, end: 1.0).animate(
         CurvedAnimation(parent: _logoController, curve: Curves.easeIn));
 
+    // Buttons
     _buttonsController = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 600));
     _hebrewSlide = Tween<Offset>(begin: const Offset(-1.5, 0), end: Offset.zero)
@@ -910,6 +1488,35 @@ class _HomeScreenState extends State<HomeScreen>
     _englishSlide = Tween<Offset>(begin: const Offset(1.5, 0), end: Offset.zero)
         .animate(CurvedAnimation(
             parent: _buttonsController, curve: Curves.easeOutCubic));
+
+    // Background blobs — gentle floating
+    _blob1Ctrl = AnimationController(
+        vsync: this, duration: const Duration(seconds: 7))
+      ..repeat(reverse: true);
+    _blob1Anim = Tween<Offset>(
+            begin: Offset.zero, end: const Offset(0.04, -0.05))
+        .animate(CurvedAnimation(parent: _blob1Ctrl, curve: Curves.easeInOut));
+
+    _blob2Ctrl = AnimationController(
+        vsync: this, duration: const Duration(seconds: 9))
+      ..repeat(reverse: true);
+    _blob2Anim = Tween<Offset>(
+            begin: Offset.zero, end: const Offset(-0.05, 0.04))
+        .animate(CurvedAnimation(parent: _blob2Ctrl, curve: Curves.easeInOut));
+
+    _blob3Ctrl = AnimationController(
+        vsync: this, duration: const Duration(seconds: 6))
+      ..repeat(reverse: true);
+    _blob3Anim = Tween<Offset>(
+            begin: Offset.zero, end: const Offset(0.03, 0.04))
+        .animate(CurvedAnimation(parent: _blob3Ctrl, curve: Curves.easeInOut));
+
+    // Streak pulse
+    _streakPulseCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 900))
+      ..repeat(reverse: true);
+    _streakPulseAnim = Tween<double>(begin: 1.0, end: 1.08).animate(
+        CurvedAnimation(parent: _streakPulseCtrl, curve: Curves.easeInOut));
 
     _logoController.forward();
     Future.delayed(const Duration(milliseconds: 400), () {
@@ -922,6 +1529,10 @@ class _HomeScreenState extends State<HomeScreen>
     WidgetsBinding.instance.removeObserver(this);
     _logoController.dispose();
     _buttonsController.dispose();
+    _blob1Ctrl.dispose();
+    _blob2Ctrl.dispose();
+    _blob3Ctrl.dispose();
+    _streakPulseCtrl.dispose();
     super.dispose();
   }
 
@@ -937,290 +1548,351 @@ class _HomeScreenState extends State<HomeScreen>
     }
   }
 
+  String _greeting() {
+    final h = DateTime.now().hour;
+    if (h >= 5 && h < 12) return 'בוקר טוב, אתגר היום מחכה';
+    if (h >= 12 && h < 17) return 'צהריים טובים, אתגר היום מחכה';
+    if (h >= 17 && h < 21) return 'ערב טוב, אתגר היום מחכה';
+    return 'לילה טוב, אתגר היום מחכה';
+  }
+
+  Widget _buildPillButton(
+      String label, Color bg, Color shadow, VoidCallback onTap) {
+    return AnimatedButton(
+      onTap: onTap,
+      child: Container(
+        height: 64,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(999),
+          boxShadow: [
+            BoxShadow(color: shadow, offset: const Offset(0, 4), blurRadius: 0),
+          ],
+        ),
+        child: Center(
+          child: Text(label,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold)),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    bool isDark = Theme.of(context).brightness == Brightness.dark;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor:
-          isDark ? const Color(0xFF121212) : const Color(0xFFF0F4FF),
-      body: SafeArea(
-        child: Stack(
-          children: [
-            // עיגולים דקורטיביים ברקע
-            Positioned(
-              top: -60,
-              right: -60,
+      backgroundColor: isDark ? const Color(0xFF121212) : kBgCream,
+      body: Stack(
+        children: [
+          // ── Animated background blobs ──
+          SlideTransition(
+            position: _blob1Anim,
+            child: Positioned(
+              top: -70,
+              right: -70,
+              child: Container(
+                width: 240,
+                height: 240,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: kBluePrimary.withValues(alpha: isDark ? 0.10 : 0.22),
+                ),
+              ),
+            ),
+          ),
+          SlideTransition(
+            position: _blob2Anim,
+            child: Positioned(
+              top: 200,
+              left: -90,
               child: Container(
                 width: 200,
                 height: 200,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.blue.withOpacity(isDark ? 0.08 : 0.12),
+                  color: kPurplePrimary
+                      .withValues(alpha: isDark ? 0.07 : 0.15),
                 ),
               ),
             ),
-            Positioned(
-              bottom: -80,
-              left: -80,
+          ),
+          SlideTransition(
+            position: _blob3Anim,
+            child: Positioned(
+              bottom: -90,
+              right: -50,
               child: Container(
-                width: 250,
-                height: 250,
+                width: 220,
+                height: 220,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.purple.withOpacity(isDark ? 0.06 : 0.08),
+                  color: kBluePrimary.withValues(alpha: isDark ? 0.07 : 0.13),
                 ),
               ),
             ),
+          ),
 
-            // כפתור הגדרות
-            Positioned(
-              top: 10,
-              left: 10,
-              child: AnimatedButton(
-                onTap: () => Navigator.push(
-                    context, _slideRoute(const SettingsScreen())),
-                child: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color:
-                        isDark ? Colors.white.withOpacity(0.08) : Colors.white,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.08),
-                        blurRadius: 10,
-                        offset: const Offset(0, 3),
-                      )
+          // ── Main content ──
+          SafeArea(
+            child: Column(
+              children: [
+                // Top bar
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 10),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Settings chip
+                      AnimatedButton(
+                        onTap: () => Navigator.push(
+                            context, _slideRoute(const SettingsScreen())),
+                        child: Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? Colors.white.withValues(alpha: 0.08)
+                                : Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color:
+                                    Colors.black.withValues(alpha: 0.08),
+                                blurRadius: 10,
+                                offset: const Offset(0, 3),
+                              )
+                            ],
+                          ),
+                          child: Icon(Icons.settings_rounded,
+                              color: isDark
+                                  ? Colors.white70
+                                  : Colors.grey[700],
+                              size: 22),
+                        ),
+                      ),
+
+                      // Streak chip with pulse
+                      ValueListenableBuilder<int>(
+                        valueListenable: StreakManager().currentStreak,
+                        builder: (ctx, streak, _) => AnimatedBuilder(
+                          animation: _streakPulseAnim,
+                          builder: (ctx, child) => Transform.scale(
+                            scale: streak > 0 ? _streakPulseAnim.value : 1.0,
+                            child: child,
+                          ),
+                          child: AnimatedButton(
+                            onTap: () {
+                              if (PurchaseManager().isPro.value) {
+                                Navigator.push(ctx,
+                                    _slideRoute(const StreakScreen()));
+                              } else {
+                                Navigator.push(ctx,
+                                    _slideRoute(const PaywallScreen()));
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 14, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: isDark
+                                    ? Colors.white.withValues(alpha: 0.08)
+                                    : Colors.white,
+                                borderRadius: BorderRadius.circular(999),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black
+                                        .withValues(alpha: 0.08),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 3),
+                                  )
+                                ],
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    '$streak',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: streak > 0
+                                          ? Colors.orange
+                                          : (isDark
+                                              ? Colors.white54
+                                              : Colors.grey[500]),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  const Text('🔥',
+                                      style: TextStyle(fontSize: 18)),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
-                  child: Icon(Icons.settings_rounded,
-                      color: isDark ? Colors.white70 : Colors.grey[700],
-                      size: 26),
                 ),
-              ),
-            ),
 
-            // כפתור רצף (למעלה ימין)
-            Positioned(
-              top: 10,
-              right: 10,
-              child: ValueListenableBuilder<int>(
-                valueListenable: StreakManager().currentStreak,
-                builder: (context, streak, _) => AnimatedButton(
-                  onTap: () {
-                    if (PurchaseManager().isPro.value) {
-                      Navigator.push(
-                          context, _slideRoute(const StreakScreen()));
-                    } else {
-                      Navigator.push(
-                          context, _slideRoute(const PaywallScreen()));
-                    }
-                  },
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: streak > 0
-                          ? Colors.orange.withOpacity(isDark ? 0.25 : 0.15)
-                          : (isDark
-                              ? Colors.white.withOpacity(0.08)
-                              : Colors.white),
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.08),
-                          blurRadius: 10,
-                          offset: const Offset(0, 3),
-                        )
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Text('🔥', style: TextStyle(fontSize: 18)),
-                        const SizedBox(width: 4),
-                        Text(
-                          '$streak',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: streak > 0
-                                ? Colors.orange
-                                : (isDark ? Colors.white54 : Colors.grey[500]),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
-            // תוכן מרכזי
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 30.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Spacer(flex: 2),
-
-                  // לוגו עם אנימציה
-                  FadeTransition(
-                    opacity: _logoFade,
-                    child: ScaleTransition(
-                      scale: _logoScale,
-                      child: Container(
-                        height: 140,
-                        width: 140,
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF4FC3F7), Color(0xFF1565C0)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.blue.withOpacity(0.4),
-                              blurRadius: 30,
-                              offset: const Offset(0, 12),
-                            )
-                          ],
-                        ),
-                        child: const Icon(Icons.school_rounded,
-                            size: 75, color: Colors.white),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 25),
-
-                  FadeTransition(
-                    opacity: _logoFade,
-                    child: ShaderMask(
-                      shaderCallback: (bounds) => const LinearGradient(
-                        colors: [Color(0xFF1565C0), Color(0xFF7B1FA2)],
-                      ).createShader(bounds),
-                      child: const Text(
-                        "מילומטרי",
+                // ── Center area: greeting + icon + app name ──
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Time-of-day greeting
+                      Text(
+                        _greeting(),
                         style: TextStyle(
-                          fontSize: 42,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          fontSize: 14,
+                          color: isDark
+                              ? Colors.white38
+                              : Colors.grey[500],
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
-                    ),
-                  ),
+                      const SizedBox(height: 22),
 
-                  FadeTransition(
-                    opacity: _logoFade,
-                    child: const Text(
-                      "מילים לפסיכומטרי",
-                      style: TextStyle(fontSize: 18, color: Colors.grey),
-                    ),
-                  ),
-
-                  const Spacer(flex: 2),
-
-                  // כפתור עברית
-                  SlideTransition(
-                    position: _hebrewSlide,
-                    child: _buildHomeButton(
-                      context,
-                      "עברית",
-                      Icons.translate_rounded,
-                      isDark
-                          ? [const Color(0xFF37474F), const Color(0xFF263238)]
-                          : [const Color(0xFF424242), const Color(0xFF212121)],
-                      () => Navigator.push(
-                        context,
-                        _slideRoute(const UnitSelectorScreen(
-                            jsonPath: 'assets/hebrew.json', title: 'עברית')),
+                      // Real app icon
+                      FadeTransition(
+                        opacity: _logoFade,
+                        child: ScaleTransition(
+                          scale: _logoScale,
+                          child: Container(
+                            width: 128,
+                            height: 128,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(28),
+                              boxShadow: [
+                                BoxShadow(
+                                  color:
+                                      Colors.black.withValues(alpha: 0.18),
+                                  blurRadius: 28,
+                                  offset: const Offset(0, 10),
+                                )
+                              ],
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(28),
+                              child: Image.asset(
+                                'assets/icon.png',
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => Container(
+                                  color: kBluePrimary,
+                                  child: const Icon(Icons.school_rounded,
+                                      size: 64, color: Colors.white),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
+                      const SizedBox(height: 18),
 
-                  const SizedBox(height: 20),
-
-                  // כפתור אנגלית
-                  SlideTransition(
-                    position: _englishSlide,
-                    child: _buildHomeButton(
-                      context,
-                      "אנגלית",
-                      Icons.language_rounded,
-                      isDark
-                          ? [const Color(0xFF1B5E20), const Color(0xFF2E7D32)]
-                          : [const Color(0xFF00C853), const Color(0xFF1B5E20)],
-                      () => Navigator.push(
-                        context,
-                        _slideRoute(const UnitSelectorScreen(
-                            jsonPath: 'assets/english.json', title: 'אנגלית')),
+                      // App name gradient
+                      FadeTransition(
+                        opacity: _logoFade,
+                        child: ShaderMask(
+                          shaderCallback: (bounds) =>
+                              const LinearGradient(
+                            colors: [kBluePrimary, kPurplePrimary],
+                          ).createShader(bounds),
+                          child: const Text(
+                            'מילומטרי',
+                            style: TextStyle(
+                              fontSize: 46,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
 
-                  const Spacer(flex: 2),
-                ],
-              ),
+                      // Subtitle
+                      FadeTransition(
+                        opacity: _logoFade,
+                        child: Text(
+                          'מילים לפסיכומטרי',
+                          style: TextStyle(
+                            fontSize: 15,
+                            color: isDark
+                                ? Colors.white38
+                                : Colors.grey[500],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // ── Mascot + speech bubble ──
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      const MiliCharacter(size: 96),
+                      const SizedBox(width: 10),
+                      const Expanded(child: SpeechBubble()),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // ── Language buttons ──
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    children: [
+                      SlideTransition(
+                        position: _hebrewSlide,
+                        child: _buildPillButton(
+                          'עברית',
+                          kDarkButton,
+                          kDarkShadow,
+                          () => Navigator.push(
+                            context,
+                            _slideRoute(const UnitSelectorScreen(
+                                jsonPath: 'assets/hebrew_with_difficulty.json',
+                                title: 'עברית')),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      SlideTransition(
+                        position: _englishSlide,
+                        child: _buildPillButton(
+                          'אנגלית',
+                          kGreenButton,
+                          kGreenShadow,
+                          () => Navigator.push(
+                            context,
+                            _slideRoute(const UnitSelectorScreen(
+                                jsonPath: 'assets/english_with_difficulty.json',
+                                title: 'אנגלית')),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
-      // באנר מודעה בתחתית — נעלם אוטומטית לגרסה פרו
       bottomNavigationBar: ValueListenableBuilder<bool>(
         valueListenable: PurchaseManager().isPro,
         builder: (context, isPro, _) =>
             isPro ? const SizedBox.shrink() : AdManager().buildBanner(),
-      ),
-    );
-  }
-
-  Widget _buildHomeButton(BuildContext context, String title, IconData icon,
-      List<Color> colors, VoidCallback onTap) {
-    return AnimatedButton(
-      onTap: onTap,
-      child: Container(
-        height: 75,
-        width: double.infinity,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: colors,
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(25),
-          boxShadow: [
-            BoxShadow(
-              color: colors.last.withOpacity(0.45),
-              blurRadius: 16,
-              offset: const Offset(0, 8),
-            )
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: Colors.white, size: 28),
-            const SizedBox(width: 12),
-            Text(
-              title,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 26,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.2,
-                shadows: [
-                  Shadow(
-                      color: Colors.black26,
-                      offset: Offset(1, 1),
-                      blurRadius: 2)
-                ],
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -1304,6 +1976,66 @@ class _UnitSelectorScreenState extends State<UnitSelectorScreen> {
           : ListView(
               padding: const EdgeInsets.all(20),
               children: [
+                // ── Level-based study button ──────────────────────────
+                AnimatedButton(
+                  onTap: () async {
+                    final prefix =
+                        widget.jsonPath.contains('hebrew') ? 'heb' : 'eng';
+                    await Navigator.push(
+                        context,
+                        _slideRoute(LevelSelectorScreen(
+                            langPrefix: prefix, title: widget.title)));
+                    loadAndOrganizeData();
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.only(
+                        bottom: 16, left: 5, right: 5),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 15, vertical: 14),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF7A3DFD), Color(0xFF3D8BFD)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF7A3DFD)
+                              .withValues(alpha: 0.35),
+                          blurRadius: 12,
+                          offset: const Offset(0, 6),
+                        )
+                      ],
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.bar_chart_rounded,
+                            size: 32, color: Colors.white),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('תרגול לפי רמת קושי',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 17,
+                                      color: Colors.white)),
+                              Text('5 רמות — מבסיסי עד קיצוני',
+                                  style: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.white70)),
+                            ],
+                          ),
+                        ),
+                        Icon(Icons.arrow_forward_ios,
+                            size: 16, color: Colors.white70),
+                      ],
+                    ),
+                  ),
+                ),
+                // ─────────────────────────────────────────────────────
                 if (totalFailedCount > 0) ...[
                   AnimatedButton(
                     onTap: () async {
@@ -1473,6 +2205,234 @@ class _UnitSelectorScreenState extends State<UnitSelectorScreen> {
                 ),
               ],
             ));
+  }
+}
+
+// ==========================================
+// 9b. Level Selector Screen
+// ==========================================
+class _LevelMeta {
+  final String label;
+  final String sublabel;
+  final Color color;
+  final Color shadow;
+  const _LevelMeta(this.label, this.sublabel, this.color, this.shadow);
+}
+
+const _kLevelMeta = [
+  _LevelMeta('בסיסי', 'מילים יומיומיות ושכיחות', Color(0xFF3D8BFD),
+      Color(0xFF1A5FC4)),
+  _LevelMeta('בינוני', 'עיתונות ופודקאסטים איכותיים', Color(0xFF1AA84A),
+      Color(0xFF0C6B29)),
+  _LevelMeta('גבוה', 'אקדמי, ספרותי ומשנה', Color(0xFFFF8C3D),
+      Color(0xFFB85C10)),
+  _LevelMeta('מתקדם', 'ארכאי, ארמי, מלכודות פסיכומטרי', Color(0xFFE14F4F),
+      Color(0xFFA02020)),
+  _LevelMeta('קיצוני', 'תנ"כי ועתיק מאוד', Color(0xFF7A3DFD),
+      Color(0xFF4A1AC0)),
+];
+
+class LevelSelectorScreen extends StatefulWidget {
+  final String langPrefix; // 'heb' or 'eng'
+  final String title;
+  const LevelSelectorScreen(
+      {super.key, required this.langPrefix, required this.title});
+
+  @override
+  State<LevelSelectorScreen> createState() => _LevelSelectorScreenState();
+}
+
+class _LevelSelectorScreenState extends State<LevelSelectorScreen> {
+  List<int> _totalCounts = List.filled(5, 0);
+  List<int> _learnedCounts = List.filled(5, 0);
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCounts();
+  }
+
+  Future<void> _loadCounts() async {
+    final totals = List.filled(5, 0);
+    final learned = List.filled(5, 0);
+
+    for (int lvl = 1; lvl <= 5; lvl++) {
+      try {
+        final path =
+            'assets/levels/${widget.langPrefix}_level_$lvl.json';
+        final String response = await rootBundle.loadString(path);
+        final data = json.decode(response);
+        final list = data['words'] as List;
+        totals[lvl - 1] = list.length;
+
+        int learnedCount = 0;
+        for (final w in list) {
+          final word = Word.fromJson(w);
+          final progress =
+              ProgressManager().getWordProgress(word.uniqueId);
+          if (progress != null &&
+              (progress['repetitions'] ?? 0) > 0) {
+            learnedCount++;
+          }
+        }
+        learned[lvl - 1] = learnedCount;
+      } catch (_) {}
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _totalCounts = totals;
+      _learnedCounts = learned;
+      _isLoading = false;
+    });
+  }
+
+  void _showOptionsDialog(
+      BuildContext context, int levelNum, String path, String label) {
+    showDialog(
+        context: context,
+        builder: (ctx) => SimpleDialog(
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20)),
+              title: Text('רמה $levelNum — $label',
+                  textAlign: TextAlign.center),
+              children: [
+                SimpleDialogOption(
+                  onPressed: () async {
+                    Navigator.pop(ctx);
+                    await Navigator.push(
+                        context,
+                        _slideRoute(LearningScreen(jsonPath: path)));
+                    _loadCounts();
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 10),
+                    child: Row(children: [
+                      Icon(Icons.play_circle_fill,
+                          color: Colors.blue, size: 30),
+                      SizedBox(width: 15),
+                      Text('התחל תרגול',
+                          style: TextStyle(fontSize: 18))
+                    ]),
+                  ),
+                ),
+                const Divider(),
+                SimpleDialogOption(
+                  onPressed: () async {
+                    Navigator.pop(ctx);
+                    await Navigator.push(
+                        context,
+                        _slideRoute(
+                            VocabularyListScreen(jsonPath: path)));
+                    _loadCounts();
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 10),
+                    child: Row(children: [
+                      Icon(Icons.list, color: Colors.black87, size: 30),
+                      SizedBox(width: 15),
+                      Text('רשימת מילים',
+                          style: TextStyle(fontSize: 18))
+                    ]),
+                  ),
+                ),
+              ],
+            ));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('רמות קושי — ${widget.title}')),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : ListView.builder(
+              padding: const EdgeInsets.all(20),
+              itemCount: 5,
+              itemBuilder: (context, i) {
+                final meta = _kLevelMeta[i];
+                final total = _totalCounts[i];
+                final lrnd = _learnedCounts[i];
+                final progress = total > 0 ? lrnd / total : 0.0;
+                final levelNum = i + 1;
+                final path =
+                    'assets/levels/${widget.langPrefix}_level_$levelNum.json';
+
+                return AnimatedButton(
+                  onTap: () => _showOptionsDialog(
+                      context, levelNum, path, meta.label),
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 16),
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: meta.color,
+                      borderRadius: BorderRadius.circular(18),
+                      boxShadow: [
+                        BoxShadow(
+                          color: meta.shadow.withValues(alpha: 0.45),
+                          blurRadius: 10,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.white
+                                    .withValues(alpha: 0.25),
+                                borderRadius:
+                                    BorderRadius.circular(20),
+                              ),
+                              child: Text('רמה $levelNum',
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold)),
+                            ),
+                            const SizedBox(width: 10),
+                            Text(meta.label,
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold)),
+                            const Spacer(),
+                            const Icon(Icons.arrow_forward_ios,
+                                size: 16, color: Colors.white70),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Text(meta.sublabel,
+                            style: const TextStyle(
+                                color: Colors.white70, fontSize: 13)),
+                        const SizedBox(height: 10),
+                        Text('התקדמות: $lrnd / $total מילים',
+                            style: const TextStyle(
+                                color: Colors.white70, fontSize: 12)),
+                        const SizedBox(height: 6),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: progress,
+                            backgroundColor:
+                                Colors.white.withValues(alpha: 0.30),
+                            color: Colors.greenAccent,
+                            minHeight: 8,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+    );
   }
 }
 
@@ -1683,7 +2643,8 @@ class LearningScreen extends StatefulWidget {
   State<LearningScreen> createState() => _LearningScreenState();
 }
 
-class _LearningScreenState extends State<LearningScreen> {
+class _LearningScreenState extends State<LearningScreen>
+    with TickerProviderStateMixin {
   List<Word> fullVocabulary = [];
   List<Word> studySession = [];
   bool isLoading = true;
@@ -1693,10 +2654,35 @@ class _LearningScreenState extends State<LearningScreen> {
   bool _sessionRecorded = false;
   final _NativeTts flutterTts = _NativeTts();
 
+  // New design state
+  bool _isFlipped = false;
+  bool _lastExitLeft = false;
+  int _sessionStreak = 0;
+  final List<String> _outcomes = [];
+  final Map<String, int> _stats = {
+    'again': 0,
+    'hard': 0,
+    'good': 0,
+    'easy': 0
+  };
+  String? _cheerMessage;
+  // Tracks how many times each word was re-queued this session.
+  // After 1 retry, the word is dropped from the session (avoids infinite loops).
+  final Map<String, int> _sessionRetries = {};
+  int _deckSize = 0;
+
   @override
   void initState() {
     super.initState();
     loadJsonData();
+  }
+
+  @override
+  void dispose() {
+    if (_wordsStudiedThisSession >= 5) {
+      ReviewManager().recordSessionAndMaybeAsk();
+    }
+    super.dispose();
   }
 
   Future<void> speak(String text, String language) async {
@@ -1743,26 +2729,22 @@ class _LearningScreenState extends State<LearningScreen> {
       }
     }
 
-    // Sort before setState so we can compute the restore index
     if (widget.onlyFailed) {
       sessionWords.shuffle();
     } else {
       sessionWords.sort((a, b) => a.nextReview.compareTo(b.nextReview));
     }
 
-    // Restore session position: find where the user left off
     int startIndex = 0;
     if (!widget.onlyFailed) {
       final prefs = await SharedPreferences.getInstance();
       final String? lastWordId = prefs.getString('last_session_word_id');
       if (lastWordId != null && sessionWords.isNotEmpty) {
-        // Exact match: user closed mid-card, word still in session
         final exactIdx =
             sessionWords.indexWhere((w) => w.uniqueId == lastWordId);
         if (exactIdx >= 0) {
           startIndex = exactIdx;
         } else {
-          // Word was answered and removed — find the next unseen word after it
           final lastVocabPos =
               filteredTotal.indexWhere((w) => w.uniqueId == lastWordId);
           if (lastVocabPos >= 0) {
@@ -1789,6 +2771,7 @@ class _LearningScreenState extends State<LearningScreen> {
       isLoading = false;
       isReviewMode = false;
       _currentIndex = startIndex;
+      _deckSize = sessionWords.length;
     });
   }
 
@@ -1800,27 +2783,59 @@ class _LearningScreenState extends State<LearningScreen> {
       studySession = learnedWords;
       isReviewMode = true;
       _currentIndex = 0;
+      _isFlipped = false;
+      _outcomes.clear();
+      _stats.updateAll((_, __) => 0);
+      _sessionStreak = 0;
+      _deckSize = learnedWords.length;
+      _sessionRetries.clear();
     });
   }
 
-  Future<void> updateWordProgress(bool knewIt) async {
+  /// 4-level SRS update. level ∈ {'again','hard','good','easy'}
+  Future<void> updateWordProgress(String level) async {
     if (studySession.isEmpty) return;
     Word word = studySession[_currentIndex];
 
-    // Persist current position so the session can be resumed after restart
-    SharedPreferences.getInstance().then(
-        (prefs) => prefs.setString('last_session_word_id', word.uniqueId));
+    SharedPreferences.getInstance()
+        .then((p) => p.setString('last_session_word_id', word.uniqueId));
+
+    final bool wasGoodOrEasy = level == 'good' || level == 'easy';
+    _lastExitLeft = level == 'again';
+
+    // Session streak
+    if (wasGoodOrEasy) {
+      _sessionStreak++;
+      _checkCheer();
+    } else {
+      _sessionStreak = 0;
+    }
+
+    // Record outcome
+    _outcomes.add(level);
+    _stats[level] = (_stats[level] ?? 0) + 1;
 
     setState(() {
       if (isReviewMode && !widget.onlyFailed) {
-        if (knewIt) {
+        if (wasGoodOrEasy) {
           studySession.removeAt(_currentIndex);
         } else {
+          // Review mode: re-queue once, then drop to avoid infinite loops
+          final retries = (_sessionRetries[word.uniqueId] ?? 0) + 1;
+          _sessionRetries[word.uniqueId] = retries;
           studySession.removeAt(_currentIndex);
-          studySession.add(word);
+          if (retries <= 1) studySession.add(word);
         }
       } else {
-        int quality = knewIt ? 4 : 0;
+        // 4-level SM2
+        int quality;
+        switch (level) {
+          case 'again': quality = 0; break;
+          case 'hard':  quality = 2; break;
+          case 'easy':  quality = 5; break;
+          default:      quality = 4; // 'good'
+        }
+
         if (quality < 3) {
           word.repetitions = 0;
           word.interval = 1;
@@ -1829,6 +2844,8 @@ class _LearningScreenState extends State<LearningScreen> {
             word.interval = 1;
           } else if (word.repetitions == 1) {
             word.interval = 6;
+          } else if (level == 'easy') {
+            word.interval = (word.interval * word.easinessFactor * 1.3).round();
           } else {
             word.interval = (word.interval * word.easinessFactor).round();
           }
@@ -1842,39 +2859,400 @@ class _LearningScreenState extends State<LearningScreen> {
         ProgressManager().updateWord(word.uniqueId, word.repetitions,
             word.interval, word.easinessFactor, word.nextReview);
 
-        if (knewIt) {
+        if (wasGoodOrEasy) {
           _wordsStudiedThisSession++;
           studySession.removeAt(_currentIndex);
-          // Count each known word immediately toward the daily goal
           StreakManager().recordStudySession(1);
         } else {
+          // Re-queue once per session, then drop — prevents infinite loops
+          final retries = (_sessionRetries[word.uniqueId] ?? 0) + 1;
+          _sessionRetries[word.uniqueId] = retries;
           studySession.removeAt(_currentIndex);
-          studySession.add(word);
+          if (retries <= 1) studySession.add(word);
         }
       }
 
       if (_currentIndex >= studySession.length) {
         _currentIndex = studySession.isNotEmpty ? studySession.length - 1 : 0;
       }
+      _isFlipped = false;
     });
 
-    // הצגת מודעה כשנגמרות המילים
     if (studySession.isEmpty && !isReviewMode && !_sessionRecorded) {
       _sessionRecorded = true;
       AdManager().showInterstitial();
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          _slideRoute(SessionDoneScreen(
+            sessionWordCount: _wordsStudiedThisSession,
+            stats: Map.from(_stats),
+            jsonPath: widget.jsonPath,
+            unitFilter: widget.unitFilter,
+          )),
+        );
+      }
     }
   }
 
-  void _nextCard() {
-    if (_currentIndex < studySession.length - 1) {
-      setState(() => _currentIndex++);
+  void _checkCheer() {
+    const msgs = {
+      3: '3 ברצף! 🔥 ממשיכים?',
+      6: '6 ברצף! המוח שלך באש',
+      10: '10 ברצף! יוצא מן הכלל ⭐',
+    };
+    if (msgs.containsKey(_sessionStreak)) {
+      setState(() => _cheerMessage = msgs[_sessionStreak]);
+      Future.delayed(const Duration(seconds: 3), () {
+        if (mounted) setState(() => _cheerMessage = null);
+      });
     }
   }
 
-  void _prevCard() {
-    if (_currentIndex > 0) {
-      setState(() => _currentIndex--);
+  // ── Difficulty badge ─────────────────────────────────────────────────────
+
+  Color _difficultyColor(int d) {
+    if (d <= 3) return const Color(0xFF1AA84A); // green — easy
+    if (d <= 6) return const Color(0xFFFF8C3D); // orange — medium
+    return const Color(0xFFE14F4F);              // red — hard
+  }
+
+  String _difficultyLabel(int d) {
+    if (d <= 3) return 'קל';
+    if (d <= 6) return 'בינוני';
+    return 'קשה';
+  }
+
+  Widget _buildDifficultyBadge(int difficulty) {
+    final color = _difficultyColor(difficulty);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.35), width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.bolt_rounded, size: 11, color: color),
+          const SizedBox(width: 3),
+          Text(
+            _difficultyLabel(difficulty),
+            style: TextStyle(
+                fontSize: 10, fontWeight: FontWeight.w800, color: color),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Card face builders ───────────────────────────────────────────────────
+
+  Widget _buildFrontFace(Word word) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final langLabel = word.language == 'english' ? '🇬🇧 אנגלית' : '🇮🇱 עברית';
+    return Container(
+      key: ValueKey('front_${word.uniqueId}'),
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E2232) : Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+            color: isDark ? Colors.white12 : const Color(0xFFEFF1F6)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.10),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          )
+        ],
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
+          // Language chip + difficulty badge + audio button
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: kBluePrimary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(langLabel,
+                    style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: kBluePrimary)),
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildDifficultyBadge(word.difficulty),
+                  if (word.language == 'english') ...[
+                    const SizedBox(width: 8),
+                    GestureDetector(
+                      onTap: () => speak(word.term, word.language),
+                      child: Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: kBluePrimary.withValues(alpha: 0.12),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.volume_up_rounded,
+                            color: kBluePrimary, size: 18),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ],
+          ),
+          // Word — centered, big
+          Expanded(
+            child: Center(
+              child: Directionality(
+                textDirection: word.language == 'english'
+                    ? TextDirection.ltr
+                    : TextDirection.rtl,
+                child: Text(
+                  word.term,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 44,
+                    fontWeight: FontWeight.w900,
+                    color: isDark ? Colors.white : const Color(0xFF1A1A2E),
+                    height: 1.2,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // Flip hint pill
+          Container(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? const Color(0xFF2A2A3A)
+                  : const Color(0xFFF0F0F5),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              'הקש כדי להפוך',
+              style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? Colors.white38 : Colors.grey[500]),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBackFace(Word word) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      key: ValueKey('back_${word.uniqueId}'),
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E2232) : Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+            color: isDark ? Colors.white12 : const Color(0xFFEFF1F6)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.10),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          )
+        ],
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Word chip
+          Align(
+            alignment: Alignment.centerRight,
+            child: Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: kBluePrimary.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(word.term,
+                  style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: kBluePrimary)),
+            ),
+          ),
+          const SizedBox(height: 10),
+          // "תרגום" label
+          Text('תרגום',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? Colors.white38 : Colors.grey[500],
+                  letterSpacing: 0.06)),
+          const SizedBox(height: 6),
+          // Translation
+          Text(
+            word.translation,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.w800,
+                color: kBluePrimary,
+                height: 1.25),
+          ),
+          const SizedBox(height: 16),
+          // Example sentence box
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? const Color(0xFF2A2510)
+                  : const Color(0xFFFFF8E8),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: isDark
+                    ? const Color(0xFF3A3010)
+                    : const Color(0xFFFCE9C0),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('דוגמה במשפט',
+                    style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w800,
+                        color: isDark
+                            ? Colors.amber.shade200
+                            : const Color(0xFF8B6914),
+                        letterSpacing: 0.06)),
+                const SizedBox(height: 6),
+                Directionality(
+                  textDirection: word.language == 'english'
+                      ? TextDirection.ltr
+                      : TextDirection.rtl,
+                  child: _buildExampleText(word, isDark),
+                ),
+              ],
+            ),
+          ),
+          const Spacer(),
+          // "seen N times" footer
+          Center(
+            child: Text(
+              '🔁 נראית ${word.repetitions} פעמים',
+              style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? Colors.white38 : Colors.grey[500]),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExampleText(Word word, bool isDark) {
+    final example = word.example;
+    final term = word.term.toLowerCase();
+    final lower = example.toLowerCase();
+    final idx = lower.indexOf(term);
+    if (idx < 0) {
+      return Text(example,
+          style: TextStyle(
+              fontSize: 14,
+              height: 1.55,
+              color: isDark ? Colors.white70 : const Color(0xFF1A1A2E)));
     }
+    return RichText(
+      text: TextSpan(
+        style: TextStyle(
+            fontSize: 14,
+            height: 1.55,
+            color: isDark ? Colors.white70 : const Color(0xFF1A1A2E)),
+        children: [
+          TextSpan(text: example.substring(0, idx)),
+          TextSpan(
+            text: example.substring(idx, idx + word.term.length),
+            style: const TextStyle(
+                fontWeight: FontWeight.bold, color: kBluePrimary),
+          ),
+          TextSpan(text: example.substring(idx + word.term.length)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFlipButton() {
+    return AnimatedButton(
+      onTap: () => setState(() => _isFlipped = true),
+      child: Container(
+        height: 56,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: kDarkButton,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: const [
+            BoxShadow(color: kDarkShadow, offset: Offset(0, 4), blurRadius: 0),
+          ],
+        ),
+        child: const Center(
+          child: Text('הפוך כרטיס',
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold)),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSRSRow() {
+    return Row(
+      children: [
+        Expanded(
+            child: SRSButton(
+                label: 'שוב',
+                sublabel: "1 דק׳",
+                color: kAgainRed,
+                onTap: () => updateWordProgress('again'))),
+        const SizedBox(width: 8),
+        Expanded(
+            child: SRSButton(
+                label: 'קשה',
+                sublabel: "10 דק׳",
+                color: kHardOrange,
+                onTap: () => updateWordProgress('hard'))),
+        const SizedBox(width: 8),
+        Expanded(
+            child: SRSButton(
+                label: 'טוב',
+                sublabel: "1 יום",
+                color: kGoodBlue,
+                onTap: () => updateWordProgress('good'))),
+        const SizedBox(width: 8),
+        Expanded(
+            child: SRSButton(
+                label: 'קל',
+                sublabel: "4 ימים",
+                color: kEasyGreen,
+                onTap: () => updateWordProgress('easy'))),
+      ],
+    );
   }
 
   @override
@@ -1883,278 +3261,367 @@ class _LearningScreenState extends State<LearningScreen> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    bool isDark = Theme.of(context).brightness == Brightness.dark;
-    String titleText = widget.onlyFailed
-        ? "חזרה על שגיאות"
-        : "אימון - יחידה ${widget.unitFilter ?? 'כללי'}";
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final titleText = widget.onlyFailed
+        ? 'חזרה על שגיאות'
+        : 'יחידה ${widget.unitFilter ?? 'כללי'}';
+    final displayTotal = _deckSize > 0 ? _deckSize : studySession.length;
+    final displayCurrent = _outcomes.length + 1;
 
     return Scaffold(
-      appBar: AppBar(title: Text(titleText), centerTitle: true),
-      body: studySession.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.check_circle, size: 80, color: Colors.green),
-                  const SizedBox(height: 20),
-                  Text(
-                      widget.onlyFailed
-                          ? "אין מילים אדומות!\nכל הכבוד!"
-                          : "סיימת את המילים להיום!",
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                          fontSize: 24, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 30),
-                  if (!widget.onlyFailed)
-                    AnimatedButton(
-                      onTap: startReviewSession,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 24, vertical: 14),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF42A5F5), Color(0xFF1565C0)],
-                          ),
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.blue.withOpacity(0.4),
-                              blurRadius: 12,
-                              offset: const Offset(0, 6),
-                            )
-                          ],
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
+      backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
+      appBar: AppBar(
+        title: Text(titleText,
+            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
+        centerTitle: true,
+        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_rounded),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: studySession.isEmpty && !_sessionRecorded
+          // Only shown while loading the session-done navigation
+          ? const Center(child: CircularProgressIndicator())
+          : Stack(
+              children: [
+                SafeArea(
+                  child: Column(
+                    children: [
+                      // ── Header strip ──
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
+                        child: Column(
                           children: [
-                            Icon(Icons.refresh, color: Colors.white),
-                            SizedBox(width: 8),
-                            Text("תרגול מילים שלמדתי",
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold)),
+                            Row(
+                              mainAxisAlignment:
+                                  MainAxisAlignment.spaceBetween,
+                              children: [
+                                // Session streak
+                                Row(
+                                  children: [
+                                    Icon(Icons.bolt_rounded,
+                                        size: 16,
+                                        color: _sessionStreak > 0
+                                            ? Colors.orange
+                                            : Colors.grey[400]),
+                                    const SizedBox(width: 3),
+                                    Text(
+                                      'סשן: $_sessionStreak ברצף',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w800,
+                                        color: _sessionStreak > 0
+                                            ? Colors.orange
+                                            : Colors.grey[400],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                // Counter
+                                Text(
+                                  '$displayCurrent / $displayTotal',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: isDark
+                                        ? Colors.white54
+                                        : Colors.grey[600],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            ProgressSegments(
+                              total: displayTotal,
+                              currentIndex: _outcomes.length,
+                              outcomes: _outcomes,
+                            ),
                           ],
                         ),
                       ),
-                    ),
-                  const SizedBox(height: 20),
-                  AnimatedButton(
-                    onTap: () => Navigator.pop(context),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 24, vertical: 14),
-                      decoration: BoxDecoration(
-                        color: isDark ? Colors.grey[800] : Colors.grey[200],
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text("חזור לרשימה",
-                          style: TextStyle(
-                              fontSize: 16,
-                              color: isDark ? Colors.white : Colors.black87)),
-                    ),
-                  ),
-                ],
-              ),
-            )
-          : Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
+
+                      // ── Card area ──
                       Expanded(
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(6),
-                          child: LinearProgressIndicator(
-                            value: widget.onlyFailed
-                                ? 0.0
-                                : 1 -
-                                    (studySession.length /
-                                        fullVocabulary.length),
-                            color: widget.onlyFailed
-                                ? Colors.redAccent
-                                : Colors.blue,
-                            backgroundColor: Colors.grey[200],
-                            minHeight: 8,
-                          ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          child: studySession.isNotEmpty
+                              ? GestureDetector(
+                                  onTap: () {
+                                    if (!_isFlipped) {
+                                      setState(() => _isFlipped = true);
+                                    }
+                                  },
+                                  child: AnimatedSwitcher(
+                                    duration:
+                                        const Duration(milliseconds: 400),
+                                    switchInCurve: Curves.easeOutCubic,
+                                    switchOutCurve: Curves.easeInCubic,
+                                    transitionBuilder: (child, anim) {
+                                      // Slide direction based on last answer
+                                      final isEntering =
+                                          child.key == ValueKey(
+                                              'front_${studySession[_currentIndex].uniqueId}') ||
+                                          child.key == ValueKey(
+                                              'back_${studySession[_currentIndex].uniqueId}');
+                                      final offset = isEntering
+                                          ? Tween<Offset>(
+                                              begin: const Offset(1.0, 0),
+                                              end: Offset.zero)
+                                          : Tween<Offset>(
+                                              begin: Offset.zero,
+                                              end: Offset(
+                                                  _lastExitLeft ? -1.0 : 1.0,
+                                                  0));
+                                      return SlideTransition(
+                                          position: offset.animate(anim),
+                                          child: child);
+                                    },
+                                    child: _isFlipped
+                                        ? _buildBackFace(
+                                            studySession[_currentIndex])
+                                        : _buildFrontFace(
+                                            studySession[_currentIndex]),
+                                  ),
+                                )
+                              : const SizedBox.shrink(),
                         ),
                       ),
-                      const SizedBox(width: 10),
-                      Text("${_currentIndex + 1}/${studySession.length}",
-                          style: const TextStyle(
-                              color: Colors.grey, fontWeight: FontWeight.bold)),
+
+                      // ── Action row ──
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                        child: _isFlipped
+                            ? _buildSRSRow()
+                            : _buildFlipButton(),
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 20),
-                  Expanded(
-                    flex: 10,
-                    child: Center(
-                      child: FlipCard(
-                        key: ValueKey(studySession[_currentIndex].id),
-                        front:
-                            _buildCardFace(studySession[_currentIndex], true),
-                        back:
-                            _buildCardFace(studySession[_currentIndex], false),
+                ),
+
+                // Mascot cheer overlay
+                if (_cheerMessage != null)
+                  MascotCheer(
+                    message: _cheerMessage!,
+                    onDismiss: () =>
+                        setState(() => _cheerMessage = null),
+                  ),
+              ],
+            ),
+      bottomNavigationBar: ValueListenableBuilder<bool>(
+        valueListenable: PurchaseManager().isPro,
+        builder: (ctx, isPro, _) =>
+            isPro ? const SizedBox.shrink() : AdManager().buildBanner(),
+      ),
+    );
+  }
+}
+
+// ==========================================
+// 11b. Session Done Screen
+// ==========================================
+class SessionDoneScreen extends StatefulWidget {
+  final int sessionWordCount;
+  final Map<String, int> stats;
+  final String jsonPath;
+  final int? unitFilter;
+
+  const SessionDoneScreen({
+    super.key,
+    required this.sessionWordCount,
+    required this.stats,
+    required this.jsonPath,
+    this.unitFilter,
+  });
+
+  @override
+  State<SessionDoneScreen> createState() => _SessionDoneScreenState();
+}
+
+class _SessionDoneScreenState extends State<SessionDoneScreen> {
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final easy = (widget.stats['easy'] ?? 0) + (widget.stats['good'] ?? 0);
+    final hard = widget.stats['hard'] ?? 0;
+    final again = widget.stats['again'] ?? 0;
+
+    return Scaffold(
+      backgroundColor: isDark ? const Color(0xFF1A1A2E) : const Color(0xFFF4F6FB),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+        title: Text(
+          'כל הכבוד!',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : const Color(0xFF1A1A2E),
+          ),
+        ),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios_rounded,
+              color: isDark ? Colors.white : const Color(0xFF1A1A2E)),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: Stack(
+        children: [
+          const Confetti(),
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              child: Column(
+                children: [
+                  const SizedBox(height: 16),
+                  // Mascot
+                  const MiliCharacter(size: 140),
+                  const SizedBox(height: 24),
+                  // Gradient "סשן הושלם!" title
+                  ShaderMask(
+                    shaderCallback: (bounds) => const LinearGradient(
+                      colors: [kBluePrimary, kPurplePrimary],
+                    ).createShader(bounds),
+                    child: const Text(
+                      'סשן הושלם!',
+                      style: TextStyle(
+                        fontSize: 36,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back_ios, size: 36),
-                        color: _currentIndex > 0
-                            ? Colors.grey[700]
-                            : Colors.grey[300],
-                        onPressed: _currentIndex > 0 ? _prevCard : null,
-                      ),
-                      const SizedBox(width: 40),
-                      IconButton(
-                        icon: const Icon(Icons.arrow_forward_ios, size: 36),
-                        color: _currentIndex < studySession.length - 1
-                            ? Colors.grey[700]
-                            : Colors.grey[300],
-                        onPressed: _currentIndex < studySession.length - 1
-                            ? _nextCard
-                            : null,
-                      ),
-                    ],
+                  const SizedBox(height: 12),
+                  Text(
+                    'סיימת ${widget.sessionWordCount} מילים בסבב הזה.\nהזיכרון שלך תמיד מתחזק קצת יותר.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 15,
+                      height: 1.55,
+                      color: isDark ? Colors.white60 : Colors.grey[600],
+                    ),
                   ),
-                  const Spacer(),
+                  const SizedBox(height: 32),
+                  // Stats row
                   Row(
                     children: [
-                      Expanded(
-                          child: _buildButton("עוד לא", Colors.white,
-                              Colors.black, () => updateWordProgress(false))),
-                      const SizedBox(width: 15),
-                      Expanded(
-                          child: _buildButton(
-                              "ידעתי!",
-                              widget.onlyFailed
-                                  ? Colors.redAccent
-                                  : Colors.blue,
-                              Colors.white,
-                              () => updateWordProgress(true))),
+                      _StatBlock(value: easy,  label: 'זכרת',      color: kEasyGreen,  isDark: isDark),
+                      const SizedBox(width: 10),
+                      _StatBlock(value: hard,  label: 'עוד עבודה', color: kHardOrange, isDark: isDark),
+                      const SizedBox(width: 10),
+                      _StatBlock(value: again, label: 'לחזרה',     color: kAgainRed,   isDark: isDark),
                     ],
                   ),
+                  const SizedBox(height: 40),
+                  // "סבב נוסף" button
+                  AnimatedButton(
+                    onTap: () => Navigator.pushReplacement(
+                      context,
+                      _slideRoute(LearningScreen(
+                        jsonPath: widget.jsonPath,
+                        unitFilter: widget.unitFilter,
+                      )),
+                    ),
+                    child: Container(
+                      height: 58,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: kDarkButton,
+                        borderRadius: BorderRadius.circular(999),
+                        boxShadow: const [
+                          BoxShadow(color: kDarkShadow, offset: Offset(0, 4), blurRadius: 0),
+                        ],
+                      ),
+                      child: const Center(
+                        child: Text('סבב נוסף',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 17,
+                                fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // "חזרה לבית" button
+                  AnimatedButton(
+                    onTap: () => Navigator.popUntil(context, (r) => r.isFirst),
+                    child: Container(
+                      height: 52,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF2A2A3E) : Colors.white,
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(
+                          color: isDark ? Colors.white24 : const Color(0xFFCDD0D8),
+                        ),
+                      ),
+                      child: Center(
+                        child: Text('חזרה לבית',
+                            style: TextStyle(
+                                color: isDark ? Colors.white : const Color(0xFF1A1A2E),
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
                 ],
               ),
             ),
-    );
-  }
-
-  Widget _buildCardFace(Word word, bool isFront) {
-    bool isDark = Theme.of(context).brightness == Brightness.dark;
-    Color unitColor = getUnitColor(word.unitNumber, isDark);
-    Color cardColor = isFront
-        ? unitColor
-        : (isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF5F5F5));
-    Color textColor = isFront
-        ? getTextColorForBackground(word.unitNumber, isDark)
-        : (isDark ? Colors.white : Colors.black87);
-    Color iconColor = isFront
-        ? (textColor == Colors.white ? Colors.white : Colors.blue)
-        : Colors.blue;
-
-    return Container(
-      width: double.infinity,
-      height: 450,
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-            color: isDark ? Colors.grey[800]! : Colors.grey.shade300, width: 1),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withOpacity(0.12),
-              blurRadius: 16,
-              offset: const Offset(0, 8))
-        ],
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-              isFront
-                  ? (word.language == 'english' ? "🇬🇧 אנגלית" : "🇮🇱 עברית")
-                  : "תרגום",
-              style: TextStyle(color: textColor.withOpacity(0.6))),
-          const SizedBox(height: 20),
-          if (isFront) ...[
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              child: Directionality(
-                textDirection: word.language == 'english'
-                    ? TextDirection.ltr
-                    : TextDirection.rtl,
-                child: Text(word.term,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        fontSize: 36,
-                        fontWeight: FontWeight.bold,
-                        color: textColor)),
-              ),
-            ),
-            if (word.language == 'english')
-              IconButton(
-                  icon: Icon(Icons.volume_up, color: iconColor),
-                  onPressed: () => speak(word.term, word.language)),
-          ] else ...[
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 15),
-              child: Text(word.translation,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue)),
-            ),
-            const SizedBox(height: 15),
-            Padding(
-              padding: const EdgeInsets.all(15),
-              child: Directionality(
-                textDirection: word.language == 'english'
-                    ? TextDirection.ltr
-                    : TextDirection.rtl,
-                child: Text(word.example,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        fontStyle: FontStyle.italic,
-                        fontSize: 18,
-                        color: textColor)),
-              ),
-            ),
-          ]
+          ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildButton(String text, Color bg, Color txt, VoidCallback onTap) {
-    return AnimatedButton(
-      onTap: onTap,
+class _StatBlock extends StatelessWidget {
+  final int value;
+  final String label;
+  final Color color;
+  final bool isDark;
+
+  const _StatBlock({
+    required this.value,
+    required this.label,
+    required this.color,
+    required this.isDark,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 20),
+        padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
-          color: bg,
-          borderRadius: BorderRadius.circular(15),
-          border: Border.all(color: Colors.grey.shade200),
+          color: isDark ? const Color(0xFF2A2A2E) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: bg == Colors.white
-                  ? Colors.black.withOpacity(0.07)
-                  : bg.withOpacity(0.4),
-              blurRadius: 10,
-              offset: const Offset(0, 5),
-            )
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
           ],
         ),
-        child: Center(
-          child: Text(text,
-              style: TextStyle(
-                  color: txt, fontWeight: FontWeight.bold, fontSize: 18)),
+        child: Column(
+          children: [
+            Text('$value',
+                style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w900,
+                    color: color,
+                    height: 1)),
+            const SizedBox(height: 4),
+            Text(label,
+                style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white54 : Colors.grey[600])),
+          ],
         ),
       ),
     );
@@ -2429,6 +3896,24 @@ class AboutScreen extends StatelessWidget {
                   style: TextStyle(fontSize: 18, height: 1.5),
                   textAlign: TextAlign.center),
               const SizedBox(height: 40),
+              ElevatedButton.icon(
+                onPressed: () async {
+                  final InAppReview inAppReview = InAppReview.instance;
+                  await inAppReview.openStoreListing(appStoreId: kAppStoreId);
+                },
+                icon: const Icon(Icons.star_rounded, color: Colors.amber),
+                label: const Text(
+                  "דרגו אותנו ⭐",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 32, vertical: 14),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30)),
+                ),
+              ),
+              const SizedBox(height: 20),
               const Text("© 2026 כל הזכויות שמורות",
                   style: TextStyle(fontSize: 12, color: Colors.grey)),
             ],
@@ -2477,8 +3962,8 @@ class _StatsScreenState extends State<StatsScreen> {
     final allProgress = ProgressManager().getAllProgress();
 
     // טעינת שתי שפות
-    final hebrewData = await _loadJson('assets/hebrew.json', 'hebrew');
-    final englishData = await _loadJson('assets/english.json', 'english');
+    final hebrewData = await _loadJson('assets/hebrew_with_difficulty.json', 'hebrew');
+    final englishData = await _loadJson('assets/english_with_difficulty.json', 'english');
     final allWords = [...hebrewData, ...englishData];
 
     int total = 0, studied = 0, mastered = 0, weak = 0;

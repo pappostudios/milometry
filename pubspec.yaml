@@ -20,6 +20,7 @@ dependencies:
   flutter_local_notifications: ^19.0.0
   url_launcher: ^6.3.0
   in_app_purchase: ^3.2.0
+  in_app_review: ^2.0.9
   # google_mobile_ads: ^5.1.0  # Re-add when kAdsEnabled = true and real iOS ad unit IDs are set
 
 dev_dependencies:
@@ -35,7 +36,10 @@ flutter:
     - assets/logo.jpg
     - assets/hebrew.json
     - assets/english.json
-    - assets/icon.png 
+    - assets/hebrew_with_difficulty.json
+    - assets/english_with_difficulty.json
+    - assets/icon.png
+    - assets/levels/
 
 # ההגדרות של האייקון
 flutter_launcher_icons:

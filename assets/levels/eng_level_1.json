@@ -1,0 +1,4947 @@
+{
+  "level": 1,
+  "language": "english",
+  "words": [
+    {
+      "id": 10200,
+      "language": "english",
+      "term": "about",
+      "translation": "אודות",
+      "example": "Tell me about your trip.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10201,
+      "language": "english",
+      "term": "as",
+      "translation": "כמו",
+      "example": "He works as a teacher.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10202,
+      "language": "english",
+      "term": "both",
+      "translation": "שניהם",
+      "example": "Both of them are here.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10207,
+      "language": "english",
+      "term": "for example",
+      "translation": "לדוגמה",
+      "example": "Take this pen, for example.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10211,
+      "language": "english",
+      "term": "in the same way",
+      "translation": "באותו אופן",
+      "example": "Do it in the same way.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10212,
+      "language": "english",
+      "term": "just as",
+      "translation": "בדיוק כמו",
+      "example": "Just as I thought.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10213,
+      "language": "english",
+      "term": "like",
+      "translation": "כמו",
+      "example": "He runs like a cheetah.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10216,
+      "language": "english",
+      "term": "such as",
+      "translation": "כמו למשל",
+      "example": "Colors such as red and blue.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10217,
+      "language": "english",
+      "term": "that",
+      "translation": "ש-",
+      "example": "I know that you are right.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10218,
+      "language": "english",
+      "term": "above all",
+      "translation": "מעל לכל",
+      "example": "Above all, be honest.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10226,
+      "language": "english",
+      "term": "however",
+      "translation": "בכל דרך",
+      "example": "However you look at it.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10227,
+      "language": "english",
+      "term": "in fact",
+      "translation": "למעשה",
+      "example": "In fact, I agree.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10228,
+      "language": "english",
+      "term": "in general",
+      "translation": "באופן כללי",
+      "example": "In general, it's good.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10240,
+      "language": "english",
+      "term": "of course",
+      "translation": "כמובן, בוודאי",
+      "example": "Of course I will.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10241,
+      "language": "english",
+      "term": "on one hand... on the other hand",
+      "translation": "מצד אחד... מצד שני",
+      "example": "On one hand it's cheap, on the other it's old.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10248,
+      "language": "english",
+      "term": "too",
+      "translation": "יותר מידי",
+      "example": "Too hot.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10254,
+      "language": "english",
+      "term": "also",
+      "translation": "גם",
+      "example": "I am also hungry.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10255,
+      "language": "english",
+      "term": "and",
+      "translation": "ו-",
+      "example": "Bread and butter.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10256,
+      "language": "english",
+      "term": "as well as",
+      "translation": "כמו גם",
+      "example": "Apples as well as oranges.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10260,
+      "language": "english",
+      "term": "but",
+      "translation": "מלבד, חוץ מ-",
+      "example": "Everyone but him.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10262,
+      "language": "english",
+      "term": "except",
+      "translation": "מלבד, חוץ מ-",
+      "example": "Everyone except you.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10265,
+      "language": "english",
+      "term": "including",
+      "translation": "כולל",
+      "example": "All prices including tax.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10267,
+      "language": "english",
+      "term": "not only",
+      "translation": "לא רק",
+      "example": "Not only today.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10269,
+      "language": "english",
+      "term": "together with",
+      "translation": "יחד עם",
+      "example": "Together with friends.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10270,
+      "language": "english",
+      "term": "too",
+      "translation": "גם",
+      "example": "Me too.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10271,
+      "language": "english",
+      "term": "with",
+      "translation": "באמצעות, עם",
+      "example": "With a knife.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10272,
+      "language": "english",
+      "term": "without",
+      "translation": "מבלי, ללא",
+      "example": "Without a doubt.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10274,
+      "language": "english",
+      "term": "even so",
+      "translation": "אף על פי כן",
+      "example": "It was hard; even so, we won.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10275,
+      "language": "english",
+      "term": "even though",
+      "translation": "למרות ש-",
+      "example": "Even though I was tired.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10276,
+      "language": "english",
+      "term": "however",
+      "translation": "למרות זאת",
+      "example": "However, I disagree.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10277,
+      "language": "english",
+      "term": "in spite of",
+      "translation": "למרות",
+      "example": "In spite of the delay.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10280,
+      "language": "english",
+      "term": "after",
+      "translation": "אחרי",
+      "example": "After lunch.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10282,
+      "language": "english",
+      "term": "again",
+      "translation": "שוב",
+      "example": "Try again.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10283,
+      "language": "english",
+      "term": "as",
+      "translation": "כאשר, כש-",
+      "example": "As I walked in.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10284,
+      "language": "english",
+      "term": "as long as",
+      "translation": "כל עוד",
+      "example": "As long as you are happy.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10285,
+      "language": "english",
+      "term": "as soon as",
+      "translation": "כאשר, ברגע ש-",
+      "example": "As soon as possible.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10286,
+      "language": "english",
+      "term": "at first",
+      "translation": "בהתחלה",
+      "example": "At first I didn't know.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10287,
+      "language": "english",
+      "term": "at last",
+      "translation": "סוף סוף",
+      "example": "At last, we arrived.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10288,
+      "language": "english",
+      "term": "before",
+      "translation": "לפני",
+      "example": "Before sunrise.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10289,
+      "language": "english",
+      "term": "by",
+      "translation": "עד, לא יאוחר מ-",
+      "example": "By five o'clock.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10291,
+      "language": "english",
+      "term": "during",
+      "translation": "תוך כדי, במשך",
+      "example": "During the war.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10295,
+      "language": "english",
+      "term": "first of all",
+      "translation": "ראשית",
+      "example": "First of all, sit down.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10297,
+      "language": "english",
+      "term": "from",
+      "translation": "מ-",
+      "example": "From here.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10301,
+      "language": "english",
+      "term": "in due time",
+      "translation": "בבוא העת",
+      "example": "You will know in due time.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10304,
+      "language": "english",
+      "term": "last",
+      "translation": "אחרון",
+      "example": "Last one.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10305,
+      "language": "english",
+      "term": "later",
+      "translation": "מאוחר יותר",
+      "example": "See you later.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10307,
+      "language": "english",
+      "term": "next",
+      "translation": "הבא",
+      "example": "Next week.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10308,
+      "language": "english",
+      "term": "now",
+      "translation": "עכשיו",
+      "example": "Do it now.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10309,
+      "language": "english",
+      "term": "once",
+      "translation": "פעם (בעבר)",
+      "example": "Once upon a time.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10310,
+      "language": "english",
+      "term": "once",
+      "translation": "ברגע ש-",
+      "example": "Once you start.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10311,
+      "language": "english",
+      "term": "past",
+      "translation": "עבר, שעבר",
+      "example": "In the past.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10317,
+      "language": "english",
+      "term": "since",
+      "translation": "מאז",
+      "example": "Since yesterday.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10318,
+      "language": "english",
+      "term": "soon",
+      "translation": "בהקדם, מוקדם",
+      "example": "See you soon.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10319,
+      "language": "english",
+      "term": "still",
+      "translation": "עדיין, למרות זאת",
+      "example": "Still waiting.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10321,
+      "language": "english",
+      "term": "then",
+      "translation": "אז",
+      "example": "Then what happened?",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10322,
+      "language": "english",
+      "term": "to begin with",
+      "translation": "בתור התחלה",
+      "example": "To begin with, I'm tired.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10323,
+      "language": "english",
+      "term": "until",
+      "translation": "עד ש-",
+      "example": "Wait until I come.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10324,
+      "language": "english",
+      "term": "until now",
+      "translation": "עד עתה",
+      "example": "Good until now.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10325,
+      "language": "english",
+      "term": "when",
+      "translation": "כאשר, כש-",
+      "example": "When I arrived.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10327,
+      "language": "english",
+      "term": "while",
+      "translation": "בזמן ש-",
+      "example": "While I slept.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10328,
+      "language": "english",
+      "term": "yet",
+      "translation": "עדיין, בכל זאת",
+      "example": "Not yet.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10330,
+      "language": "english",
+      "term": "down",
+      "translation": "למטה",
+      "example": "Sit down.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10334,
+      "language": "english",
+      "term": "right",
+      "translation": "ימינה",
+      "example": "Turn right.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10336,
+      "language": "english",
+      "term": "toward",
+      "translation": "אל, אל עבר",
+      "example": "Walk toward the door.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10339,
+      "language": "english",
+      "term": "about",
+      "translation": "ליד, בערך",
+      "example": "About five miles.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10340,
+      "language": "english",
+      "term": "above",
+      "translation": "מעל",
+      "example": "Above the clouds.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10341,
+      "language": "english",
+      "term": "toward",
+      "translation": "אל, אל עבר",
+      "example": "Walk toward the light.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10344,
+      "language": "english",
+      "term": "about",
+      "translation": "ליד, בערך",
+      "example": "About five miles away.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10345,
+      "language": "english",
+      "term": "above",
+      "translation": "מעל",
+      "example": "Above the clouds.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10346,
+      "language": "english",
+      "term": "across",
+      "translation": "בצד השני, לרוחב",
+      "example": "Across the street.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10348,
+      "language": "english",
+      "term": "against",
+      "translation": "כנגד, ממול",
+      "example": "Lean against the wall.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10353,
+      "language": "english",
+      "term": "among",
+      "translation": "בקרב, בין",
+      "example": "Among friends.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10354,
+      "language": "english",
+      "term": "around",
+      "translation": "מסביב",
+      "example": "Around the world.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10355,
+      "language": "english",
+      "term": "at",
+      "translation": "אצל, ב-",
+      "example": "At home.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10356,
+      "language": "english",
+      "term": "before",
+      "translation": "לפני, מול",
+      "example": "Before the judge.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10358,
+      "language": "english",
+      "term": "below",
+      "translation": "מתחת",
+      "example": "Below sea level.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10361,
+      "language": "english",
+      "term": "between",
+      "translation": "בין",
+      "example": "Between two cities.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10363,
+      "language": "english",
+      "term": "by",
+      "translation": "ליד, בסמוך ל-",
+      "example": "Stand by me.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10364,
+      "language": "english",
+      "term": "close",
+      "translation": "קרוב",
+      "example": "Close to home.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10368,
+      "language": "english",
+      "term": "from",
+      "translation": "מ-",
+      "example": "From here to there.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10369,
+      "language": "english",
+      "term": "here",
+      "translation": "כאן",
+      "example": "I am here.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10370,
+      "language": "english",
+      "term": "in",
+      "translation": "ב-, בתוך",
+      "example": "In the box.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10371,
+      "language": "english",
+      "term": "in front of",
+      "translation": "בחזית של, מול",
+      "example": "In front of the house.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10372,
+      "language": "english",
+      "term": "inside",
+      "translation": "בתוך, פנים",
+      "example": "Go inside.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10373,
+      "language": "english",
+      "term": "into",
+      "translation": "אל תוך",
+      "example": "Jump into the water.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10375,
+      "language": "english",
+      "term": "near",
+      "translation": "קרוב",
+      "example": "Near the station.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10377,
+      "language": "english",
+      "term": "next to",
+      "translation": "ליד",
+      "example": "Sit next to him.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10378,
+      "language": "english",
+      "term": "of",
+      "translation": "של, מ-",
+      "example": "City of lights.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10379,
+      "language": "english",
+      "term": "on",
+      "translation": "על",
+      "example": "On the table.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10380,
+      "language": "english",
+      "term": "on top of",
+      "translation": "על, מעל",
+      "example": "On top of the world.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10382,
+      "language": "english",
+      "term": "outside",
+      "translation": "חוץ / בחוץ",
+      "example": "Wait outside.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10383,
+      "language": "english",
+      "term": "over",
+      "translation": "על, מעל",
+      "example": "Fly over the sea.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10384,
+      "language": "english",
+      "term": "there",
+      "translation": "שם",
+      "example": "Over there.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10385,
+      "language": "english",
+      "term": "under",
+      "translation": "מתחת",
+      "example": "Under the bed.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10387,
+      "language": "english",
+      "term": "up",
+      "translation": "למעלה",
+      "example": "Look up.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10388,
+      "language": "english",
+      "term": "where",
+      "translation": "היכן, איפה",
+      "example": "Where are you?",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10392,
+      "language": "english",
+      "term": "although",
+      "translation": "למרות ש-",
+      "example": "Although it rained.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10393,
+      "language": "english",
+      "term": "but",
+      "translation": "אך, אבל",
+      "example": "Poor but happy.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10397,
+      "language": "english",
+      "term": "different from",
+      "translation": "שונה מ-",
+      "example": "Different from me.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10400,
+      "language": "english",
+      "term": "instead",
+      "translation": "במקום",
+      "example": "Do this instead.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10401,
+      "language": "english",
+      "term": "instead of",
+      "translation": "במקום",
+      "example": "Instead of milk.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10404,
+      "language": "english",
+      "term": "or",
+      "translation": "או",
+      "example": "Tea or coffee?",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10409,
+      "language": "english",
+      "term": "than",
+      "translation": "מ- (בהשוואה)",
+      "example": "Bigger than you.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10410,
+      "language": "english",
+      "term": "though",
+      "translation": "למרות זאת / למרות ש-",
+      "example": "Even though I tried.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10413,
+      "language": "english",
+      "term": "where",
+      "translation": "בעוד ש-",
+      "example": "Where others failed.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10415,
+      "language": "english",
+      "term": "yet",
+      "translation": "אך, אולם",
+      "example": "Simple yet effective.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10416,
+      "language": "english",
+      "term": "after all",
+      "translation": "אחרי הכל",
+      "example": "After all, he tried.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10417,
+      "language": "english",
+      "term": "because",
+      "translation": "בגלל",
+      "example": "Because I said so.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10418,
+      "language": "english",
+      "term": "because of",
+      "translation": "בגלל",
+      "example": "Because of the rain.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10420,
+      "language": "english",
+      "term": "due to",
+      "translation": "בגלל, לאור",
+      "example": "Due to weather.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10422,
+      "language": "english",
+      "term": "in light of",
+      "translation": "לאור",
+      "example": "In light of new evidence.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10424,
+      "language": "english",
+      "term": "since",
+      "translation": "מכיוון ש-",
+      "example": "Since you are here.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10427,
+      "language": "english",
+      "term": "why",
+      "translation": "מדוע",
+      "example": "Why ask?",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10430,
+      "language": "english",
+      "term": "as a result",
+      "translation": "כתוצאה",
+      "example": "As a result of this.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10432,
+      "language": "english",
+      "term": "for",
+      "translation": "מפני ש- / עבור",
+      "example": "For he is good.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10434,
+      "language": "english",
+      "term": "in that case",
+      "translation": "במקרה הזה",
+      "example": "In that case, go.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10435,
+      "language": "english",
+      "term": "led to",
+      "translation": "הוביל ל-",
+      "example": "Led to success.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10436,
+      "language": "english",
+      "term": "so",
+      "translation": "אז, כך ש-, ולכן",
+      "example": "So I went home.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10437,
+      "language": "english",
+      "term": "so that",
+      "translation": "כך ש-",
+      "example": "So that you know.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10439,
+      "language": "english",
+      "term": "then",
+      "translation": "אז",
+      "example": "Then we left.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10441,
+      "language": "english",
+      "term": "always",
+      "translation": "תמיד",
+      "example": "Always love.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10445,
+      "language": "english",
+      "term": "every day",
+      "translation": "כל יום",
+      "example": "I run every day.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10446,
+      "language": "english",
+      "term": "every now and then",
+      "translation": "לפעמים",
+      "example": "Every now and then I cook.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10447,
+      "language": "english",
+      "term": "for the most part",
+      "translation": "בדרך כלל",
+      "example": "For the most part, it's true.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10450,
+      "language": "english",
+      "term": "from time to time",
+      "translation": "מפעם לפעם",
+      "example": "Visit from time to time.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10453,
+      "language": "english",
+      "term": "never",
+      "translation": "אף פעם",
+      "example": "Never again.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10455,
+      "language": "english",
+      "term": "often",
+      "translation": "לעיתים קרובות",
+      "example": "Often used.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10456,
+      "language": "english",
+      "term": "once in a while",
+      "translation": "מידי פעם",
+      "example": "Once in a while I go.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10463,
+      "language": "english",
+      "term": "sometimes",
+      "translation": "לעיתים, לפעמים",
+      "example": "Sometimes I cry.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10464,
+      "language": "english",
+      "term": "usually",
+      "translation": "בדרך כלל",
+      "example": "Usually on time.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10465,
+      "language": "english",
+      "term": "how",
+      "translation": "איך, כיצד",
+      "example": "How are you?",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10466,
+      "language": "english",
+      "term": "what",
+      "translation": "מה, איזה",
+      "example": "What is this?",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10467,
+      "language": "english",
+      "term": "which",
+      "translation": "איזה",
+      "example": "Which one?",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10468,
+      "language": "english",
+      "term": "who",
+      "translation": "מי, ש-",
+      "example": "Who is he?",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10471,
+      "language": "english",
+      "term": "first",
+      "translation": "ראשון",
+      "example": "First place.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 10472,
+      "language": "english",
+      "term": "second",
+      "translation": "שני",
+      "example": "Second chance.",
+      "unit": 1,
+      "level": 1
+    },
+    {
+      "id": 11001,
+      "language": "english",
+      "term": "able",
+      "translation": "יכול, מסוגל",
+      "example": "He is able to run a marathon.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11019,
+      "language": "english",
+      "term": "aim",
+      "translation": "לכוון, מטרה",
+      "example": "His aim is to succeed.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11032,
+      "language": "english",
+      "term": "another",
+      "translation": "נוסף / אחר",
+      "example": "Let's try another way.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11033,
+      "language": "english",
+      "term": "answer",
+      "translation": "תשובה",
+      "example": "He gave the correct answer.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11036,
+      "language": "english",
+      "term": "appear",
+      "translation": "להופיע / נראה ש-",
+      "example": "It appears to be broken.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11042,
+      "language": "english",
+      "term": "area",
+      "translation": "אזור, תחום",
+      "example": "This is a quiet area.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11046,
+      "language": "english",
+      "term": "arm",
+      "translation": "לחמש / זרוע",
+      "example": "He broke his arm.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11048,
+      "language": "english",
+      "term": "around",
+      "translation": "בערך",
+      "example": "It costs around five dollars.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11052,
+      "language": "english",
+      "term": "art",
+      "translation": "אמנות",
+      "example": "She loves modern art.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11057,
+      "language": "english",
+      "term": "as far as",
+      "translation": "לגבי, בכל הנוגע ל-",
+      "example": "As far as I know, he is coming.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11058,
+      "language": "english",
+      "term": "as proof of",
+      "translation": "כהוכחה ל-",
+      "example": "He showed his ID as proof of age.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11059,
+      "language": "english",
+      "term": "ask",
+      "translation": "לשאול",
+      "example": "Can I ask a question?",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11086,
+      "language": "english",
+      "term": "base",
+      "translation": "בסיס",
+      "example": "The base of the statue.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11087,
+      "language": "english",
+      "term": "bat",
+      "translation": "עטלף / מחבט",
+      "example": "He hit the ball with a bat.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11099,
+      "language": "english",
+      "term": "better",
+      "translation": "יותר טוב",
+      "example": "I feel better today.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11110,
+      "language": "english",
+      "term": "body",
+      "translation": "גוויה, גוף",
+      "example": "Exercise is good for the body.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11121,
+      "language": "english",
+      "term": "break",
+      "translation": "לשבור",
+      "example": "Don't break the glass.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11126,
+      "language": "english",
+      "term": "build",
+      "translation": "לבנות",
+      "example": "They plan to build a house.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11130,
+      "language": "english",
+      "term": "by",
+      "translation": "באמצעות, על-ידי",
+      "example": "Written by Shakespeare.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11131,
+      "language": "english",
+      "term": "call",
+      "translation": "לקרוא, להתקשר",
+      "example": "Call me later.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11133,
+      "language": "english",
+      "term": "care",
+      "translation": "לחבב / לדאוג, לטפל",
+      "example": "Take care of yourself.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11136,
+      "language": "english",
+      "term": "carry",
+      "translation": "לסחוב",
+      "example": "Can you carry this bag?",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11139,
+      "language": "english",
+      "term": "cause",
+      "translation": "מטרה / גורם, סיבה",
+      "example": "The cause of the fire.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11144,
+      "language": "english",
+      "term": "chance",
+      "translation": "סיכוי",
+      "example": "There is a good chance.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11145,
+      "language": "english",
+      "term": "change",
+      "translation": "עודף / שינוי, לשנות",
+      "example": "Keep the change.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11148,
+      "language": "english",
+      "term": "check",
+      "translation": "לבדוק",
+      "example": "Check the answers.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11151,
+      "language": "english",
+      "term": "children",
+      "translation": "ילדים",
+      "example": "The children are playing.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11152,
+      "language": "english",
+      "term": "circle",
+      "translation": "להקיף בעיגול / מעגל",
+      "example": "Draw a circle.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11157,
+      "language": "english",
+      "term": "close",
+      "translation": "סגור, לסגור",
+      "example": "Close the door.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11163,
+      "language": "english",
+      "term": "cold",
+      "translation": "קר, התקררות",
+      "example": "It is cold outside.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11165,
+      "language": "english",
+      "term": "color",
+      "translation": "לצבוע / צבע",
+      "example": "What is your favorite color?",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11167,
+      "language": "english",
+      "term": "complete",
+      "translation": "כולל / להשלים",
+      "example": "Complete the task.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11170,
+      "language": "english",
+      "term": "continue",
+      "translation": "להמשיך",
+      "example": "Please continue reading.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11179,
+      "language": "english",
+      "term": "cost",
+      "translation": "מחיר, עלות",
+      "example": "What is the cost of this?",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11181,
+      "language": "english",
+      "term": "count",
+      "translation": "לספור / רוזן",
+      "example": "Can you count to ten?",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11182,
+      "language": "english",
+      "term": "country",
+      "translation": "ארץ / כפר, אזור",
+      "example": "I love my country.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11183,
+      "language": "english",
+      "term": "cover",
+      "translation": "כיסוי, מכסה",
+      "example": "Cover the pot.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11184,
+      "language": "english",
+      "term": "cow",
+      "translation": "פרה",
+      "example": "The cow gives milk.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11190,
+      "language": "english",
+      "term": "death",
+      "translation": "מוות",
+      "example": "The death of the king.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11191,
+      "language": "english",
+      "term": "deep",
+      "translation": "עמוק",
+      "example": "The ocean is deep.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11198,
+      "language": "english",
+      "term": "die",
+      "translation": "מת, למות",
+      "example": "Flowers die without water.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11203,
+      "language": "english",
+      "term": "done",
+      "translation": "גמור, עשוי",
+      "example": "The work is done.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11204,
+      "language": "english",
+      "term": "dream",
+      "translation": "חלום, לחלום",
+      "example": "I had a bad dream.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11233,
+      "language": "english",
+      "term": "due",
+      "translation": "צריך להיעשות, זמנו הגיע / בשל",
+      "example": "The assignment is due tomorrow.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11234,
+      "language": "english",
+      "term": "early",
+      "translation": "מוקדם",
+      "example": "He woke up early.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11235,
+      "language": "english",
+      "term": "earth",
+      "translation": "אדמה",
+      "example": "The earth is rich and fertile.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11236,
+      "language": "english",
+      "term": "Earth",
+      "translation": "כדור הארץ",
+      "example": "The Earth orbits the sun.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11245,
+      "language": "english",
+      "term": "enter",
+      "translation": "נכנס",
+      "example": "Please enter the password.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11248,
+      "language": "english",
+      "term": "evening",
+      "translation": "ערב",
+      "example": "We went out in the evening.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11252,
+      "language": "english",
+      "term": "example",
+      "translation": "דוגמה",
+      "example": "Give me an example.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11256,
+      "language": "english",
+      "term": "fact",
+      "translation": "עובדה",
+      "example": "It is a known fact.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11261,
+      "language": "english",
+      "term": "fear",
+      "translation": "פחד, לפחד",
+      "example": "He has a fear of heights.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11262,
+      "language": "english",
+      "term": "feel",
+      "translation": "להרגיש",
+      "example": "I feel happy today.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11264,
+      "language": "english",
+      "term": "few",
+      "translation": "מעט",
+      "example": "Only a few people came.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11265,
+      "language": "english",
+      "term": "field",
+      "translation": "תחום, שדה",
+      "example": "He works in the field of science.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11266,
+      "language": "english",
+      "term": "find",
+      "translation": "למצוא",
+      "example": "I can't find my keys.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11269,
+      "language": "english",
+      "term": "fire",
+      "translation": "לפטר / אש, להצית / לירות",
+      "example": "They had to fire him.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11270,
+      "language": "english",
+      "term": "fix",
+      "translation": "לתקן",
+      "example": "Can you fix the broken chair?",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11276,
+      "language": "english",
+      "term": "front",
+      "translation": "חזית, להתעמת",
+      "example": "Wait at the front of the line.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11277,
+      "language": "english",
+      "term": "full",
+      "translation": "מלא, למלא",
+      "example": "The glass is full.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11281,
+      "language": "english",
+      "term": "great",
+      "translation": "גדול, מעולה",
+      "example": "He did a great job.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11282,
+      "language": "english",
+      "term": "half",
+      "translation": "חצי",
+      "example": "I ate half of the apple.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11283,
+      "language": "english",
+      "term": "hand",
+      "translation": "יד / למסור",
+      "example": "Raise your hand.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11284,
+      "language": "english",
+      "term": "hear",
+      "translation": "לשמוע",
+      "example": "Can you hear the music?",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11286,
+      "language": "english",
+      "term": "heat",
+      "translation": "חום, לחמם",
+      "example": "The heat was unbearable.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11288,
+      "language": "english",
+      "term": "horse",
+      "translation": "סוס",
+      "example": "She rides a horse.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11289,
+      "language": "english",
+      "term": "hot",
+      "translation": "חם / חריף",
+      "example": "The soup is very hot.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11290,
+      "language": "english",
+      "term": "house",
+      "translation": "לשכן / בית",
+      "example": "They bought a new house.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11294,
+      "language": "english",
+      "term": "jump",
+      "translation": "לקפוץ",
+      "example": "The cat jumped off the table.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11295,
+      "language": "english",
+      "term": "just",
+      "translation": "מדויק, אמיתי / צודק, הוגן / רק, בלבד",
+      "example": "It was just a joke.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11297,
+      "language": "english",
+      "term": "king",
+      "translation": "מלך",
+      "example": "The lion is the king of the jungle.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11299,
+      "language": "english",
+      "term": "kitchen",
+      "translation": "מטבח",
+      "example": "She is cooking in the kitchen.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11300,
+      "language": "english",
+      "term": "last",
+      "translation": "המשיך, החזיק מעמד",
+      "example": "The meeting lasted two hours.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11301,
+      "language": "english",
+      "term": "late",
+      "translation": "מאוחר, לאחר",
+      "example": "He was late for class.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11302,
+      "language": "english",
+      "term": "light",
+      "translation": "קל / אור",
+      "example": "The bag is very light.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11303,
+      "language": "english",
+      "term": "like",
+      "translation": "לחבב, להעדיף",
+      "example": "I like ice cream.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11304,
+      "language": "english",
+      "term": "list",
+      "translation": "רשימה, להכין רשימה",
+      "example": "Make a grocery list.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11307,
+      "language": "english",
+      "term": "main",
+      "translation": "עיקרי",
+      "example": "What is the main idea?",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11308,
+      "language": "english",
+      "term": "map",
+      "translation": "מפה, למפות",
+      "example": "We used a map to find the way.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11309,
+      "language": "english",
+      "term": "mark",
+      "translation": "לסמן",
+      "example": "Mark the correct answer.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11313,
+      "language": "english",
+      "term": "milk",
+      "translation": "חלב, לחלוב",
+      "example": "Do you want milk in your coffee?",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11316,
+      "language": "english",
+      "term": "money",
+      "translation": "כסף",
+      "example": "I need some money.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11317,
+      "language": "english",
+      "term": "move",
+      "translation": "לזוז, לעבור",
+      "example": "Please move aside.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11319,
+      "language": "english",
+      "term": "must",
+      "translation": "חייב, חובה, הכרח",
+      "example": "You must study for the test.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11320,
+      "language": "english",
+      "term": "number",
+      "translation": "מספר",
+      "example": "What is your phone number?",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11321,
+      "language": "english",
+      "term": "once",
+      "translation": "פעם אחת",
+      "example": "I met him once.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11322,
+      "language": "english",
+      "term": "open",
+      "translation": "לפתוח, פתוח",
+      "example": "The shop is open.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11323,
+      "language": "english",
+      "term": "over",
+      "translation": "מחדש, שוב",
+      "example": "Start over.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11325,
+      "language": "english",
+      "term": "pay",
+      "translation": "לשלם",
+      "example": "How much did you pay?",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11329,
+      "language": "english",
+      "term": "place",
+      "translation": "מקום, למקם",
+      "example": "This is a nice place.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11330,
+      "language": "english",
+      "term": "plan",
+      "translation": "לתכנן / תכנית",
+      "example": "What is the plan?",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11333,
+      "language": "english",
+      "term": "price",
+      "translation": "מחיר",
+      "example": "The price is too high.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11335,
+      "language": "english",
+      "term": "problem",
+      "translation": "בעיה",
+      "example": "There is a problem with the car.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11336,
+      "language": "english",
+      "term": "program",
+      "translation": "תכנית / תכניה / לתכנת",
+      "example": "He watched a TV program.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11338,
+      "language": "english",
+      "term": "question",
+      "translation": "להטיל ספק / שאלה",
+      "example": "May I ask a question?",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11347,
+      "language": "english",
+      "term": "rest",
+      "translation": "מנוחה / יתר, שאר",
+      "example": "You need some rest.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11348,
+      "language": "english",
+      "term": "rich",
+      "translation": "עשיר",
+      "example": "He is a rich man.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11349,
+      "language": "english",
+      "term": "right",
+      "translation": "זכות",
+      "example": "You have the right to remain silent.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11351,
+      "language": "english",
+      "term": "river",
+      "translation": "נהר",
+      "example": "They crossed the river.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11352,
+      "language": "english",
+      "term": "road",
+      "translation": "דרך",
+      "example": "The road is blocked.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11353,
+      "language": "english",
+      "term": "safe",
+      "translation": "בטוח",
+      "example": "Is it safe to swim here?",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11355,
+      "language": "english",
+      "term": "save",
+      "translation": "לשמור",
+      "example": "Save the file on your computer.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11357,
+      "language": "english",
+      "term": "school",
+      "translation": "בית-ספר",
+      "example": "School starts at 8 AM.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11360,
+      "language": "english",
+      "term": "sell",
+      "translation": "למכור",
+      "example": "They sell fresh fruit.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11361,
+      "language": "english",
+      "term": "send",
+      "translation": "לשלוח",
+      "example": "Send me an email.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11363,
+      "language": "english",
+      "term": "short",
+      "translation": "קצר",
+      "example": "It was a short trip.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11365,
+      "language": "english",
+      "term": "side",
+      "translation": "צד, לצודד, לתמוך",
+      "example": "Which side are you on?",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11366,
+      "language": "english",
+      "term": "sleep",
+      "translation": "שינה / לישון",
+      "example": "I need more sleep.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11367,
+      "language": "english",
+      "term": "slow",
+      "translation": "איטי, לאט",
+      "example": "He walks slow.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11368,
+      "language": "english",
+      "term": "slow down",
+      "translation": "להאט",
+      "example": "You should slow down.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11369,
+      "language": "english",
+      "term": "so",
+      "translation": "כל-כך, מאוד",
+      "example": "I am so happy.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11370,
+      "language": "english",
+      "term": "space",
+      "translation": "חלל / רווח",
+      "example": "There is no space left.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11371,
+      "language": "english",
+      "term": "speed",
+      "translation": "מהירות",
+      "example": "Drive at a safe speed.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11372,
+      "language": "english",
+      "term": "start",
+      "translation": "להתחיל",
+      "example": "Let's start the game.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11373,
+      "language": "english",
+      "term": "still",
+      "translation": "נייח, דומם, שקט",
+      "example": "Stand still.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11374,
+      "language": "english",
+      "term": "stone",
+      "translation": "אבן",
+      "example": "He threw a stone.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11375,
+      "language": "english",
+      "term": "strong",
+      "translation": "חזק",
+      "example": "He is very strong.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11377,
+      "language": "english",
+      "term": "system",
+      "translation": "מערכת / שיטה",
+      "example": "The computer system is down.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11381,
+      "language": "english",
+      "term": "time",
+      "translation": "זמן",
+      "example": "What time is it?",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11383,
+      "language": "english",
+      "term": "town",
+      "translation": "עיר, עיירה",
+      "example": "We live in a small town.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11386,
+      "language": "english",
+      "term": "use",
+      "translation": "תועלת, תכלית / לנצל / להשתמש",
+      "example": "Use this tool.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11389,
+      "language": "english",
+      "term": "usual",
+      "translation": "רגיל",
+      "example": "As usual, he is late.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11391,
+      "language": "english",
+      "term": "value",
+      "translation": "ערך, להעריך",
+      "example": "I value your opinion.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11392,
+      "language": "english",
+      "term": "view",
+      "translation": "לראות / נוף, שדה ראיה",
+      "example": "The view from here is beautiful.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11394,
+      "language": "english",
+      "term": "visit",
+      "translation": "לבקר",
+      "example": "I will visit you tomorrow.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11396,
+      "language": "english",
+      "term": "voice",
+      "translation": "קול, להשמיע קול",
+      "example": "She has a lovely voice.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11397,
+      "language": "english",
+      "term": "wait",
+      "translation": "להמתין, המתנה",
+      "example": "Wait for me.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 11398,
+      "language": "english",
+      "term": "way",
+      "translation": "דרך",
+      "example": "This is the right way.",
+      "unit": 2,
+      "level": 1
+    },
+    {
+      "id": 12034,
+      "language": "english",
+      "term": "ban",
+      "translation": "חרם, איסור",
+      "example": "There is a ban on smoking here.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12041,
+      "language": "english",
+      "term": "bright",
+      "translation": "בהיר, ברור",
+      "example": "The sun is very bright today.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12042,
+      "language": "english",
+      "term": "by no means",
+      "translation": "ללא ספק, בשום אופן",
+      "example": "It is by no means certain.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12043,
+      "language": "english",
+      "term": "by now",
+      "translation": "עד עתה",
+      "example": "He should be here by now.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12049,
+      "language": "english",
+      "term": "certain",
+      "translation": "מסוים / בטוח",
+      "example": "I am certain that he is right.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12053,
+      "language": "english",
+      "term": "choice",
+      "translation": "בחירה",
+      "example": "You have a choice to make.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12057,
+      "language": "english",
+      "term": "class",
+      "translation": "כיתה / מעמד / סוג",
+      "example": "She is in my class.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12061,
+      "language": "english",
+      "term": "common",
+      "translation": "נפוץ, משותף",
+      "example": "It is a common mistake.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12081,
+      "language": "english",
+      "term": "decide",
+      "translation": "להחליט",
+      "example": "You must decide what to do.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12094,
+      "language": "english",
+      "term": "direct",
+      "translation": "לכוון / לביים / ישיר, כנה",
+      "example": "He gave me a direct answer.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12115,
+      "language": "english",
+      "term": "enough",
+      "translation": "מספיק",
+      "example": "I have enough money.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12116,
+      "language": "english",
+      "term": "era",
+      "translation": "עידן",
+      "example": "We live in a digital era.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12120,
+      "language": "english",
+      "term": "even",
+      "translation": "אפילו / זוגי (מספר) / ליישר, להשוות",
+      "example": "Even a child knows that.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12122,
+      "language": "english",
+      "term": "except for",
+      "translation": "למעט",
+      "example": "Everyone came except for John.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12124,
+      "language": "english",
+      "term": "expect",
+      "translation": "לצפות",
+      "example": "I expect him to arrive soon.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12126,
+      "language": "english",
+      "term": "explain",
+      "translation": "להסביר",
+      "example": "Can you explain the rule?",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12131,
+      "language": "english",
+      "term": "face",
+      "translation": "פונה ל-, עם הפנים ל- / פנים",
+      "example": "Wash your face.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12135,
+      "language": "english",
+      "term": "form",
+      "translation": "צורה / ליצור, להקים",
+      "example": "Water takes the form of its container / They formed a committee.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12138,
+      "language": "english",
+      "term": "general",
+      "translation": "כללי / גנרל (דרגה צבאית)",
+      "example": "In general, I agree with you / The general led the army.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12146,
+      "language": "english",
+      "term": "heavy",
+      "translation": "כבד",
+      "example": "This box is too heavy to lift.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12147,
+      "language": "english",
+      "term": "hope",
+      "translation": "תקווה, לקוות",
+      "example": "I hope you feel better soon.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12148,
+      "language": "english",
+      "term": "human",
+      "translation": "אנושי",
+      "example": "To err is human.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12154,
+      "language": "english",
+      "term": "important",
+      "translation": "חשוב",
+      "example": "It is important to be on time.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12165,
+      "language": "english",
+      "term": "island",
+      "translation": "אי",
+      "example": "They live on a tropical island.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12169,
+      "language": "english",
+      "term": "join",
+      "translation": "להצטרף, לחבר",
+      "example": "Join us for lunch.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12174,
+      "language": "english",
+      "term": "large",
+      "translation": "גדול",
+      "example": "A large crowd gathered.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12176,
+      "language": "english",
+      "term": "law",
+      "translation": "חוק",
+      "example": "Obey the law.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12180,
+      "language": "english",
+      "term": "less",
+      "translation": "פחות",
+      "example": "Eat less sugar.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12182,
+      "language": "english",
+      "term": "level",
+      "translation": "רמה, דרגה, מפלס / לאזן, להשוות",
+      "example": "A high level of noise / Level the ground.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12183,
+      "language": "english",
+      "term": "likely",
+      "translation": "סביר",
+      "example": "It is likely to rain.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12184,
+      "language": "english",
+      "term": "local",
+      "translation": "מקומי",
+      "example": "Buy local produce.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12193,
+      "language": "english",
+      "term": "middle",
+      "translation": "אמצע",
+      "example": "In the middle of the room.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12196,
+      "language": "english",
+      "term": "most",
+      "translation": "הכי / רוב",
+      "example": "The most beautiful / Most people.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12202,
+      "language": "english",
+      "term": "natural",
+      "translation": "טבעי",
+      "example": "It is natural to feel sad.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12204,
+      "language": "english",
+      "term": "need",
+      "translation": "צריך, צורך",
+      "example": "I need help / There is a need for change.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12207,
+      "language": "english",
+      "term": "new",
+      "translation": "חדש",
+      "example": "I bought a new car.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12210,
+      "language": "english",
+      "term": "note",
+      "translation": "הערה, פתק / לציין",
+      "example": "Write a note / Please note the change.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12220,
+      "language": "english",
+      "term": "oil",
+      "translation": "נפט, שמן, לשמן",
+      "example": "Olive oil.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12223,
+      "language": "english",
+      "term": "order",
+      "translation": "מסדר דתי / להזמין / לצוות",
+      "example": "The order of monks / Order food / He ordered me to stop.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12232,
+      "language": "english",
+      "term": "part",
+      "translation": "חלק",
+      "example": "Part of the problem.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12235,
+      "language": "english",
+      "term": "per",
+      "translation": "לכל",
+      "example": "Miles per hour.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12245,
+      "language": "english",
+      "term": "present",
+      "translation": "להציג / מתנה / הווה, נוכח, קיים",
+      "example": "Present your ticket / A birthday present / He is present today.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12246,
+      "language": "english",
+      "term": "prime",
+      "translation": "ראשוני, עיקרי, מובחר",
+      "example": "The prime minister.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12255,
+      "language": "english",
+      "term": "provide",
+      "translation": "לספק / לפרנס",
+      "example": "Provide food and water.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12261,
+      "language": "english",
+      "term": "raise",
+      "translation": "להעלות",
+      "example": "Raise your hand.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12266,
+      "language": "english",
+      "term": "reason",
+      "translation": "סיבה / הגיון",
+      "example": "What is the reason?",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12289,
+      "language": "english",
+      "term": "result",
+      "translation": "תוצאה",
+      "example": "The result of the game.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12290,
+      "language": "english",
+      "term": "result in",
+      "translation": "הסתיים ב-",
+      "example": "The fight resulted in injuries.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12294,
+      "language": "english",
+      "term": "rise",
+      "translation": "עליה, לעלות",
+      "example": "The sun rises in the east.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12302,
+      "language": "english",
+      "term": "seem",
+      "translation": "נראה כ-, דומה ל-",
+      "example": "It seems likely.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12303,
+      "language": "english",
+      "term": "sense",
+      "translation": "היגיון, תודעה / חוש, לחוש",
+      "example": "Common sense / Sense of smell.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12307,
+      "language": "english",
+      "term": "sign",
+      "translation": "לחתום / סימן, לסמן / שֶׁלֶט",
+      "example": "Sign your name / A stop sign.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12310,
+      "language": "english",
+      "term": "simple",
+      "translation": "פשוט",
+      "example": "It is a simple task.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12315,
+      "language": "english",
+      "term": "square",
+      "translation": "כיכר / ריבוע",
+      "example": "Times Square / Draw a square.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12316,
+      "language": "english",
+      "term": "stand",
+      "translation": "לעמוד",
+      "example": "Stand up.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12323,
+      "language": "english",
+      "term": "sum",
+      "translation": "סכום, סך, לסכם",
+      "example": "The sum of money.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12324,
+      "language": "english",
+      "term": "sum up",
+      "translation": "לסכם",
+      "example": "To sum up, we need more time.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12332,
+      "language": "english",
+      "term": "title",
+      "translation": "כותרת",
+      "example": "The title of the book.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12333,
+      "language": "english",
+      "term": "touch",
+      "translation": "מגע, לגעת",
+      "example": "Don't touch the glass.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12334,
+      "language": "english",
+      "term": "trade",
+      "translation": "להחליף / לסחור, מסחר",
+      "example": "Trade places / International trade.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12335,
+      "language": "english",
+      "term": "train",
+      "translation": "להכשיר, לאמן / רכבת",
+      "example": "Train the dog / Take the train.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12337,
+      "language": "english",
+      "term": "turn",
+      "translation": "לפנות, סיבוב",
+      "example": "Turn left.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12341,
+      "language": "english",
+      "term": "union",
+      "translation": "איגוד, איחוד",
+      "example": "Labor union.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12345,
+      "language": "english",
+      "term": "war",
+      "translation": "מלחמה",
+      "example": "Peace and war.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12348,
+      "language": "english",
+      "term": "waste",
+      "translation": "בזבוז, לבזבז / הפסולת",
+      "example": "Don't waste time.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12349,
+      "language": "english",
+      "term": "watch",
+      "translation": "להסתכל, להשגיח / שעון",
+      "example": "Watch the game / Look at your watch.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12351,
+      "language": "english",
+      "term": "wild",
+      "translation": "פראי, טבע",
+      "example": "Wild animals.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 12353,
+      "language": "english",
+      "term": "wool",
+      "translation": "צמר",
+      "example": "A wool sweater.",
+      "unit": 3,
+      "level": 1
+    },
+    {
+      "id": 13017,
+      "language": "english",
+      "term": "aid",
+      "translation": "עזרה, לסייע",
+      "example": "They sent aid to the refugees.",
+      "unit": 4,
+      "level": 1
+    },
+    {
+      "id": 13066,
+      "language": "english",
+      "term": "case",
+      "translation": "מקרה, טיעון / תיבה",
+      "example": "In any case / A violin case.",
+      "unit": 4,
+      "level": 1
+    },
+    {
+      "id": 13070,
+      "language": "english",
+      "term": "charge",
+      "translation": "להאשים / לחייב / להסתער / לגבות",
+      "example": "Charge the battery / Charge him with a crime.",
+      "unit": 4,
+      "level": 1
+    },
+    {
+      "id": 13101,
+      "language": "english",
+      "term": "create",
+      "translation": "ליצור",
+      "example": "Create a new file.",
+      "unit": 4,
+      "level": 1
+    },
+    {
+      "id": 13159,
+      "language": "english",
+      "term": "fall",
+      "translation": "סתיו",
+      "example": "Leaves fall in the fall.",
+      "unit": 4,
+      "level": 1
+    },
+    {
+      "id": 13162,
+      "language": "english",
+      "term": "follow",
+      "translation": "לעקוב, לציית",
+      "example": "Follow me.",
+      "unit": 4,
+      "level": 1
+    },
+    {
+      "id": 13163,
+      "language": "english",
+      "term": "for the sake of",
+      "translation": "למען",
+      "example": "For the sake of peace.",
+      "unit": 4,
+      "level": 1
+    },
+    {
+      "id": 13164,
+      "language": "english",
+      "term": "force",
+      "translation": "לכפות / כוח",
+      "example": "Use of force.",
+      "unit": 4,
+      "level": 1
+    },
+    {
+      "id": 13166,
+      "language": "english",
+      "term": "found",
+      "translation": "מצא, גילה / לייסד",
+      "example": "He founded the city.",
+      "unit": 4,
+      "level": 1
+    },
+    {
+      "id": 13175,
+      "language": "english",
+      "term": "group",
+      "translation": "קבוצה, לקבץ",
+      "example": "A group of friends.",
+      "unit": 4,
+      "level": 1
+    },
+    {
+      "id": 13178,
+      "language": "english",
+      "term": "hold back",
+      "translation": "לעכב, למנוע",
+      "example": "Hold back your tears.",
+      "unit": 4,
+      "level": 1
+    },
+    {
+      "id": 13183,
+      "language": "english",
+      "term": "idea",
+      "translation": "רעיון",
+      "example": "I have an idea.",
+      "unit": 4,
+      "level": 1
+    },
+    {
+      "id": 13186,
+      "language": "english",
+      "term": "image",
+      "translation": "דמות, תמונה",
+      "example": "A clear image.",
+      "unit": 4,
+      "level": 1
+    },
+    {
+      "id": 13198,
+      "language": "english",
+      "term": "in order",
+      "translation": "תקין, מסודר",
+      "example": "Everything is in order.",
+      "unit": 4,
+      "level": 1
+    },
+    {
+      "id": 13199,
+      "language": "english",
+      "term": "increase",
+      "translation": "להגדיל, להגביר",
+      "example": "Increase the volume.",
+      "unit": 4,
+      "level": 1
+    },
+    {
+      "id": 13210,
+      "language": "english",
+      "term": "interest",
+      "translation": "עניין / ריבית",
+      "example": "I have an interest in art / The bank pays interest.",
+      "unit": 4,
+      "level": 1
+    },
+    {
+      "id": 13218,
+      "language": "english",
+      "term": "known",
+      "translation": "ידוע",
+      "example": "He is a known artist.",
+      "unit": 4,
+      "level": 1
+    },
+    {
+      "id": 13234,
+      "language": "english",
+      "term": "object",
+      "translation": "להתנגד / פריט, אובייקט",
+      "example": "I object to the plan / A strange object.",
+      "unit": 4,
+      "level": 1
+    },
+    {
+      "id": 13247,
+      "language": "english",
+      "term": "pair",
+      "translation": "זוג",
+      "example": "A pair of shoes.",
+      "unit": 4,
+      "level": 1
+    },
+    {
+      "id": 13275,
+      "language": "english",
+      "term": "product",
+      "translation": "מוצר",
+      "example": "A new product.",
+      "unit": 4,
+      "level": 1
+    },
+    {
+      "id": 13284,
+      "language": "english",
+      "term": "public",
+      "translation": "ציבורי",
+      "example": "Public transport.",
+      "unit": 4,
+      "level": 1
+    },
+    {
+      "id": 13303,
+      "language": "english",
+      "term": "report",
+      "translation": "דיווח, לדווח",
+      "example": "Report the news.",
+      "unit": 4,
+      "level": 1
+    },
+    {
+      "id": 13310,
+      "language": "english",
+      "term": "rule",
+      "translation": "כלל, חוק, שלטון / לשלוט, לפסוק, להחליט",
+      "example": "Follow the rules / The king rules the country.",
+      "unit": 4,
+      "level": 1
+    },
+    {
+      "id": 13316,
+      "language": "english",
+      "term": "share",
+      "translation": "מניה / לחלוק",
+      "example": "Buy shares / Share your lunch.",
+      "unit": 4,
+      "level": 1
+    },
+    {
+      "id": 13317,
+      "language": "english",
+      "term": "ship",
+      "translation": "אוניה / לשלוח",
+      "example": "A cargo ship / Ship the goods.",
+      "unit": 4,
+      "level": 1
+    },
+    {
+      "id": 13322,
+      "language": "english",
+      "term": "size",
+      "translation": "גודל",
+      "example": "What size do you wear?",
+      "unit": 4,
+      "level": 1
+    },
+    {
+      "id": 13324,
+      "language": "english",
+      "term": "soil",
+      "translation": "לכלוך / אדמה",
+      "example": "Rich soil.",
+      "unit": 4,
+      "level": 1
+    },
+    {
+      "id": 13328,
+      "language": "english",
+      "term": "sort",
+      "translation": "למיין",
+      "example": "Sort the mail.",
+      "unit": 4,
+      "level": 1
+    },
+    {
+      "id": 13332,
+      "language": "english",
+      "term": "spring",
+      "translation": "מעיין / אביב",
+      "example": "Fresh spring water / Flowers bloom in spring.",
+      "unit": 4,
+      "level": 1
+    },
+    {
+      "id": 13337,
+      "language": "english",
+      "term": "state",
+      "translation": "מצב / מדינה",
+      "example": "State of emergency / The State of Israel.",
+      "unit": 4,
+      "level": 1
+    },
+    {
+      "id": 13342,
+      "language": "english",
+      "term": "strange",
+      "translation": "מוזר",
+      "example": "A strange noise.",
+      "unit": 4,
+      "level": 1
+    },
+    {
+      "id": 13354,
+      "language": "english",
+      "term": "thick",
+      "translation": "סמיך / עבה",
+      "example": "Thick fog / Thick book.",
+      "unit": 4,
+      "level": 1
+    },
+    {
+      "id": 13366,
+      "language": "english",
+      "term": "unit",
+      "translation": "יחידה",
+      "example": "A unit of measurement.",
+      "unit": 4,
+      "level": 1
+    },
+    {
+      "id": 14077,
+      "language": "english",
+      "term": "design",
+      "translation": "תכנית, דוגמה, תרשים / לתכנן, לעצב",
+      "example": "Design a house.",
+      "unit": 5,
+      "level": 1
+    },
+    {
+      "id": 14082,
+      "language": "english",
+      "term": "develop",
+      "translation": "לפתח",
+      "example": "Develop software.",
+      "unit": 5,
+      "level": 1
+    },
+    {
+      "id": 14088,
+      "language": "english",
+      "term": "different",
+      "translation": "שונה",
+      "example": "Different color.",
+      "unit": 5,
+      "level": 1
+    },
+    {
+      "id": 14107,
+      "language": "english",
+      "term": "experience",
+      "translation": "ניסיון, לחוות",
+      "example": "Work experience.",
+      "unit": 5,
+      "level": 1
+    },
+    {
+      "id": 14114,
+      "language": "english",
+      "term": "fast",
+      "translation": "צום / מהיר",
+      "example": "Break a fast / Fast car.",
+      "unit": 5,
+      "level": 1
+    },
+    {
+      "id": 14117,
+      "language": "english",
+      "term": "fine",
+      "translation": "קנס / קטן, עדין, דקיק / משביע רצון / משובח, מצוין",
+      "example": "Pay a fine / Fine sand / I'm fine / Fine wine.",
+      "unit": 5,
+      "level": 1
+    },
+    {
+      "id": 14118,
+      "language": "english",
+      "term": "fit",
+      "translation": "להתאים / בכושר",
+      "example": "These shoes fit / Keep fit.",
+      "unit": 5,
+      "level": 1
+    },
+    {
+      "id": 14126,
+      "language": "english",
+      "term": "frame",
+      "translation": "מסגרת, למסגר",
+      "example": "Picture frame.",
+      "unit": 5,
+      "level": 1
+    },
+    {
+      "id": 14131,
+      "language": "english",
+      "term": "gap",
+      "translation": "פער",
+      "example": "Generation gap.",
+      "unit": 5,
+      "level": 1
+    },
+    {
+      "id": 14138,
+      "language": "english",
+      "term": "ground",
+      "translation": "בסיס, אדמה",
+      "example": "Ground floor.",
+      "unit": 5,
+      "level": 1
+    },
+    {
+      "id": 14139,
+      "language": "english",
+      "term": "grow",
+      "translation": "לגדול, לגדל",
+      "example": "Plants grow.",
+      "unit": 5,
+      "level": 1
+    },
+    {
+      "id": 14140,
+      "language": "english",
+      "term": "grow up",
+      "translation": "להתבגר, לגדול",
+      "example": "When I grow up.",
+      "unit": 5,
+      "level": 1
+    },
+    {
+      "id": 14145,
+      "language": "english",
+      "term": "hunt",
+      "translation": "לצוד, ציד",
+      "example": "Hunt for food.",
+      "unit": 5,
+      "level": 1
+    },
+    {
+      "id": 14192,
+      "language": "english",
+      "term": "measure",
+      "translation": "למדוד / אמצעי",
+      "example": "Measure the length.",
+      "unit": 5,
+      "level": 1
+    },
+    {
+      "id": 14204,
+      "language": "english",
+      "term": "model",
+      "translation": "דגם, מודל, דוגמן",
+      "example": "A role model.",
+      "unit": 5,
+      "level": 1
+    },
+    {
+      "id": 14216,
+      "language": "english",
+      "term": "odd",
+      "translation": "מוזר / אי זוגי",
+      "example": "An odd number.",
+      "unit": 5,
+      "level": 1
+    },
+    {
+      "id": 14224,
+      "language": "english",
+      "term": "own",
+      "translation": "משלו / בעלות על משהו",
+      "example": "My own car.",
+      "unit": 5,
+      "level": 1
+    },
+    {
+      "id": 14234,
+      "language": "english",
+      "term": "plant",
+      "translation": "צמח, עציץ, לשתול",
+      "example": "Plant a tree.",
+      "unit": 5,
+      "level": 1
+    },
+    {
+      "id": 14256,
+      "language": "english",
+      "term": "raw",
+      "translation": "חי, נא / גולמי, גס",
+      "example": "Raw vegetables.",
+      "unit": 5,
+      "level": 1
+    },
+    {
+      "id": 14271,
+      "language": "english",
+      "term": "replace",
+      "translation": "להחליף",
+      "example": "Replace the battery.",
+      "unit": 5,
+      "level": 1
+    },
+    {
+      "id": 14294,
+      "language": "english",
+      "term": "serve",
+      "translation": "להגיש, לשרת / לְרָצוֹת (עונש)",
+      "example": "Serve dinner.",
+      "unit": 5,
+      "level": 1
+    },
+    {
+      "id": 14296,
+      "language": "english",
+      "term": "sharp",
+      "translation": "חד",
+      "example": "Sharp knife.",
+      "unit": 5,
+      "level": 1
+    },
+    {
+      "id": 14325,
+      "language": "english",
+      "term": "take place",
+      "translation": "התרחש",
+      "example": "The event will take place tomorrow.",
+      "unit": 5,
+      "level": 1
+    },
+    {
+      "id": 14332,
+      "language": "english",
+      "term": "trust",
+      "translation": "אמון, לבטוח",
+      "example": "Trust me.",
+      "unit": 5,
+      "level": 1
+    },
+    {
+      "id": 14333,
+      "language": "english",
+      "term": "type",
+      "translation": "להקליד / סוג",
+      "example": "Type a letter.",
+      "unit": 5,
+      "level": 1
+    },
+    {
+      "id": 14356,
+      "language": "english",
+      "term": "various",
+      "translation": "מגוון",
+      "example": "Various reasons.",
+      "unit": 5,
+      "level": 1
+    },
+    {
+      "id": 14366,
+      "language": "english",
+      "term": "wide",
+      "translation": "רחב",
+      "example": "Wide street.",
+      "unit": 5,
+      "level": 1
+    },
+    {
+      "id": 14369,
+      "language": "english",
+      "term": "wish",
+      "translation": "משאלה, לבקש",
+      "example": "Make a wish.",
+      "unit": 5,
+      "level": 1
+    },
+    {
+      "id": 15014,
+      "language": "english",
+      "term": "as many as",
+      "translation": "רבים כמו (מספר גדול)",
+      "example": "As many as 50 people.",
+      "unit": 6,
+      "level": 1
+    },
+    {
+      "id": 15095,
+      "language": "english",
+      "term": "describe",
+      "translation": "לתאר",
+      "example": "Describe the scene.",
+      "unit": 6,
+      "level": 1
+    },
+    {
+      "id": 15115,
+      "language": "english",
+      "term": "effect",
+      "translation": "תוצאה, אפקט / רושם, השפעה",
+      "example": "Cause and effect.",
+      "unit": 6,
+      "level": 1
+    },
+    {
+      "id": 15150,
+      "language": "english",
+      "term": "fly",
+      "translation": "לעוף / זבוב",
+      "example": "Time flies.",
+      "unit": 6,
+      "level": 1
+    },
+    {
+      "id": 15176,
+      "language": "english",
+      "term": "in favor of",
+      "translation": "לטובת",
+      "example": "Vote in favor of.",
+      "unit": 6,
+      "level": 1
+    },
+    {
+      "id": 15198,
+      "language": "english",
+      "term": "Jew",
+      "translation": "יהודי",
+      "example": "He is a Jew.",
+      "unit": 6,
+      "level": 1
+    },
+    {
+      "id": 15199,
+      "language": "english",
+      "term": "kind",
+      "translation": "סוג / טוב לב, אדיב, נעים",
+      "example": "What kind? / Be kind.",
+      "unit": 6,
+      "level": 1
+    },
+    {
+      "id": 15210,
+      "language": "english",
+      "term": "load",
+      "translation": "להעמיס",
+      "example": "Load the truck.",
+      "unit": 6,
+      "level": 1
+    },
+    {
+      "id": 15244,
+      "language": "english",
+      "term": "party",
+      "translation": "מפלגה, מסיבה",
+      "example": "Political party.",
+      "unit": 6,
+      "level": 1
+    },
+    {
+      "id": 15255,
+      "language": "english",
+      "term": "piece",
+      "translation": "יצירה, חתיכה, חלק",
+      "example": "A piece of cake.",
+      "unit": 6,
+      "level": 1
+    },
+    {
+      "id": 15256,
+      "language": "english",
+      "term": "pipe",
+      "translation": "צינור",
+      "example": "Water pipe.",
+      "unit": 6,
+      "level": 1
+    },
+    {
+      "id": 15270,
+      "language": "english",
+      "term": "probably",
+      "translation": "כנראה, קרוב לוודאי",
+      "example": "Probably not.",
+      "unit": 6,
+      "level": 1
+    },
+    {
+      "id": 15271,
+      "language": "english",
+      "term": "process",
+      "translation": "לעכל, לעבד, תהליך",
+      "example": "Process information.",
+      "unit": 6,
+      "level": 1
+    },
+    {
+      "id": 15273,
+      "language": "english",
+      "term": "project",
+      "translation": "לתכנן, פרוייקט, מיזם, להשליך, להקרין",
+      "example": "School project.",
+      "unit": 6,
+      "level": 1
+    },
+    {
+      "id": 15288,
+      "language": "english",
+      "term": "ray",
+      "translation": "קרן, אלומת אור",
+      "example": "Ray of light.",
+      "unit": 6,
+      "level": 1
+    },
+    {
+      "id": 15306,
+      "language": "english",
+      "term": "rough",
+      "translation": "קשה, מחוספס",
+      "example": "Rough surface.",
+      "unit": 6,
+      "level": 1
+    },
+    {
+      "id": 15318,
+      "language": "english",
+      "term": "shape",
+      "translation": "לעצב, צורה",
+      "example": "In good shape.",
+      "unit": 6,
+      "level": 1
+    },
+    {
+      "id": 15321,
+      "language": "english",
+      "term": "side effect",
+      "translation": "תופעת לוואי",
+      "example": "Side effect of medicine.",
+      "unit": 6,
+      "level": 1
+    },
+    {
+      "id": 15329,
+      "language": "english",
+      "term": "spirit",
+      "translation": "רוח הדברים, כוונה, נפש, רוח רפאים",
+      "example": "Team spirit.",
+      "unit": 6,
+      "level": 1
+    },
+    {
+      "id": 15334,
+      "language": "english",
+      "term": "steam",
+      "translation": "לאדות, אד",
+      "example": "Steam engine.",
+      "unit": 6,
+      "level": 1
+    },
+    {
+      "id": 15337,
+      "language": "english",
+      "term": "stream",
+      "translation": "זרם, נחל, לזרום",
+      "example": "Mountain stream.",
+      "unit": 6,
+      "level": 1
+    },
+    {
+      "id": 15348,
+      "language": "english",
+      "term": "surface",
+      "translation": "פני שטח",
+      "example": "Surface area.",
+      "unit": 6,
+      "level": 1
+    },
+    {
+      "id": 15359,
+      "language": "english",
+      "term": "tight",
+      "translation": "צמוד, לחוץ, הדוק",
+      "example": "Tight shoes.",
+      "unit": 6,
+      "level": 1
+    },
+    {
+      "id": 15374,
+      "language": "english",
+      "term": "village",
+      "translation": "כפר",
+      "example": "Small village.",
+      "unit": 6,
+      "level": 1
+    },
+    {
+      "id": 15381,
+      "language": "english",
+      "term": "weight",
+      "translation": "משקל",
+      "example": "Lose weight.",
+      "unit": 6,
+      "level": 1
+    },
+    {
+      "id": 16021,
+      "language": "english",
+      "term": "beg",
+      "translation": "להתחנן",
+      "example": "I beg you to reconsider.",
+      "unit": 7,
+      "level": 1
+    },
+    {
+      "id": 16063,
+      "language": "english",
+      "term": "deal",
+      "translation": "עסקה / להתמודד",
+      "example": "I have to deal with this problem.",
+      "unit": 7,
+      "level": 1
+    },
+    {
+      "id": 16156,
+      "language": "english",
+      "term": "guess",
+      "translation": "לנחש , ניחוש",
+      "example": "Take a guess.",
+      "unit": 7,
+      "level": 1
+    },
+    {
+      "id": 16161,
+      "language": "english",
+      "term": "hall",
+      "translation": "מסדרון / היכל",
+      "example": "Down the hall.",
+      "unit": 7,
+      "level": 1
+    },
+    {
+      "id": 16206,
+      "language": "english",
+      "term": "lead",
+      "translation": "הוביל, להוביל",
+      "example": "Lead the way.",
+      "unit": 7,
+      "level": 1
+    },
+    {
+      "id": 16209,
+      "language": "english",
+      "term": "lie",
+      "translation": "שֶׁקֶר, לשקר / שכב, לשכב",
+      "example": "Tell a lie / Lie down.",
+      "unit": 7,
+      "level": 1
+    },
+    {
+      "id": 16210,
+      "language": "english",
+      "term": "listen",
+      "translation": "להקשיב",
+      "example": "Listen carefully.",
+      "unit": 7,
+      "level": 1
+    },
+    {
+      "id": 16223,
+      "language": "english",
+      "term": "match",
+      "translation": "גפרור / להתאים, התאמה",
+      "example": "Light a match / Perfect match.",
+      "unit": 7,
+      "level": 1
+    },
+    {
+      "id": 16225,
+      "language": "english",
+      "term": "mind",
+      "translation": "שכל / אכפת / לשמור, לשים לב",
+      "example": "Peace of mind / Do you mind?",
+      "unit": 7,
+      "level": 1
+    },
+    {
+      "id": 16249,
+      "language": "english",
+      "term": "pain",
+      "translation": "להכאיב, כאב",
+      "example": "Feel pain.",
+      "unit": 7,
+      "level": 1
+    },
+    {
+      "id": 16253,
+      "language": "english",
+      "term": "picture",
+      "translation": "לצלם, תמונה / לדמיין",
+      "example": "Take a picture.",
+      "unit": 7,
+      "level": 1
+    },
+    {
+      "id": 16254,
+      "language": "english",
+      "term": "play",
+      "translation": "לשחק, משחק / מחזה",
+      "example": "Play a game / School play.",
+      "unit": 7,
+      "level": 1
+    },
+    {
+      "id": 16261,
+      "language": "english",
+      "term": "pride",
+      "translation": "גאווה",
+      "example": "Pride and joy.",
+      "unit": 7,
+      "level": 1
+    },
+    {
+      "id": 16305,
+      "language": "english",
+      "term": "set up",
+      "translation": "לסדר, לארגן, להרכיב",
+      "example": "Set up a meeting.",
+      "unit": 7,
+      "level": 1
+    },
+    {
+      "id": 16306,
+      "language": "english",
+      "term": "sheet",
+      "translation": "דף / סדין",
+      "example": "Sheet of paper.",
+      "unit": 7,
+      "level": 1
+    },
+    {
+      "id": 16307,
+      "language": "english",
+      "term": "sight",
+      "translation": "כוונת, ראייה",
+      "example": "Lost his sight.",
+      "unit": 7,
+      "level": 1
+    },
+    {
+      "id": 16311,
+      "language": "english",
+      "term": "skin",
+      "translation": "עור",
+      "example": "Dry skin.",
+      "unit": 7,
+      "level": 1
+    },
+    {
+      "id": 16315,
+      "language": "english",
+      "term": "speak",
+      "translation": "דיבר, לדבר",
+      "example": "Speak slowly.",
+      "unit": 7,
+      "level": 1
+    },
+    {
+      "id": 16318,
+      "language": "english",
+      "term": "spend",
+      "translation": "להעביר, לבלות / לפזר, לבזבז",
+      "example": "Spend money.",
+      "unit": 7,
+      "level": 1
+    },
+    {
+      "id": 16325,
+      "language": "english",
+      "term": "steel",
+      "translation": "פלדה",
+      "example": "Steel beams.",
+      "unit": 7,
+      "level": 1
+    },
+    {
+      "id": 16332,
+      "language": "english",
+      "term": "stuck",
+      "translation": "תקוע",
+      "example": "Stuck in mud.",
+      "unit": 7,
+      "level": 1
+    },
+    {
+      "id": 16351,
+      "language": "english",
+      "term": "track",
+      "translation": "מסלול, מסילה / לעקוב",
+      "example": "Train track.",
+      "unit": 7,
+      "level": 1
+    },
+    {
+      "id": 16361,
+      "language": "english",
+      "term": "truth",
+      "translation": "אמת",
+      "example": "Tell the truth.",
+      "unit": 7,
+      "level": 1
+    },
+    {
+      "id": 16363,
+      "language": "english",
+      "term": "twist",
+      "translation": "סיבוב, סיבוך",
+      "example": "Twist and turn.",
+      "unit": 7,
+      "level": 1
+    },
+    {
+      "id": 16374,
+      "language": "english",
+      "term": "want",
+      "translation": "לרצות",
+      "example": "I want that.",
+      "unit": 7,
+      "level": 1
+    },
+    {
+      "id": 16379,
+      "language": "english",
+      "term": "wheat",
+      "translation": "חיטה",
+      "example": "Grow wheat.",
+      "unit": 7,
+      "level": 1
+    },
+    {
+      "id": 16381,
+      "language": "english",
+      "term": "wind",
+      "translation": "למתוח / רוח",
+      "example": "Wind the clock.",
+      "unit": 7,
+      "level": 1
+    },
+    {
+      "id": 16382,
+      "language": "english",
+      "term": "wing",
+      "translation": "כנף",
+      "example": "Bird's wing.",
+      "unit": 7,
+      "level": 1
+    },
+    {
+      "id": 17014,
+      "language": "english",
+      "term": "ark",
+      "translation": "תיבה",
+      "example": "",
+      "unit": 8,
+      "level": 1
+    },
+    {
+      "id": 17086,
+      "language": "english",
+      "term": "draw",
+      "translation": "שוויון, תיקו / לצייר",
+      "example": "",
+      "unit": 8,
+      "level": 1
+    },
+    {
+      "id": 17160,
+      "language": "english",
+      "term": "hid from",
+      "translation": "התחבא מ-",
+      "example": "",
+      "unit": 8,
+      "level": 1
+    },
+    {
+      "id": 17174,
+      "language": "english",
+      "term": "ill",
+      "translation": "חולה",
+      "example": "",
+      "unit": 8,
+      "level": 1
+    },
+    {
+      "id": 17213,
+      "language": "english",
+      "term": "metal",
+      "translation": "מתכתי, מתכת",
+      "example": "",
+      "unit": 8,
+      "level": 1
+    },
+    {
+      "id": 17242,
+      "language": "english",
+      "term": "path",
+      "translation": "נתיב, דרך",
+      "example": "",
+      "unit": 8,
+      "level": 1
+    },
+    {
+      "id": 17248,
+      "language": "english",
+      "term": "people",
+      "translation": "אנשים",
+      "example": "",
+      "unit": 8,
+      "level": 1
+    },
+    {
+      "id": 17257,
+      "language": "english",
+      "term": "poor",
+      "translation": "מסכן, עני",
+      "example": "",
+      "unit": 8,
+      "level": 1
+    },
+    {
+      "id": 17261,
+      "language": "english",
+      "term": "pot",
+      "translation": "קדרה, סיר",
+      "example": "",
+      "unit": 8,
+      "level": 1
+    },
+    {
+      "id": 17319,
+      "language": "english",
+      "term": "rim",
+      "translation": "שפה",
+      "example": "",
+      "unit": 8,
+      "level": 1
+    },
+    {
+      "id": 17321,
+      "language": "english",
+      "term": "rub",
+      "translation": "לשפשף",
+      "example": "",
+      "unit": 8,
+      "level": 1
+    },
+    {
+      "id": 17325,
+      "language": "english",
+      "term": "saw",
+      "translation": "מסור",
+      "example": "",
+      "unit": 8,
+      "level": 1
+    },
+    {
+      "id": 17352,
+      "language": "english",
+      "term": "sound",
+      "translation": "קול / בריא",
+      "example": "",
+      "unit": 8,
+      "level": 1
+    },
+    {
+      "id": 17353,
+      "language": "english",
+      "term": "special",
+      "translation": "מיוחד",
+      "example": "",
+      "unit": 8,
+      "level": 1
+    },
+    {
+      "id": 17357,
+      "language": "english",
+      "term": "stage",
+      "translation": "לביים, במה",
+      "example": "",
+      "unit": 8,
+      "level": 1
+    },
+    {
+      "id": 17359,
+      "language": "english",
+      "term": "store",
+      "translation": "לאחסן, חנות",
+      "example": "",
+      "unit": 8,
+      "level": 1
+    },
+    {
+      "id": 17365,
+      "language": "english",
+      "term": "supply",
+      "translation": "אספקה",
+      "example": "",
+      "unit": 8,
+      "level": 1
+    },
+    {
+      "id": 17373,
+      "language": "english",
+      "term": "tie",
+      "translation": "עניבה / קשר, לקשור",
+      "example": "",
+      "unit": 8,
+      "level": 1
+    },
+    {
+      "id": 17398,
+      "language": "english",
+      "term": "zoo",
+      "translation": "גן חיות",
+      "example": "",
+      "unit": 8,
+      "level": 1
+    },
+    {
+      "id": 18011,
+      "language": "english",
+      "term": "awe",
+      "translation": "יראת כבוד",
+      "example": "",
+      "unit": 9,
+      "level": 1
+    },
+    {
+      "id": 18040,
+      "language": "english",
+      "term": "course",
+      "translation": "קורס / מנה / מסלול",
+      "example": "",
+      "unit": 9,
+      "level": 1
+    },
+    {
+      "id": 18062,
+      "language": "english",
+      "term": "dim",
+      "translation": "לעמעמם",
+      "example": "",
+      "unit": 9,
+      "level": 1
+    },
+    {
+      "id": 18080,
+      "language": "english",
+      "term": "dye",
+      "translation": "לצבוע, צבע",
+      "example": "",
+      "unit": 9,
+      "level": 1
+    },
+    {
+      "id": 18081,
+      "language": "english",
+      "term": "East",
+      "translation": "מזרח",
+      "example": "",
+      "unit": 9,
+      "level": 1
+    },
+    {
+      "id": 18144,
+      "language": "english",
+      "term": "fur",
+      "translation": "פרווה",
+      "example": "",
+      "unit": 9,
+      "level": 1
+    },
+    {
+      "id": 18187,
+      "language": "english",
+      "term": "keep",
+      "translation": "לשמור / חלק מהמצודה",
+      "example": "",
+      "unit": 9,
+      "level": 1
+    },
+    {
+      "id": 18202,
+      "language": "english",
+      "term": "log",
+      "translation": "בול עץ, יומן",
+      "example": "",
+      "unit": 9,
+      "level": 1
+    },
+    {
+      "id": 18203,
+      "language": "english",
+      "term": "lone",
+      "translation": "בודד",
+      "example": "",
+      "unit": 9,
+      "level": 1
+    },
+    {
+      "id": 18220,
+      "language": "english",
+      "term": "mirror",
+      "translation": "מראה",
+      "example": "",
+      "unit": 9,
+      "level": 1
+    },
+    {
+      "id": 18225,
+      "language": "english",
+      "term": "mix",
+      "translation": "לערבב",
+      "example": "",
+      "unit": 9,
+      "level": 1
+    },
+    {
+      "id": 18229,
+      "language": "english",
+      "term": "mountain",
+      "translation": "הר",
+      "example": "",
+      "unit": 9,
+      "level": 1
+    },
+    {
+      "id": 18234,
+      "language": "english",
+      "term": "neck",
+      "translation": "צוואר",
+      "example": "",
+      "unit": 9,
+      "level": 1
+    },
+    {
+      "id": 18238,
+      "language": "english",
+      "term": "nose",
+      "translation": "אף",
+      "example": "",
+      "unit": 9,
+      "level": 1
+    },
+    {
+      "id": 18245,
+      "language": "english",
+      "term": "owe",
+      "translation": "להיות חייב",
+      "example": "",
+      "unit": 9,
+      "level": 1
+    },
+    {
+      "id": 18253,
+      "language": "english",
+      "term": "plate",
+      "translation": "צלחת",
+      "example": "",
+      "unit": 9,
+      "level": 1
+    },
+    {
+      "id": 18267,
+      "language": "english",
+      "term": "prize",
+      "translation": "פרס",
+      "example": "",
+      "unit": 9,
+      "level": 1
+    },
+    {
+      "id": 18321,
+      "language": "english",
+      "term": "step",
+      "translation": "צעד",
+      "example": "",
+      "unit": 9,
+      "level": 1
+    },
+    {
+      "id": 18322,
+      "language": "english",
+      "term": "storm",
+      "translation": "סערה",
+      "example": "",
+      "unit": 9,
+      "level": 1
+    },
+    {
+      "id": 18324,
+      "language": "english",
+      "term": "study",
+      "translation": "ללמוד, מחקר",
+      "example": "",
+      "unit": 9,
+      "level": 1
+    },
+    {
+      "id": 18345,
+      "language": "english",
+      "term": "tone",
+      "translation": "טון, צליל",
+      "example": "",
+      "unit": 9,
+      "level": 1
+    },
+    {
+      "id": 18357,
+      "language": "english",
+      "term": "valley",
+      "translation": "עמק",
+      "example": "",
+      "unit": 9,
+      "level": 1
+    },
+    {
+      "id": 18360,
+      "language": "english",
+      "term": "via",
+      "translation": "דרך",
+      "example": "",
+      "unit": 9,
+      "level": 1
+    },
+    {
+      "id": 18366,
+      "language": "english",
+      "term": "West",
+      "translation": "מערב",
+      "example": "",
+      "unit": 9,
+      "level": 1
+    },
+    {
+      "id": 18370,
+      "language": "english",
+      "term": "wood",
+      "translation": "עץ",
+      "example": "",
+      "unit": 9,
+      "level": 1
+    },
+    {
+      "id": 18375,
+      "language": "english",
+      "term": "young",
+      "translation": "צעיר",
+      "example": "",
+      "unit": 9,
+      "level": 1
+    },
+    {
+      "id": 19012,
+      "language": "english",
+      "term": "bee",
+      "translation": "דבורה",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19058,
+      "language": "english",
+      "term": "Dead Sea",
+      "translation": "ים המלח",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19076,
+      "language": "english",
+      "term": "eel",
+      "translation": "צלופח",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19083,
+      "language": "english",
+      "term": "fan",
+      "translation": "לאוורר, מאוורר / אוהד, מעריץ",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19104,
+      "language": "english",
+      "term": "garden",
+      "translation": "גן",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19106,
+      "language": "english",
+      "term": "gate",
+      "translation": "שער",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19110,
+      "language": "english",
+      "term": "glass",
+      "translation": "כוס / זכוכית",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19121,
+      "language": "english",
+      "term": "gym",
+      "translation": "אולם ספורט",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19125,
+      "language": "english",
+      "term": "heart",
+      "translation": "לב",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19129,
+      "language": "english",
+      "term": "hill",
+      "translation": "גבעה",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19135,
+      "language": "english",
+      "term": "inn",
+      "translation": "פונדק",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19142,
+      "language": "english",
+      "term": "jog",
+      "translation": "לרוץ, ג'וגינג, ריצה",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19144,
+      "language": "english",
+      "term": "jug",
+      "translation": "קנקן, כד",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19150,
+      "language": "english",
+      "term": "lake",
+      "translation": "אגם",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19158,
+      "language": "english",
+      "term": "lip",
+      "translation": "שפה",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19165,
+      "language": "english",
+      "term": "made",
+      "translation": "עשה",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19168,
+      "language": "english",
+      "term": "make sure",
+      "translation": "לוודא, להבטיח",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19182,
+      "language": "english",
+      "term": "mouth",
+      "translation": "פה",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19188,
+      "language": "english",
+      "term": "nut",
+      "translation": "אגוז",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19190,
+      "language": "english",
+      "term": "ode",
+      "translation": "שיר הלל",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19197,
+      "language": "english",
+      "term": "pad",
+      "translation": "לרפד",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19199,
+      "language": "english",
+      "term": "pan",
+      "translation": "מחבת",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19205,
+      "language": "english",
+      "term": "pet",
+      "translation": "חיית מחמד",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19211,
+      "language": "english",
+      "term": "pick",
+      "translation": "מפרט לגיטרה / לבחור, לקטוף",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19214,
+      "language": "english",
+      "term": "pit",
+      "translation": "בור",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19216,
+      "language": "english",
+      "term": "pool",
+      "translation": "בריכה",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19232,
+      "language": "english",
+      "term": "rain",
+      "translation": "גשם",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19236,
+      "language": "english",
+      "term": "rat",
+      "translation": "עכברוש",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19245,
+      "language": "english",
+      "term": "rice",
+      "translation": "אורז",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19246,
+      "language": "english",
+      "term": "ride",
+      "translation": "לרכוב, רכיבה",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19247,
+      "language": "english",
+      "term": "ring",
+      "translation": "זירה / טבעת",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19252,
+      "language": "english",
+      "term": "roof",
+      "translation": "גג",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19261,
+      "language": "english",
+      "term": "seat",
+      "translation": "להושיב, מושב",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19269,
+      "language": "english",
+      "term": "shop",
+      "translation": "חנות / לקנות",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19270,
+      "language": "english",
+      "term": "shoulder",
+      "translation": "כתף",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19271,
+      "language": "english",
+      "term": "show",
+      "translation": "הופעה / להראות",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19272,
+      "language": "english",
+      "term": "shy",
+      "translation": "ביישן",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19276,
+      "language": "english",
+      "term": "sir",
+      "translation": "תואר אצולה אנגלי, אדון",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19277,
+      "language": "english",
+      "term": "sky",
+      "translation": "רקיע, שמיים",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19284,
+      "language": "english",
+      "term": "snow",
+      "translation": "שלג",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19287,
+      "language": "english",
+      "term": "South",
+      "translation": "דרום",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19294,
+      "language": "english",
+      "term": "spread",
+      "translation": "פיזור, התפשטות / למרוח, ממרח",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19295,
+      "language": "english",
+      "term": "spy",
+      "translation": "לרגל, מרגל",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19298,
+      "language": "english",
+      "term": "star",
+      "translation": "לככב, כוכב",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19304,
+      "language": "english",
+      "term": "stroke",
+      "translation": "מכה / ליטוף / אירוע מוחי/שבץ",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19310,
+      "language": "english",
+      "term": "sugar",
+      "translation": "סוכר",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19319,
+      "language": "english",
+      "term": "taste",
+      "translation": "לטעום, טעם",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19320,
+      "language": "english",
+      "term": "tax",
+      "translation": "מס",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19323,
+      "language": "english",
+      "term": "thank",
+      "translation": "להודות, תודה",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19328,
+      "language": "english",
+      "term": "through",
+      "translation": "מבעד, דרך",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19330,
+      "language": "english",
+      "term": "throw",
+      "translation": "זריקה, לזרוק",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19333,
+      "language": "english",
+      "term": "tin",
+      "translation": "עשוי מפח, בדיל",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19352,
+      "language": "english",
+      "term": "uncle",
+      "translation": "דוד",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19376,
+      "language": "english",
+      "term": "wave",
+      "translation": "גל",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19378,
+      "language": "english",
+      "term": "wear",
+      "translation": "ללבוש",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19382,
+      "language": "english",
+      "term": "well",
+      "translation": "באר / היטב, טוב / בריא",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19387,
+      "language": "english",
+      "term": "win",
+      "translation": "לנצח, ניצחון",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    },
+    {
+      "id": 19389,
+      "language": "english",
+      "term": "work",
+      "translation": "לעבוד, עבודה",
+      "example": "",
+      "unit": 10,
+      "level": 1
+    }
+  ]
+}

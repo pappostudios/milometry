@@ -1,0 +1,2940 @@
+{
+  "level": 5,
+  "language": "english",
+  "words": [
+    {
+      "id": 10203,
+      "language": "english",
+      "term": "comparatively",
+      "translation": "באופן יחסי",
+      "example": "It was comparatively easy.",
+      "unit": 1,
+      "level": 5
+    },
+    {
+      "id": 10204,
+      "language": "english",
+      "term": "correspondingly",
+      "translation": "בהתאמה",
+      "example": "Sales rose, and profits increased correspondingly.",
+      "unit": 1,
+      "level": 5
+    },
+    {
+      "id": 10244,
+      "language": "english",
+      "term": "significantly",
+      "translation": "באופן משמעותי",
+      "example": "Significantly better.",
+      "unit": 1,
+      "level": 5
+    },
+    {
+      "id": 10278,
+      "language": "english",
+      "term": "nevertheless",
+      "translation": "למרות זאת",
+      "example": "Nevertheless, we continued.",
+      "unit": 1,
+      "level": 5
+    },
+    {
+      "id": 10279,
+      "language": "english",
+      "term": "nonetheless",
+      "translation": "למרות זאת",
+      "example": "It was difficult; nonetheless, we finished.",
+      "unit": 1,
+      "level": 5
+    },
+    {
+      "id": 10316,
+      "language": "english",
+      "term": "simultaneously",
+      "translation": "בו זמנית",
+      "example": "Happening simultaneously.",
+      "unit": 1,
+      "level": 5
+    },
+    {
+      "id": 10394,
+      "language": "english",
+      "term": "contradictory",
+      "translation": "סותר",
+      "example": "Contradictory evidence.",
+      "unit": 1,
+      "level": 5
+    },
+    {
+      "id": 11003,
+      "language": "english",
+      "term": "acceptable",
+      "translation": "מקובל",
+      "example": "His behavior was not acceptable.",
+      "unit": 2,
+      "level": 5
+    },
+    {
+      "id": 11004,
+      "language": "english",
+      "term": "acceptance",
+      "translation": "הסכמה",
+      "example": "Her acceptance of the terms was immediate.",
+      "unit": 2,
+      "level": 5
+    },
+    {
+      "id": 11037,
+      "language": "english",
+      "term": "appearance",
+      "translation": "מראה, הופעה",
+      "example": "Her appearance has changed.",
+      "unit": 2,
+      "level": 5
+    },
+    {
+      "id": 11038,
+      "language": "english",
+      "term": "appropriate",
+      "translation": "מתאים",
+      "example": "Wear appropriate clothes.",
+      "unit": 2,
+      "level": 5
+    },
+    {
+      "id": 11054,
+      "language": "english",
+      "term": "articulate",
+      "translation": "רהוט / להביע",
+      "example": "He is very articulate.",
+      "unit": 2,
+      "level": 5
+    },
+    {
+      "id": 11062,
+      "language": "english",
+      "term": "association",
+      "translation": "אסוציאציה / איגוד",
+      "example": "He is a member of the association.",
+      "unit": 2,
+      "level": 5
+    },
+    {
+      "id": 11073,
+      "language": "english",
+      "term": "attractive",
+      "translation": "נאה, מושך",
+      "example": "He is a very attractive man.",
+      "unit": 2,
+      "level": 5
+    },
+    {
+      "id": 11076,
+      "language": "english",
+      "term": "availability",
+      "translation": "זמינות",
+      "example": "Check the availability of tickets.",
+      "unit": 2,
+      "level": 5
+    },
+    {
+      "id": 11146,
+      "language": "english",
+      "term": "characterize",
+      "translation": "לאפיין",
+      "example": "How would you characterize him?",
+      "unit": 2,
+      "level": 5
+    },
+    {
+      "id": 11292,
+      "language": "english",
+      "term": "inconsistent",
+      "translation": "לא עקבי",
+      "example": "His results were inconsistent.",
+      "unit": 2,
+      "level": 5
+    },
+    {
+      "id": 11345,
+      "language": "english",
+      "term": "registration",
+      "translation": "הרשמה",
+      "example": "Registration closes tomorrow.",
+      "unit": 2,
+      "level": 5
+    },
+    {
+      "id": 12002,
+      "language": "english",
+      "term": "accessible",
+      "translation": "נגיש, זמין",
+      "example": "The museum is accessible to wheelchair users.",
+      "unit": 3,
+      "level": 5
+    },
+    {
+      "id": 12005,
+      "language": "english",
+      "term": "accomplishment",
+      "translation": "הישג",
+      "example": "Winning the competition was a great accomplishment.",
+      "unit": 3,
+      "level": 5
+    },
+    {
+      "id": 12012,
+      "language": "english",
+      "term": "administration",
+      "translation": "מנהל",
+      "example": "She works in the school administration.",
+      "unit": 3,
+      "level": 5
+    },
+    {
+      "id": 12017,
+      "language": "english",
+      "term": "advancement",
+      "translation": "התקדמות / מקדמה",
+      "example": "His advancement in the company was rapid.",
+      "unit": 3,
+      "level": 5
+    },
+    {
+      "id": 12024,
+      "language": "english",
+      "term": "announcement",
+      "translation": "הכרזה",
+      "example": "We heard the announcement over the speakers.",
+      "unit": 3,
+      "level": 5
+    },
+    {
+      "id": 12028,
+      "language": "english",
+      "term": "approximately",
+      "translation": "בערך, בקירוב",
+      "example": "The trip takes approximately two hours.",
+      "unit": 3,
+      "level": 5
+    },
+    {
+      "id": 12048,
+      "language": "english",
+      "term": "capitalize",
+      "translation": "לנצל",
+      "example": "We should capitalize on this opportunity.",
+      "unit": 3,
+      "level": 5
+    },
+    {
+      "id": 12052,
+      "language": "english",
+      "term": "characteristic",
+      "translation": "מאפיין",
+      "example": "Generosity is his main characteristic.",
+      "unit": 3,
+      "level": 5
+    },
+    {
+      "id": 12055,
+      "language": "english",
+      "term": "circumstance",
+      "translation": "מצב, תנאי, נסיבות",
+      "example": "Under no circumstance should you go.",
+      "unit": 3,
+      "level": 5
+    },
+    {
+      "id": 12063,
+      "language": "english",
+      "term": "communicate",
+      "translation": "לתקשר",
+      "example": "We communicate by email.",
+      "unit": 3,
+      "level": 5
+    },
+    {
+      "id": 12066,
+      "language": "english",
+      "term": "comparable",
+      "translation": "בר-השוואה",
+      "example": "The two situations are not comparable.",
+      "unit": 3,
+      "level": 5
+    },
+    {
+      "id": 12070,
+      "language": "english",
+      "term": "comprehension",
+      "translation": "הבנה",
+      "example": "Reading comprehension is important.",
+      "unit": 3,
+      "level": 5
+    },
+    {
+      "id": 12071,
+      "language": "english",
+      "term": "concentrate",
+      "translation": "להתרכז",
+      "example": "I need to concentrate on my work.",
+      "unit": 3,
+      "level": 5
+    },
+    {
+      "id": 12076,
+      "language": "english",
+      "term": "continuation",
+      "translation": "המשך",
+      "example": "This is a continuation of the story.",
+      "unit": 3,
+      "level": 5
+    },
+    {
+      "id": 12077,
+      "language": "english",
+      "term": "cooperation",
+      "translation": "שיתוף פעולה",
+      "example": "Thank you for your cooperation.",
+      "unit": 3,
+      "level": 5
+    },
+    {
+      "id": 12119,
+      "language": "english",
+      "term": "evaluation",
+      "translation": "הערכה",
+      "example": "The evaluation took one week.",
+      "unit": 3,
+      "level": 5
+    },
+    {
+      "id": 12127,
+      "language": "english",
+      "term": "explanation",
+      "translation": "הסבר",
+      "example": "He gave a clear explanation.",
+      "unit": 3,
+      "level": 5
+    },
+    {
+      "id": 12153,
+      "language": "english",
+      "term": "importance",
+      "translation": "חשיבות",
+      "example": "He stressed the importance of education.",
+      "unit": 3,
+      "level": 5
+    },
+    {
+      "id": 12155,
+      "language": "english",
+      "term": "inadequate",
+      "translation": "לקוי, לא מספיק",
+      "example": "The supplies were inadequate.",
+      "unit": 3,
+      "level": 5
+    },
+    {
+      "id": 12157,
+      "language": "english",
+      "term": "incomprehensible",
+      "translation": "לא מובן",
+      "example": "His handwriting is incomprehensible.",
+      "unit": 3,
+      "level": 5
+    },
+    {
+      "id": 12159,
+      "language": "english",
+      "term": "indication",
+      "translation": "אינדיקציה, סימן ל-",
+      "example": "There is no indication of rain.",
+      "unit": 3,
+      "level": 5
+    },
+    {
+      "id": 12164,
+      "language": "english",
+      "term": "international",
+      "translation": "בינלאומי",
+      "example": "An international conference.",
+      "unit": 3,
+      "level": 5
+    },
+    {
+      "id": 12190,
+      "language": "english",
+      "term": "merchandise",
+      "translation": "מוצרים, סחורה",
+      "example": "The store sells various merchandise.",
+      "unit": 3,
+      "level": 5
+    },
+    {
+      "id": 12199,
+      "language": "english",
+      "term": "nationality",
+      "translation": "לאום",
+      "example": "What is your nationality?",
+      "unit": 3,
+      "level": 5
+    },
+    {
+      "id": 12200,
+      "language": "english",
+      "term": "nationalize",
+      "translation": "להלאים",
+      "example": "The government nationalized the industry.",
+      "unit": 3,
+      "level": 5
+    },
+    {
+      "id": 12214,
+      "language": "english",
+      "term": "occasional",
+      "translation": "מדי פעם, מקרי",
+      "example": "An occasional visit.",
+      "unit": 3,
+      "level": 5
+    },
+    {
+      "id": 12225,
+      "language": "english",
+      "term": "orientation",
+      "translation": "התמצאות",
+      "example": "He has a good sense of orientation.",
+      "unit": 3,
+      "level": 5
+    },
+    {
+      "id": 12228,
+      "language": "english",
+      "term": "originality",
+      "translation": "מקוריות",
+      "example": "His work shows originality.",
+      "unit": 3,
+      "level": 5
+    },
+    {
+      "id": 12239,
+      "language": "english",
+      "term": "population",
+      "translation": "אוכלוסייה",
+      "example": "The population of the city.",
+      "unit": 3,
+      "level": 5
+    },
+    {
+      "id": 12251,
+      "language": "english",
+      "term": "progressive",
+      "translation": "מתקדם ומתמשך",
+      "example": "A progressive disease.",
+      "unit": 3,
+      "level": 5
+    },
+    {
+      "id": 12264,
+      "language": "english",
+      "term": "rationalize",
+      "translation": "להצדיק, להסביר",
+      "example": "Don't try to rationalize your behavior.",
+      "unit": 3,
+      "level": 5
+    },
+    {
+      "id": 12276,
+      "language": "english",
+      "term": "regulation",
+      "translation": "תקנה",
+      "example": "Safety regulations.",
+      "unit": 3,
+      "level": 5
+    },
+    {
+      "id": 12283,
+      "language": "english",
+      "term": "repetition",
+      "translation": "חזרה",
+      "example": "Repetition helps learning.",
+      "unit": 3,
+      "level": 5
+    },
+    {
+      "id": 12287,
+      "language": "english",
+      "term": "resistance",
+      "translation": "התנגדות, מחתרת",
+      "example": "The resistance movement.",
+      "unit": 3,
+      "level": 5
+    },
+    {
+      "id": 12317,
+      "language": "english",
+      "term": "standardize",
+      "translation": "לתקנן",
+      "example": "Standardize the process.",
+      "unit": 3,
+      "level": 5
+    },
+    {
+      "id": 12319,
+      "language": "english",
+      "term": "subjective",
+      "translation": "אישי, משוחד בדעתו",
+      "example": "A subjective view.",
+      "unit": 3,
+      "level": 5
+    },
+    {
+      "id": 13008,
+      "language": "english",
+      "term": "accumulate",
+      "translation": "לצבור, לאסוף",
+      "example": "Dust accumulates quickly.",
+      "unit": 4,
+      "level": 5
+    },
+    {
+      "id": 13010,
+      "language": "english",
+      "term": "acquisition",
+      "translation": "רכישה",
+      "example": "The acquisition of the new company.",
+      "unit": 4,
+      "level": 5
+    },
+    {
+      "id": 13030,
+      "language": "english",
+      "term": "anticipate",
+      "translation": "לצפות",
+      "example": "We anticipate a large crowd.",
+      "unit": 4,
+      "level": 5
+    },
+    {
+      "id": 13035,
+      "language": "english",
+      "term": "appreciate",
+      "translation": "עליה בערך",
+      "example": "The value of the house appreciated[cite: 278].",
+      "unit": 4,
+      "level": 5
+    },
+    {
+      "id": 13036,
+      "language": "english",
+      "term": "appreciation",
+      "translation": "הערכה",
+      "example": "Show your appreciation.",
+      "unit": 4,
+      "level": 5
+    },
+    {
+      "id": 13037,
+      "language": "english",
+      "term": "appropriately",
+      "translation": "בהתאם",
+      "example": "Dress appropriately for the weather.",
+      "unit": 4,
+      "level": 5
+    },
+    {
+      "id": 13040,
+      "language": "english",
+      "term": "artificial",
+      "translation": "מלאכותי",
+      "example": "Artificial intelligence.",
+      "unit": 4,
+      "level": 5
+    },
+    {
+      "id": 13067,
+      "language": "english",
+      "term": "categorize",
+      "translation": "לקטלג, למיין, לסווג",
+      "example": "Categorize the items.",
+      "unit": 4,
+      "level": 5
+    },
+    {
+      "id": 13081,
+      "language": "english",
+      "term": "conference",
+      "translation": "ועידה",
+      "example": "Press conference.",
+      "unit": 4,
+      "level": 5
+    },
+    {
+      "id": 13085,
+      "language": "english",
+      "term": "conjecture",
+      "translation": "סברה, לשער",
+      "example": "It is just conjecture.",
+      "unit": 4,
+      "level": 5
+    },
+    {
+      "id": 13087,
+      "language": "english",
+      "term": "consequence",
+      "translation": "תוצאה",
+      "example": "Face the consequences.",
+      "unit": 4,
+      "level": 5
+    },
+    {
+      "id": 13089,
+      "language": "english",
+      "term": "considerable",
+      "translation": "הרבה, רבות",
+      "example": "A considerable amount.",
+      "unit": 4,
+      "level": 5
+    },
+    {
+      "id": 13093,
+      "language": "english",
+      "term": "contemporary",
+      "translation": "עכשווי",
+      "example": "Contemporary art.",
+      "unit": 4,
+      "level": 5
+    },
+    {
+      "id": 13097,
+      "language": "english",
+      "term": "conventional",
+      "translation": "שגרתי, קונבנציונאלי",
+      "example": "Conventional medicine.",
+      "unit": 4,
+      "level": 5
+    },
+    {
+      "id": 13117,
+      "language": "english",
+      "term": "demographic",
+      "translation": "דמוגרפי",
+      "example": "Demographic changes.",
+      "unit": 4,
+      "level": 5
+    },
+    {
+      "id": 13118,
+      "language": "english",
+      "term": "demonstrate",
+      "translation": "להפגין / להדגים",
+      "example": "Demonstrate how it works.",
+      "unit": 4,
+      "level": 5
+    },
+    {
+      "id": 13119,
+      "language": "english",
+      "term": "destination",
+      "translation": "יעד",
+      "example": "Final destination.",
+      "unit": 4,
+      "level": 5
+    },
+    {
+      "id": 13121,
+      "language": "english",
+      "term": "deteriorate",
+      "translation": "להידרדר",
+      "example": "His health deteriorated.",
+      "unit": 4,
+      "level": 5
+    },
+    {
+      "id": 13124,
+      "language": "english",
+      "term": "discriminate",
+      "translation": "להפלות",
+      "example": "Do not discriminate against anyone.",
+      "unit": 4,
+      "level": 5
+    },
+    {
+      "id": 13126,
+      "language": "english",
+      "term": "disposable",
+      "translation": "חד-פעמי",
+      "example": "Disposable plates.",
+      "unit": 4,
+      "level": 5
+    },
+    {
+      "id": 13129,
+      "language": "english",
+      "term": "distribution",
+      "translation": "הפצה",
+      "example": "Distribution center.",
+      "unit": 4,
+      "level": 5
+    },
+    {
+      "id": 13143,
+      "language": "english",
+      "term": "environment",
+      "translation": "סביבה",
+      "example": "Protect the environment.",
+      "unit": 4,
+      "level": 5
+    },
+    {
+      "id": 13145,
+      "language": "english",
+      "term": "equivalent",
+      "translation": "מקבילה",
+      "example": "The equivalent amount.",
+      "unit": 4,
+      "level": 5
+    },
+    {
+      "id": 13187,
+      "language": "english",
+      "term": "imagination",
+      "translation": "דמיון",
+      "example": "Use your imagination.",
+      "unit": 4,
+      "level": 5
+    },
+    {
+      "id": 13194,
+      "language": "english",
+      "term": "impossible",
+      "translation": "בלתי אפשר",
+      "example": "Mission impossible.",
+      "unit": 4,
+      "level": 5
+    },
+    {
+      "id": 13200,
+      "language": "english",
+      "term": "incredible",
+      "translation": "מדהים",
+      "example": "Incredible news.",
+      "unit": 4,
+      "level": 5
+    },
+    {
+      "id": 13201,
+      "language": "english",
+      "term": "individual",
+      "translation": "יחיד, אינדיבידואל",
+      "example": "Each individual is unique.",
+      "unit": 4,
+      "level": 5
+    },
+    {
+      "id": 13205,
+      "language": "english",
+      "term": "information",
+      "translation": "מידע",
+      "example": "More information.",
+      "unit": 4,
+      "level": 5
+    },
+    {
+      "id": 13208,
+      "language": "english",
+      "term": "intentional",
+      "translation": "מכוון",
+      "example": "It was an intentional mistake.",
+      "unit": 4,
+      "level": 5
+    },
+    {
+      "id": 13212,
+      "language": "english",
+      "term": "interpretation",
+      "translation": "פרשנות",
+      "example": "What is your interpretation of the poem?",
+      "unit": 4,
+      "level": 5
+    },
+    {
+      "id": 13223,
+      "language": "english",
+      "term": "limitation",
+      "translation": "מגבלה",
+      "example": "Know your limitations.",
+      "unit": 4,
+      "level": 5
+    },
+    {
+      "id": 13238,
+      "language": "english",
+      "term": "opposition",
+      "translation": "אופוזיציה, התנגדות",
+      "example": "The opposition party.",
+      "unit": 4,
+      "level": 5
+    },
+    {
+      "id": 13241,
+      "language": "english",
+      "term": "organization",
+      "translation": "ארגון",
+      "example": "A non-profit organization.",
+      "unit": 4,
+      "level": 5
+    },
+    {
+      "id": 13250,
+      "language": "english",
+      "term": "participate",
+      "translation": "השתתף",
+      "example": "Participate in the game.",
+      "unit": 4,
+      "level": 5
+    },
+    {
+      "id": 13257,
+      "language": "english",
+      "term": "personality",
+      "translation": "אישיות",
+      "example": "She has a great personality.",
+      "unit": 4,
+      "level": 5
+    },
+    {
+      "id": 13264,
+      "language": "english",
+      "term": "poverty-stricken",
+      "translation": "מוכה עוני",
+      "example": "A poverty-stricken area.",
+      "unit": 4,
+      "level": 5
+    },
+    {
+      "id": 13271,
+      "language": "english",
+      "term": "predictive",
+      "translation": "נבואי",
+      "example": "Predictive text.",
+      "unit": 4,
+      "level": 5
+    },
+    {
+      "id": 13277,
+      "language": "english",
+      "term": "professional",
+      "translation": "מקצועי",
+      "example": "A professional player.",
+      "unit": 4,
+      "level": 5
+    },
+    {
+      "id": 13291,
+      "language": "english",
+      "term": "reasonable",
+      "translation": "הגיוני",
+      "example": "A reasonable price.",
+      "unit": 4,
+      "level": 5
+    },
+    {
+      "id": 13319,
+      "language": "english",
+      "term": "significance",
+      "translation": "משמעות, חשיבות",
+      "example": "The significance of the event.",
+      "unit": 4,
+      "level": 5
+    },
+    {
+      "id": 13320,
+      "language": "english",
+      "term": "significant",
+      "translation": "משמעותי",
+      "example": "A significant change.",
+      "unit": 4,
+      "level": 5
+    },
+    {
+      "id": 13349,
+      "language": "english",
+      "term": "supportive",
+      "translation": "תומך",
+      "example": "A supportive friend.",
+      "unit": 4,
+      "level": 5
+    },
+    {
+      "id": 14011,
+      "language": "english",
+      "term": "astonishment",
+      "translation": "תדהמה, השתאות",
+      "example": "She looked in astonishment.",
+      "unit": 5,
+      "level": 5
+    },
+    {
+      "id": 14018,
+      "language": "english",
+      "term": "beneficial",
+      "translation": "מועיל, רווחי",
+      "example": "Exercise is beneficial.",
+      "unit": 5,
+      "level": 5
+    },
+    {
+      "id": 14036,
+      "language": "english",
+      "term": "coexistence",
+      "translation": "דו-קיום",
+      "example": "Peaceful coexistence.",
+      "unit": 5,
+      "level": 5
+    },
+    {
+      "id": 14037,
+      "language": "english",
+      "term": "collaborate",
+      "translation": "לשתף פעולה",
+      "example": "Collaborate on a project.",
+      "unit": 5,
+      "level": 5
+    },
+    {
+      "id": 14041,
+      "language": "english",
+      "term": "comfortable",
+      "translation": "נוח",
+      "example": "A comfortable chair.",
+      "unit": 5,
+      "level": 5
+    },
+    {
+      "id": 14047,
+      "language": "english",
+      "term": "complication",
+      "translation": "סיבוך",
+      "example": "Medical complication.",
+      "unit": 5,
+      "level": 5
+    },
+    {
+      "id": 14049,
+      "language": "english",
+      "term": "compromise",
+      "translation": "להתפשר",
+      "example": "Reach a compromise.",
+      "unit": 5,
+      "level": 5
+    },
+    {
+      "id": 14054,
+      "language": "english",
+      "term": "confrontation",
+      "translation": "עימות",
+      "example": "Avoid confrontation.",
+      "unit": 5,
+      "level": 5
+    },
+    {
+      "id": 14055,
+      "language": "english",
+      "term": "consideration",
+      "translation": "התחשבות",
+      "example": "Show consideration.",
+      "unit": 5,
+      "level": 5
+    },
+    {
+      "id": 14064,
+      "language": "english",
+      "term": "contradiction",
+      "translation": "סתירה",
+      "example": "A direct contradiction.",
+      "unit": 5,
+      "level": 5
+    },
+    {
+      "id": 14069,
+      "language": "english",
+      "term": "declaration",
+      "translation": "הכרזה, הצהרה",
+      "example": "Declaration of Independence.",
+      "unit": 5,
+      "level": 5
+    },
+    {
+      "id": 14073,
+      "language": "english",
+      "term": "degenerate",
+      "translation": "להתנוון",
+      "example": "The debate degenerated into a fight.",
+      "unit": 5,
+      "level": 5
+    },
+    {
+      "id": 14083,
+      "language": "english",
+      "term": "development",
+      "translation": "התפתחות, פיתוח",
+      "example": "Child development.",
+      "unit": 5,
+      "level": 5
+    },
+    {
+      "id": 14086,
+      "language": "english",
+      "term": "difference",
+      "translation": "הבדל",
+      "example": "What's the difference?",
+      "unit": 5,
+      "level": 5
+    },
+    {
+      "id": 14089,
+      "language": "english",
+      "term": "differentiate",
+      "translation": "להבדיל, להבחין",
+      "example": "Differentiate between right and wrong.",
+      "unit": 5,
+      "level": 5
+    },
+    {
+      "id": 14099,
+      "language": "english",
+      "term": "electricity",
+      "translation": "חשמל",
+      "example": "Save electricity.",
+      "unit": 5,
+      "level": 5
+    },
+    {
+      "id": 14108,
+      "language": "english",
+      "term": "experiment",
+      "translation": "ניסוי, להתנסות",
+      "example": "Scientific experiment.",
+      "unit": 5,
+      "level": 5
+    },
+    {
+      "id": 14112,
+      "language": "english",
+      "term": "facilitate",
+      "translation": "לסייע, לעזור, להקל",
+      "example": "Facilitate the process.",
+      "unit": 5,
+      "level": 5
+    },
+    {
+      "id": 14128,
+      "language": "english",
+      "term": "fundamental",
+      "translation": "בסיסי (פונדמנטלי)",
+      "example": "Fundamental rights.",
+      "unit": 5,
+      "level": 5
+    },
+    {
+      "id": 14133,
+      "language": "english",
+      "term": "generation",
+      "translation": "דור",
+      "example": "New generation.",
+      "unit": 5,
+      "level": 5
+    },
+    {
+      "id": 14150,
+      "language": "english",
+      "term": "illiterate",
+      "translation": "בור, אנאלפבית",
+      "example": "Illiterate population.",
+      "unit": 5,
+      "level": 5
+    },
+    {
+      "id": 14154,
+      "language": "english",
+      "term": "impressive",
+      "translation": "מרשים",
+      "example": "Impressive performance.",
+      "unit": 5,
+      "level": 5
+    },
+    {
+      "id": 14155,
+      "language": "english",
+      "term": "inactivity",
+      "translation": "חוסר פעילות",
+      "example": "Period of inactivity.",
+      "unit": 5,
+      "level": 5
+    },
+    {
+      "id": 14169,
+      "language": "english",
+      "term": "irrigation",
+      "translation": "השקיה",
+      "example": "Drip irrigation.",
+      "unit": 5,
+      "level": 5
+    },
+    {
+      "id": 14174,
+      "language": "english",
+      "term": "legislation",
+      "translation": "חקיקה",
+      "example": "New legislation.",
+      "unit": 5,
+      "level": 5
+    },
+    {
+      "id": 14183,
+      "language": "english",
+      "term": "management",
+      "translation": "ניהול",
+      "example": "Time management.",
+      "unit": 5,
+      "level": 5
+    },
+    {
+      "id": 14201,
+      "language": "english",
+      "term": "misconception",
+      "translation": "דעה מוטעית",
+      "example": "A common misconception.",
+      "unit": 5,
+      "level": 5
+    },
+    {
+      "id": 14207,
+      "language": "english",
+      "term": "monumental",
+      "translation": "גדול, אדיר",
+      "example": "A monumental success.",
+      "unit": 5,
+      "level": 5
+    },
+    {
+      "id": 14209,
+      "language": "english",
+      "term": "negotiation",
+      "translation": "משא ומתן",
+      "example": "Peace negotiations.",
+      "unit": 5,
+      "level": 5
+    },
+    {
+      "id": 14215,
+      "language": "english",
+      "term": "occurrence",
+      "translation": "התרחשות",
+      "example": "A rare occurrence.",
+      "unit": 5,
+      "level": 5
+    },
+    {
+      "id": 14221,
+      "language": "english",
+      "term": "opportunity",
+      "translation": "הזדמנות",
+      "example": "A golden opportunity.",
+      "unit": 5,
+      "level": 5
+    },
+    {
+      "id": 14232,
+      "language": "english",
+      "term": "persecution",
+      "translation": "רדיפה (דתית)",
+      "example": "Religious persecution.",
+      "unit": 5,
+      "level": 5
+    },
+    {
+      "id": 14241,
+      "language": "english",
+      "term": "preferable",
+      "translation": "עדיף",
+      "example": "It is preferable to wait.",
+      "unit": 5,
+      "level": 5
+    },
+    {
+      "id": 14246,
+      "language": "english",
+      "term": "profitable",
+      "translation": "רווחי",
+      "example": "A profitable business.",
+      "unit": 5,
+      "level": 5
+    },
+    {
+      "id": 14247,
+      "language": "english",
+      "term": "publication",
+      "translation": "הוצאה לאור",
+      "example": "Date of publication.",
+      "unit": 5,
+      "level": 5
+    },
+    {
+      "id": 14260,
+      "language": "english",
+      "term": "recognition",
+      "translation": "הכרה",
+      "example": "Public recognition.",
+      "unit": 5,
+      "level": 5
+    },
+    {
+      "id": 14272,
+      "language": "english",
+      "term": "replacement",
+      "translation": "מחליף",
+      "example": "A replacement part.",
+      "unit": 5,
+      "level": 5
+    },
+    {
+      "id": 14278,
+      "language": "english",
+      "term": "resourceful",
+      "translation": "בעל תושייה",
+      "example": "A resourceful leader.",
+      "unit": 5,
+      "level": 5
+    },
+    {
+      "id": 14287,
+      "language": "english",
+      "term": "satisfaction",
+      "translation": "שביעות רצון",
+      "example": "Customer satisfaction.",
+      "unit": 5,
+      "level": 5
+    },
+    {
+      "id": 14291,
+      "language": "english",
+      "term": "sensitivity",
+      "translation": "רגישות",
+      "example": "High sensitivity.",
+      "unit": 5,
+      "level": 5
+    },
+    {
+      "id": 14301,
+      "language": "english",
+      "term": "sophisticated",
+      "translation": "מתוחכם",
+      "example": "Sophisticated technology.",
+      "unit": 5,
+      "level": 5
+    },
+    {
+      "id": 14303,
+      "language": "english",
+      "term": "specialize",
+      "translation": "להתמחות",
+      "example": "Specialize in law.",
+      "unit": 5,
+      "level": 5
+    },
+    {
+      "id": 14320,
+      "language": "english",
+      "term": "superficial",
+      "translation": "שטחי",
+      "example": "Superficial wound.",
+      "unit": 5,
+      "level": 5
+    },
+    {
+      "id": 14335,
+      "language": "english",
+      "term": "unbelievable",
+      "translation": "לא יאמן",
+      "example": "Unbelievable story.",
+      "unit": 5,
+      "level": 5
+    },
+    {
+      "id": 14341,
+      "language": "english",
+      "term": "unfortunate",
+      "translation": "מצער",
+      "example": "Unfortunate incident.",
+      "unit": 5,
+      "level": 5
+    },
+    {
+      "id": 14342,
+      "language": "english",
+      "term": "unfortunately",
+      "translation": "למרבה הצער",
+      "example": "Unfortunately, I cannot come.",
+      "unit": 5,
+      "level": 5
+    },
+    {
+      "id": 14343,
+      "language": "english",
+      "term": "unimaginable",
+      "translation": "בלתי נתפס",
+      "example": "Unimaginable pain.",
+      "unit": 5,
+      "level": 5
+    },
+    {
+      "id": 14347,
+      "language": "english",
+      "term": "unnecessary",
+      "translation": "לא הכרחי",
+      "example": "Unnecessary risk.",
+      "unit": 5,
+      "level": 5
+    },
+    {
+      "id": 15001,
+      "language": "english",
+      "term": "accelerate",
+      "translation": "להאיץ",
+      "example": "Accelerate the car.",
+      "unit": 6,
+      "level": 5
+    },
+    {
+      "id": 15003,
+      "language": "english",
+      "term": "accommodate",
+      "translation": "לאכסן, לשכן",
+      "example": "Accommodate guests.",
+      "unit": 6,
+      "level": 5
+    },
+    {
+      "id": 15006,
+      "language": "english",
+      "term": "aggressive",
+      "translation": "תוקפני, אלים",
+      "example": "Aggressive behavior.",
+      "unit": 6,
+      "level": 5
+    },
+    {
+      "id": 15015,
+      "language": "english",
+      "term": "ascertain",
+      "translation": "לוודא",
+      "example": "Ascertain the facts.",
+      "unit": 6,
+      "level": 5
+    },
+    {
+      "id": 15016,
+      "language": "english",
+      "term": "aspiration",
+      "translation": "שאיפה, חלום",
+      "example": "Career aspiration.",
+      "unit": 6,
+      "level": 5
+    },
+    {
+      "id": 15042,
+      "language": "english",
+      "term": "compatible",
+      "translation": "מתאים, ראוי",
+      "example": "Compatible donor.",
+      "unit": 6,
+      "level": 5
+    },
+    {
+      "id": 15044,
+      "language": "english",
+      "term": "compensate",
+      "translation": "לפצות",
+      "example": "Compensate for loss.",
+      "unit": 6,
+      "level": 5
+    },
+    {
+      "id": 15050,
+      "language": "english",
+      "term": "concurrence",
+      "translation": "להתרחש בו זמנית",
+      "example": "Chance concurrence.",
+      "unit": 6,
+      "level": 5
+    },
+    {
+      "id": 15054,
+      "language": "english",
+      "term": "confinement",
+      "translation": "מאסר, ריתוק",
+      "example": "Solitary confinement.",
+      "unit": 6,
+      "level": 5
+    },
+    {
+      "id": 15055,
+      "language": "english",
+      "term": "confiscate",
+      "translation": "להחרים",
+      "example": "Confiscate weapons.",
+      "unit": 6,
+      "level": 5
+    },
+    {
+      "id": 15062,
+      "language": "english",
+      "term": "conservation",
+      "translation": "שימור",
+      "example": "Nature conservation.",
+      "unit": 6,
+      "level": 5
+    },
+    {
+      "id": 15063,
+      "language": "english",
+      "term": "conservative",
+      "translation": "שמרני",
+      "example": "Conservative estimate.",
+      "unit": 6,
+      "level": 5
+    },
+    {
+      "id": 15070,
+      "language": "english",
+      "term": "controversial",
+      "translation": "שנוי במחלוקת",
+      "example": "Controversial topic.",
+      "unit": 6,
+      "level": 5
+    },
+    {
+      "id": 15073,
+      "language": "english",
+      "term": "conversation",
+      "translation": "שיחה",
+      "example": "Phone conversation.",
+      "unit": 6,
+      "level": 5
+    },
+    {
+      "id": 15075,
+      "language": "english",
+      "term": "coordination",
+      "translation": "קואורדינציה, תיאום",
+      "example": "Hand-eye coordination.",
+      "unit": 6,
+      "level": 5
+    },
+    {
+      "id": 15079,
+      "language": "english",
+      "term": "correspondence",
+      "translation": "התכתבות",
+      "example": "Business correspondence.",
+      "unit": 6,
+      "level": 5
+    },
+    {
+      "id": 15090,
+      "language": "english",
+      "term": "deliberate",
+      "translation": "מכוון / לשקול, לבחון, לדון",
+      "example": "Deliberate action.",
+      "unit": 6,
+      "level": 5
+    },
+    {
+      "id": 15091,
+      "language": "english",
+      "term": "deliberation",
+      "translation": "דיון",
+      "example": "After much deliberation.",
+      "unit": 6,
+      "level": 5
+    },
+    {
+      "id": 15098,
+      "language": "english",
+      "term": "destructive",
+      "translation": "הרסני",
+      "example": "Destructive force.",
+      "unit": 6,
+      "level": 5
+    },
+    {
+      "id": 15125,
+      "language": "english",
+      "term": "evolutionary",
+      "translation": "התפתחותי",
+      "example": "Evolutionary process.",
+      "unit": 6,
+      "level": 5
+    },
+    {
+      "id": 15169,
+      "language": "english",
+      "term": "hospitalize",
+      "translation": "לאשפז",
+      "example": "Hospitalize a patient.",
+      "unit": 6,
+      "level": 5
+    },
+    {
+      "id": 15179,
+      "language": "english",
+      "term": "indifference",
+      "translation": "אדישות",
+      "example": "Show indifference.",
+      "unit": 6,
+      "level": 5
+    },
+    {
+      "id": 15186,
+      "language": "english",
+      "term": "inspiration",
+      "translation": "השראה",
+      "example": "Source of inspiration.",
+      "unit": 6,
+      "level": 5
+    },
+    {
+      "id": 15190,
+      "language": "english",
+      "term": "intersection",
+      "translation": "צומת, הצטלבות",
+      "example": "Busy intersection.",
+      "unit": 6,
+      "level": 5
+    },
+    {
+      "id": 15192,
+      "language": "english",
+      "term": "intervention",
+      "translation": "התערבות",
+      "example": "Medical intervention.",
+      "unit": 6,
+      "level": 5
+    },
+    {
+      "id": 15214,
+      "language": "english",
+      "term": "malnutrition",
+      "translation": "תת-תזונה",
+      "example": "Malnutrition is a serious problem.",
+      "unit": 6,
+      "level": 5
+    },
+    {
+      "id": 15226,
+      "language": "english",
+      "term": "negligence",
+      "translation": "הזנחה, רשלנות",
+      "example": "He was sued for negligence.",
+      "unit": 6,
+      "level": 5
+    },
+    {
+      "id": 15249,
+      "language": "english",
+      "term": "performance",
+      "translation": "ביצוע, הופעה",
+      "example": "Great performance.",
+      "unit": 6,
+      "level": 5
+    },
+    {
+      "id": 15257,
+      "language": "english",
+      "term": "plausible",
+      "translation": "סביר, מתקבל על הדעת",
+      "example": "A plausible excuse.",
+      "unit": 6,
+      "level": 5
+    },
+    {
+      "id": 15293,
+      "language": "english",
+      "term": "reinvigorate",
+      "translation": "לרענן, להמריץ מחדש",
+      "example": "Reinvigorate the economy.",
+      "unit": 6,
+      "level": 5
+    },
+    {
+      "id": 15298,
+      "language": "english",
+      "term": "respective",
+      "translation": "שייך בהתאמה",
+      "example": "Their respective homes.",
+      "unit": 6,
+      "level": 5
+    },
+    {
+      "id": 15307,
+      "language": "english",
+      "term": "rudimentary",
+      "translation": "יסודי, בסיסי",
+      "example": "Rudimentary skills.",
+      "unit": 6,
+      "level": 5
+    },
+    {
+      "id": 15331,
+      "language": "english",
+      "term": "spontaneously",
+      "translation": "ללא תכנון",
+      "example": "Act spontaneously.",
+      "unit": 6,
+      "level": 5
+    },
+    {
+      "id": 15336,
+      "language": "english",
+      "term": "straightforward",
+      "translation": "ישיר",
+      "example": "Straightforward answer.",
+      "unit": 6,
+      "level": 5
+    },
+    {
+      "id": 15363,
+      "language": "english",
+      "term": "unbearable",
+      "translation": "בלתי נסבל",
+      "example": "Unbearable pain.",
+      "unit": 6,
+      "level": 5
+    },
+    {
+      "id": 15364,
+      "language": "english",
+      "term": "uncountable",
+      "translation": "אינספור",
+      "example": "Uncountable nouns.",
+      "unit": 6,
+      "level": 5
+    },
+    {
+      "id": 15366,
+      "language": "english",
+      "term": "unforgettable",
+      "translation": "בלתי נשכח",
+      "example": "Unforgettable experience.",
+      "unit": 6,
+      "level": 5
+    },
+    {
+      "id": 16001,
+      "language": "english",
+      "term": "accentuate",
+      "translation": "להדגיש , להבליט",
+      "example": "Her dress accentuated her figure.",
+      "unit": 7,
+      "level": 5
+    },
+    {
+      "id": 16002,
+      "language": "english",
+      "term": "accusation",
+      "translation": "האשמה",
+      "example": "The police made an accusation against him.",
+      "unit": 7,
+      "level": 5
+    },
+    {
+      "id": 16006,
+      "language": "english",
+      "term": "advertisement",
+      "translation": "פרסום , מודעה",
+      "example": "I saw an advertisement for a job.",
+      "unit": 7,
+      "level": 5
+    },
+    {
+      "id": 16013,
+      "language": "english",
+      "term": "alienation",
+      "translation": "הרחקה , ניכור",
+      "example": "The policy caused alienation among the staff.",
+      "unit": 7,
+      "level": 5
+    },
+    {
+      "id": 16015,
+      "language": "english",
+      "term": "annihilate",
+      "translation": "להשמיד",
+      "example": "The bomb could annihilate the city.",
+      "unit": 7,
+      "level": 5
+    },
+    {
+      "id": 16019,
+      "language": "english",
+      "term": "augment",
+      "translation": "להרחיב",
+      "example": "He works a second job to augment his income.",
+      "unit": 7,
+      "level": 5
+    },
+    {
+      "id": 16035,
+      "language": "english",
+      "term": "competition",
+      "translation": "תחרות",
+      "example": "The competition was tough.",
+      "unit": 7,
+      "level": 5
+    },
+    {
+      "id": 16040,
+      "language": "english",
+      "term": "congregate",
+      "translation": "לאסוף , לאסוף קהל",
+      "example": "People congregate in the town square.",
+      "unit": 7,
+      "level": 5
+    },
+    {
+      "id": 16041,
+      "language": "english",
+      "term": "conspicuous",
+      "translation": "בולט",
+      "example": "He was conspicuous in his bright suit.",
+      "unit": 7,
+      "level": 5
+    },
+    {
+      "id": 16044,
+      "language": "english",
+      "term": "contaminate",
+      "translation": "לזהם",
+      "example": "Do not contaminate the water supply.",
+      "unit": 7,
+      "level": 5
+    },
+    {
+      "id": 16077,
+      "language": "english",
+      "term": "desperation",
+      "translation": "ייאוש",
+      "example": "She cried out in desperation.",
+      "unit": 7,
+      "level": 5
+    },
+    {
+      "id": 16079,
+      "language": "english",
+      "term": "disagreement",
+      "translation": "חוסר הסכמה",
+      "example": "They had a disagreement about money.",
+      "unit": 7,
+      "level": 5
+    },
+    {
+      "id": 16090,
+      "language": "english",
+      "term": "disinfection",
+      "translation": "חיטוי",
+      "example": "Disinfection of the wound is important.",
+      "unit": 7,
+      "level": 5
+    },
+    {
+      "id": 16092,
+      "language": "english",
+      "term": "disparage",
+      "translation": "להמעיט בערך , לזלזל",
+      "example": "Do not disparage his efforts.",
+      "unit": 7,
+      "level": 5
+    },
+    {
+      "id": 16095,
+      "language": "english",
+      "term": "distinctive",
+      "translation": "מיוחד",
+      "example": "The car has a distinctive design.",
+      "unit": 7,
+      "level": 5
+    },
+    {
+      "id": 16098,
+      "language": "english",
+      "term": "disturbance",
+      "translation": "הפרעה",
+      "example": "He caused a disturbance in class.",
+      "unit": 7,
+      "level": 5
+    },
+    {
+      "id": 16107,
+      "language": "english",
+      "term": "eloquent",
+      "translation": "רהוט",
+      "example": "An eloquent speaker.",
+      "unit": 7,
+      "level": 5
+    },
+    {
+      "id": 16152,
+      "language": "english",
+      "term": "granddaughter",
+      "translation": "נכדה",
+      "example": "Her granddaughter is visiting.",
+      "unit": 7,
+      "level": 5
+    },
+    {
+      "id": 16169,
+      "language": "english",
+      "term": "illustrate",
+      "translation": "להדגים , להמחיש",
+      "example": "Illustrate the point.",
+      "unit": 7,
+      "level": 5
+    },
+    {
+      "id": 16174,
+      "language": "english",
+      "term": "implementation",
+      "translation": "ביצוע, יישום, מימוש",
+      "example": "Implementation of the plan.",
+      "unit": 7,
+      "level": 5
+    },
+    {
+      "id": 16176,
+      "language": "english",
+      "term": "incompetence",
+      "translation": "חוסר יכולת",
+      "example": "Fired for incompetence.",
+      "unit": 7,
+      "level": 5
+    },
+    {
+      "id": 16177,
+      "language": "english",
+      "term": "incorporate",
+      "translation": "לאגד, לשתף, לכלול",
+      "example": "Incorporate new ideas.",
+      "unit": 7,
+      "level": 5
+    },
+    {
+      "id": 16179,
+      "language": "english",
+      "term": "independence",
+      "translation": "עצמאות",
+      "example": "Fight for independence.",
+      "unit": 7,
+      "level": 5
+    },
+    {
+      "id": 16180,
+      "language": "english",
+      "term": "independent",
+      "translation": "עצמאי",
+      "example": "Independent country.",
+      "unit": 7,
+      "level": 5
+    },
+    {
+      "id": 16181,
+      "language": "english",
+      "term": "inevitable",
+      "translation": "בלתי נמנע",
+      "example": "War was inevitable.",
+      "unit": 7,
+      "level": 5
+    },
+    {
+      "id": 16184,
+      "language": "english",
+      "term": "infiltrate",
+      "translation": "להסתנן",
+      "example": "Infiltrate the organization.",
+      "unit": 7,
+      "level": 5
+    },
+    {
+      "id": 16188,
+      "language": "english",
+      "term": "insurmountable",
+      "translation": "שאין להתגבר עליו",
+      "example": "Insurmountable obstacles.",
+      "unit": 7,
+      "level": 5
+    },
+    {
+      "id": 16189,
+      "language": "english",
+      "term": "intellectual",
+      "translation": "אינטלקטואלי",
+      "example": "Intellectual property.",
+      "unit": 7,
+      "level": 5
+    },
+    {
+      "id": 16192,
+      "language": "english",
+      "term": "introduction",
+      "translation": "היכרות, מבוא, הקדמה",
+      "example": "Introduction to the book.",
+      "unit": 7,
+      "level": 5
+    },
+    {
+      "id": 16195,
+      "language": "english",
+      "term": "investigate",
+      "translation": "לחקור",
+      "example": "Investigate the scene.",
+      "unit": 7,
+      "level": 5
+    },
+    {
+      "id": 16198,
+      "language": "english",
+      "term": "irresistible",
+      "translation": "שלא ניתן לעמוד בפניו",
+      "example": "Irresistible offer.",
+      "unit": 7,
+      "level": 5
+    },
+    {
+      "id": 16203,
+      "language": "english",
+      "term": "laboratory",
+      "translation": "מעבדה",
+      "example": "Science laboratory.",
+      "unit": 7,
+      "level": 5
+    },
+    {
+      "id": 16237,
+      "language": "english",
+      "term": "observation",
+      "translation": "אבחנה",
+      "example": "Keen observation.",
+      "unit": 7,
+      "level": 5
+    },
+    {
+      "id": 16243,
+      "language": "english",
+      "term": "oppressive",
+      "translation": "אכזרי / מעיק, מדכא",
+      "example": "Oppressive heat.",
+      "unit": 7,
+      "level": 5
+    },
+    {
+      "id": 16270,
+      "language": "english",
+      "term": "purification",
+      "translation": "טיהור",
+      "example": "Water purification.",
+      "unit": 7,
+      "level": 5
+    },
+    {
+      "id": 16277,
+      "language": "english",
+      "term": "recollection",
+      "translation": "זיכרון",
+      "example": "Vague recollection.",
+      "unit": 7,
+      "level": 5
+    },
+    {
+      "id": 16290,
+      "language": "english",
+      "term": "remarkable",
+      "translation": "יוצא דופן, ראוי לציון",
+      "example": "Remarkable talent.",
+      "unit": 7,
+      "level": 5
+    },
+    {
+      "id": 16371,
+      "language": "english",
+      "term": "veracity",
+      "translation": "הגינות, יושר",
+      "example": "Check veracity.",
+      "unit": 7,
+      "level": 5
+    },
+    {
+      "id": 17009,
+      "language": "english",
+      "term": "amputation",
+      "translation": "קטיעה",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17041,
+      "language": "english",
+      "term": "congenital",
+      "translation": "מולד",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17042,
+      "language": "english",
+      "term": "consolidate",
+      "translation": "לגבש, לאחד",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17050,
+      "language": "english",
+      "term": "credibility",
+      "translation": "מהימנות, אמינות",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17068,
+      "language": "english",
+      "term": "department-store",
+      "translation": "חנות כלבו",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17070,
+      "language": "english",
+      "term": "depreciate",
+      "translation": "להפחית",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17074,
+      "language": "english",
+      "term": "disdain",
+      "translation": "בוז, זלזול",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17078,
+      "language": "english",
+      "term": "disparagement",
+      "translation": "זלזול",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17080,
+      "language": "english",
+      "term": "displacement",
+      "translation": "עקירה",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17081,
+      "language": "english",
+      "term": "disseminate",
+      "translation": "להפיץ",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17093,
+      "language": "english",
+      "term": "engagement",
+      "translation": "התחייבות / אירוסין",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17097,
+      "language": "english",
+      "term": "entertainment",
+      "translation": "בידור",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17102,
+      "language": "english",
+      "term": "exaggerate",
+      "translation": "להגזים",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17103,
+      "language": "english",
+      "term": "examination",
+      "translation": "בדיקה, בחינה",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17105,
+      "language": "english",
+      "term": "excitement",
+      "translation": "התרגשות",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17112,
+      "language": "english",
+      "term": "expendable",
+      "translation": "שניתן לוותר עליו",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17116,
+      "language": "english",
+      "term": "familiarize",
+      "translation": "להתוודע",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17121,
+      "language": "english",
+      "term": "figurative",
+      "translation": "סמלי",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17158,
+      "language": "english",
+      "term": "heresy",
+      "translation": "כפירה",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17169,
+      "language": "english",
+      "term": "hospitality",
+      "translation": "הכנסת אורחים",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17175,
+      "language": "english",
+      "term": "illuminate",
+      "translation": "להאיר",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17177,
+      "language": "english",
+      "term": "imaginative",
+      "translation": "דמיוני",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17181,
+      "language": "english",
+      "term": "imprisonment",
+      "translation": "כליאה, מאסר",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17182,
+      "language": "english",
+      "term": "inadvertently",
+      "translation": "בלי כוונה, בלי משים",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17195,
+      "language": "english",
+      "term": "intelligence",
+      "translation": "מודיעין / אינטליגנציה",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17197,
+      "language": "english",
+      "term": "interjection",
+      "translation": "הפרעה לשיחה, הערה",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17207,
+      "language": "english",
+      "term": "malformation",
+      "translation": "פגם, עיוות",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17214,
+      "language": "english",
+      "term": "meticulous",
+      "translation": "קפדני",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17231,
+      "language": "english",
+      "term": "obligation",
+      "translation": "התחייבות",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17249,
+      "language": "english",
+      "term": "perpetuate",
+      "translation": "להנציח",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17272,
+      "language": "english",
+      "term": "proliferate",
+      "translation": "התפשט במהירות",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17281,
+      "language": "english",
+      "term": "proposition",
+      "translation": "הצעה",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17282,
+      "language": "english",
+      "term": "prospective",
+      "translation": "עתידי, צפוי",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17288,
+      "language": "english",
+      "term": "reassurance",
+      "translation": "הרגעה, הבטחה",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17296,
+      "language": "english",
+      "term": "reorganize",
+      "translation": "לארגן מחדש",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17300,
+      "language": "english",
+      "term": "repressive",
+      "translation": "מדכא",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17302,
+      "language": "english",
+      "term": "reputation",
+      "translation": "מוניטין, שם",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17304,
+      "language": "english",
+      "term": "reservation",
+      "translation": "שריון מקום / שמורה",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17311,
+      "language": "english",
+      "term": "responsibility",
+      "translation": "אחריות",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17312,
+      "language": "english",
+      "term": "responsible",
+      "translation": "אחראי",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17313,
+      "language": "english",
+      "term": "retirement",
+      "translation": "פרישה",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17318,
+      "language": "english",
+      "term": "ridiculous",
+      "translation": "מגוחך",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17329,
+      "language": "english",
+      "term": "self-confidence",
+      "translation": "בטחון עצמי",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17330,
+      "language": "english",
+      "term": "self-indulgence",
+      "translation": "סיפוק עצמי",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17366,
+      "language": "english",
+      "term": "susceptible",
+      "translation": "רגישות",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17377,
+      "language": "english",
+      "term": "tranquilize",
+      "translation": "להרדים, להרגיע",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17383,
+      "language": "english",
+      "term": "transportation",
+      "translation": "תחבורה",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17384,
+      "language": "english",
+      "term": "unconventional",
+      "translation": "לא שיגרתי",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17385,
+      "language": "english",
+      "term": "underestimate",
+      "translation": "לזלזל, הערכה נמוכה",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 17391,
+      "language": "english",
+      "term": "vulnerable",
+      "translation": "פגיעות",
+      "example": "",
+      "unit": 8,
+      "level": 5
+    },
+    {
+      "id": 18001,
+      "language": "english",
+      "term": "adolescence",
+      "translation": "גיל ההתבגרות",
+      "example": "",
+      "unit": 9,
+      "level": 5
+    },
+    {
+      "id": 18004,
+      "language": "english",
+      "term": "apathy",
+      "translation": "אדישות, אפאתיה",
+      "example": "",
+      "unit": 9,
+      "level": 5
+    },
+    {
+      "id": 18005,
+      "language": "english",
+      "term": "appease",
+      "translation": "לפייס",
+      "example": "",
+      "unit": 9,
+      "level": 5
+    },
+    {
+      "id": 18051,
+      "language": "english",
+      "term": "decorative",
+      "translation": "דקורטיבי, קישוטי",
+      "example": "",
+      "unit": 9,
+      "level": 5
+    },
+    {
+      "id": 18059,
+      "language": "english",
+      "term": "detrimental",
+      "translation": "מזיק",
+      "example": "",
+      "unit": 9,
+      "level": 5
+    },
+    {
+      "id": 18063,
+      "language": "english",
+      "term": "disarmament",
+      "translation": "פירוק מנשק",
+      "example": "",
+      "unit": 9,
+      "level": 5
+    },
+    {
+      "id": 18082,
+      "language": "english",
+      "term": "eccentric",
+      "translation": "אקסצנטרי, מוזר",
+      "example": "",
+      "unit": 9,
+      "level": 5
+    },
+    {
+      "id": 18083,
+      "language": "english",
+      "term": "ecological",
+      "translation": "אקולוגי",
+      "example": "",
+      "unit": 9,
+      "level": 5
+    },
+    {
+      "id": 18108,
+      "language": "english",
+      "term": "exhibition",
+      "translation": "תערוכה",
+      "example": "",
+      "unit": 9,
+      "level": 5
+    },
+    {
+      "id": 18112,
+      "language": "english",
+      "term": "expatriate",
+      "translation": "לגרש, להגלות",
+      "example": "",
+      "unit": 9,
+      "level": 5
+    },
+    {
+      "id": 18116,
+      "language": "english",
+      "term": "extraordinary",
+      "translation": "בלתי רגיל",
+      "example": "",
+      "unit": 9,
+      "level": 5
+    },
+    {
+      "id": 18117,
+      "language": "english",
+      "term": "extrapolate",
+      "translation": "לאמוד על סמך מידע קיים",
+      "example": "",
+      "unit": 9,
+      "level": 5
+    },
+    {
+      "id": 18130,
+      "language": "english",
+      "term": "forgettable",
+      "translation": "שאפשר לשכוח אותו",
+      "example": "",
+      "unit": 9,
+      "level": 5
+    },
+    {
+      "id": 18139,
+      "language": "english",
+      "term": "frugal",
+      "translation": "חסכני",
+      "example": "",
+      "unit": 9,
+      "level": 5
+    },
+    {
+      "id": 18164,
+      "language": "english",
+      "term": "indigenous",
+      "translation": "מולד, ילידים",
+      "example": "",
+      "unit": 9,
+      "level": 5
+    },
+    {
+      "id": 18165,
+      "language": "english",
+      "term": "inflammation",
+      "translation": "דלקת",
+      "example": "",
+      "unit": 9,
+      "level": 5
+    },
+    {
+      "id": 18172,
+      "language": "english",
+      "term": "installation",
+      "translation": "התקנה",
+      "example": "",
+      "unit": 9,
+      "level": 5
+    },
+    {
+      "id": 18176,
+      "language": "english",
+      "term": "insurrection",
+      "translation": "התקוממות",
+      "example": "",
+      "unit": 9,
+      "level": 5
+    },
+    {
+      "id": 18178,
+      "language": "english",
+      "term": "intermediary",
+      "translation": "אמצעי, מתווך",
+      "example": "",
+      "unit": 9,
+      "level": 5
+    },
+    {
+      "id": 18179,
+      "language": "english",
+      "term": "interminable",
+      "translation": "נצחי",
+      "example": "",
+      "unit": 9,
+      "level": 5
+    },
+    {
+      "id": 18180,
+      "language": "english",
+      "term": "intimidate",
+      "translation": "להפחיד",
+      "example": "",
+      "unit": 9,
+      "level": 5
+    },
+    {
+      "id": 18191,
+      "language": "english",
+      "term": "lamentable",
+      "translation": "מעציב, מצער",
+      "example": "",
+      "unit": 9,
+      "level": 5
+    },
+    {
+      "id": 18204,
+      "language": "english",
+      "term": "loneliness",
+      "translation": "בדידות",
+      "example": "",
+      "unit": 9,
+      "level": 5
+    },
+    {
+      "id": 18210,
+      "language": "english",
+      "term": "Mediterranean",
+      "translation": "ים תיכון",
+      "example": "",
+      "unit": 9,
+      "level": 5
+    },
+    {
+      "id": 18243,
+      "language": "english",
+      "term": "old-fashioned",
+      "translation": "מיושן",
+      "example": "",
+      "unit": 9,
+      "level": 5
+    },
+    {
+      "id": 18259,
+      "language": "english",
+      "term": "poignant",
+      "translation": "נוגע ללב, חריף",
+      "example": "",
+      "unit": 9,
+      "level": 5
+    },
+    {
+      "id": 18265,
+      "language": "english",
+      "term": "predominantly",
+      "translation": "בעיקר",
+      "example": "",
+      "unit": 9,
+      "level": 5
+    },
+    {
+      "id": 18283,
+      "language": "english",
+      "term": "reciprocal",
+      "translation": "הדדי",
+      "example": "",
+      "unit": 9,
+      "level": 5
+    },
+    {
+      "id": 18284,
+      "language": "english",
+      "term": "reciprocate",
+      "translation": "לגמול, להחזיר טובה",
+      "example": "",
+      "unit": 9,
+      "level": 5
+    },
+    {
+      "id": 18289,
+      "language": "english",
+      "term": "rehabilitation",
+      "translation": "שיקום",
+      "example": "",
+      "unit": 9,
+      "level": 5
+    },
+    {
+      "id": 18292,
+      "language": "english",
+      "term": "revitalize",
+      "translation": "להחיות מחדש",
+      "example": "",
+      "unit": 9,
+      "level": 5
+    },
+    {
+      "id": 18295,
+      "language": "english",
+      "term": "revolution",
+      "translation": "מהפכה",
+      "example": "",
+      "unit": 9,
+      "level": 5
+    },
+    {
+      "id": 18307,
+      "language": "english",
+      "term": "scrutinize",
+      "translation": "לבחון בקפידה",
+      "example": "",
+      "unit": 9,
+      "level": 5
+    },
+    {
+      "id": 18311,
+      "language": "english",
+      "term": "segregation",
+      "translation": "הפרדה",
+      "example": "",
+      "unit": 9,
+      "level": 5
+    },
+    {
+      "id": 18312,
+      "language": "english",
+      "term": "separation",
+      "translation": "היפרדות",
+      "example": "",
+      "unit": 9,
+      "level": 5
+    },
+    {
+      "id": 18333,
+      "language": "english",
+      "term": "surveillance",
+      "translation": "מעקב",
+      "example": "",
+      "unit": 9,
+      "level": 5
+    },
+    {
+      "id": 18348,
+      "language": "english",
+      "term": "unpardonable",
+      "translation": "לא נסלח",
+      "example": "",
+      "unit": 9,
+      "level": 5
+    },
+    {
+      "id": 18349,
+      "language": "english",
+      "term": "unrealistic",
+      "translation": "לא מציאותי",
+      "example": "",
+      "unit": 9,
+      "level": 5
+    },
+    {
+      "id": 18362,
+      "language": "english",
+      "term": "vocabulary",
+      "translation": "אוצר מילים",
+      "example": "",
+      "unit": 9,
+      "level": 5
+    },
+    {
+      "id": 19114,
+      "language": "english",
+      "term": "grammatical",
+      "translation": "דקדוקי",
+      "example": "",
+      "unit": 10,
+      "level": 5
+    },
+    {
+      "id": 19134,
+      "language": "english",
+      "term": "inexpensive",
+      "translation": "זול, לא יקר",
+      "example": "",
+      "unit": 10,
+      "level": 5
+    },
+    {
+      "id": 19137,
+      "language": "english",
+      "term": "intoxicate",
+      "translation": "לשכר, להרעיל / להלהיב",
+      "example": "",
+      "unit": 10,
+      "level": 5
+    },
+    {
+      "id": 19139,
+      "language": "english",
+      "term": "invertebrate",
+      "translation": "חסר חוליות",
+      "example": "",
+      "unit": 10,
+      "level": 5
+    },
+    {
+      "id": 19167,
+      "language": "english",
+      "term": "magnificent",
+      "translation": "מדהים",
+      "example": "",
+      "unit": 10,
+      "level": 5
+    },
+    {
+      "id": 19172,
+      "language": "english",
+      "term": "mathematician",
+      "translation": "מתמטיקאי",
+      "example": "",
+      "unit": 10,
+      "level": 5
+    },
+    {
+      "id": 19194,
+      "language": "english",
+      "term": "orchestrate",
+      "translation": "לתזמר, לתאם",
+      "example": "",
+      "unit": 10,
+      "level": 5
+    },
+    {
+      "id": 19223,
+      "language": "english",
+      "term": "prehistoric",
+      "translation": "היסטורי-פרה, קדמון",
+      "example": "",
+      "unit": 10,
+      "level": 5
+    },
+    {
+      "id": 19225,
+      "language": "english",
+      "term": "presentation",
+      "translation": "מצגת",
+      "example": "",
+      "unit": 10,
+      "level": 5
+    },
+    {
+      "id": 19240,
+      "language": "english",
+      "term": "reincarnation",
+      "translation": "גלגול נשמות",
+      "example": "",
+      "unit": 10,
+      "level": 5
+    },
+    {
+      "id": 19242,
+      "language": "english",
+      "term": "resurgence",
+      "translation": "תחייה",
+      "example": "",
+      "unit": 10,
+      "level": 5
+    },
+    {
+      "id": 19243,
+      "language": "english",
+      "term": "retroactive",
+      "translation": "למפרע, רטרואקטיבי",
+      "example": "",
+      "unit": 10,
+      "level": 5
+    },
+    {
+      "id": 19293,
+      "language": "english",
+      "term": "spontaneous",
+      "translation": "ללא מחשבה",
+      "example": "",
+      "unit": 10,
+      "level": 5
+    },
+    {
+      "id": 19325,
+      "language": "english",
+      "term": "theoretically",
+      "translation": "לכאורה, תיאורטית",
+      "example": "",
+      "unit": 10,
+      "level": 5
+    },
+    {
+      "id": 19351,
+      "language": "english",
+      "term": "unattractive",
+      "translation": "לא מושך",
+      "example": "",
+      "unit": 10,
+      "level": 5
+    },
+    {
+      "id": 19354,
+      "language": "english",
+      "term": "uncritical",
+      "translation": "לא ביקורתי",
+      "example": "",
+      "unit": 10,
+      "level": 5
+    },
+    {
+      "id": 19364,
+      "language": "english",
+      "term": "vertebrate",
+      "translation": "בעל חוליות",
+      "example": "",
+      "unit": 10,
+      "level": 5
+    },
+    {
+      "id": 19370,
+      "language": "english",
+      "term": "vociferous",
+      "translation": "רעשני",
+      "example": "",
+      "unit": 10,
+      "level": 5
+    }
+  ]
+}
