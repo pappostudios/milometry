@@ -40,17 +40,19 @@ android {
     }
 
     signingConfigs {
-        create("release") {
-            keyAlias = "upload"
-            keyPassword = "3141592653"
-            storeFile = file("C:/My games/Mobile/psycho_app/android/app/upload-keystore.jks")
-            storePassword = "3141592653"
+        if (keystorePropertiesFile.exists()) {
+            create("release") {
+                keyAlias = keystoreProperties["keyAlias"] as String
+                keyPassword = keystoreProperties["keyPassword"] as String
+                storeFile = file(keystoreProperties["storeFile"] as String)
+                storePassword = keystoreProperties["storePassword"] as String
+            }
         }
     }
 
     buildTypes {
         getByName("release") {
-            signingConfig = signingConfigs.getByName("release")
+            signingConfig = runCatching { signingConfigs.getByName("release") }.getOrElse { signingConfigs.getByName("debug") }
             isMinifyEnabled = false
             isShrinkResources = false
         }
