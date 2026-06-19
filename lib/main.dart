@@ -23,8 +23,13 @@ class _NativeTts {
   String _language = 'en-US';
   double _rate = 0.5;
 
-  Future<void> setLanguage(String lang) async { _language = lang; }
-  Future<void> setSpeechRate(double rate) async { _rate = rate; }
+  Future<void> setLanguage(String lang) async {
+    _language = lang;
+  }
+
+  Future<void> setSpeechRate(double rate) async {
+    _rate = rate;
+  }
 
   Future<void> speak(String text) async {
     try {
@@ -37,14 +42,16 @@ class _NativeTts {
   }
 
   Future<void> stop() async {
-    try { await _channel.invokeMethod('stop'); } catch (_) {}
+    try {
+      await _channel.invokeMethod('stop');
+    } catch (_) {}
   }
 }
 
 // ==========================================
 // הגדרות גלובליות
 // ==========================================
-const int currentTermsVersion = 2;
+const int currentTermsVersion = 3;
 
 // Set to true once real iOS AdMob unit IDs are added to _AdIds
 const bool kAdsEnabled = false;
@@ -87,8 +94,8 @@ class PurchaseManager {
   Future<void> _loadProductDetails() async {
     try {
       final ProductDetailsResponse response = await InAppPurchase.instance
-          .queryProductDetails({kFullVersionProductId})
-          .timeout(const Duration(seconds: 8));
+          .queryProductDetails({kFullVersionProductId}).timeout(
+              const Duration(seconds: 8));
       if (response.productDetails.isNotEmpty) {
         _productDetails = response.productDetails.first;
       }
@@ -455,17 +462,17 @@ Color getTextColorForBackground(int unit, bool isDark) {
 // ==========================================
 // DESIGN SYSTEM CONSTANTS
 // ==========================================
-const Color kBgCream       = Color(0xFFFAF3EA);
-const Color kBluePrimary   = Color(0xFF3D8BFD);
+const Color kBgCream = Color(0xFFFAF3EA);
+const Color kBluePrimary = Color(0xFF3D8BFD);
 const Color kPurplePrimary = Color(0xFF7A3DFD);
-const Color kDarkButton    = Color(0xFF1A1A2E);
-const Color kDarkShadow    = Color(0xFF0A0A14);
-const Color kGreenButton   = Color(0xFF1AA84A);
-const Color kGreenShadow   = Color(0xFF0C6B29);
-const Color kAgainRed      = Color(0xFFE14F4F);
-const Color kHardOrange    = Color(0xFFFF8C3D);
-const Color kGoodBlue      = Color(0xFF3D8BFD);
-const Color kEasyGreen     = Color(0xFF1AA84A);
+const Color kDarkButton = Color(0xFF1A1A2E);
+const Color kDarkShadow = Color(0xFF0A0A14);
+const Color kGreenButton = Color(0xFF1AA84A);
+const Color kGreenShadow = Color(0xFF0C6B29);
+const Color kAgainRed = Color(0xFFE14F4F);
+const Color kHardOrange = Color(0xFFFF8C3D);
+const Color kGoodBlue = Color(0xFF3D8BFD);
+const Color kEasyGreen = Color(0xFF1AA84A);
 
 // ==========================================
 // 3. NotificationManager
@@ -667,7 +674,9 @@ class ProgressManager {
           'repetitions': int.parse(parts[1]),
           'interval': int.parse(parts[2]),
           'easinessFactor': double.parse(parts[3]),
-          'nextReview': DateTime.fromMillisecondsSinceEpoch(int.parse(parts[4]))
+          'nextReview':
+              DateTime.fromMillisecondsSinceEpoch(int.parse(parts[4])),
+          'word_status': parts.length >= 6 ? parts[5] : '',
         };
       } else if (parts.length == 3) {
         int lvl = int.parse(parts[1]);
@@ -694,16 +703,29 @@ class ProgressManager {
     return Map.unmodifiable(_cache);
   }
 
-  Future<void> updateWord(String uniqueId, int reps, int interval, double ef,
-      DateTime nextReview) async {
+  Future<void> updateWord(
+      String uniqueId, int reps, int interval, double ef, DateTime nextReview,
+      {String wordStatus = ''}) async {
     _cache[uniqueId] = {
       'repetitions': reps,
       'interval': interval,
       'easinessFactor': ef,
-      'nextReview': nextReview
+      'nextReview': nextReview,
+      'word_status': wordStatus,
     };
     await _saveToDisk();
   }
+
+  /// Returns uniqueIds of all words with a given word_status.
+  List<String> getAllByStatus(String status) {
+    return _cache.entries
+        .where((e) => (e.value['word_status'] ?? '') == status)
+        .map((e) => e.key)
+        .toList();
+  }
+
+  int countByStatus(String status) =>
+      _cache.values.where((v) => (v['word_status'] ?? '') == status).length;
 
   Future<void> resetWord(String uniqueId) async {
     _cache.remove(uniqueId);
@@ -717,7 +739,8 @@ class ProgressManager {
       int i = value['interval'];
       double ef = value['easinessFactor'];
       int time = (value['nextReview'] as DateTime).millisecondsSinceEpoch;
-      exportList.add("$key:$n:$i:$ef:$time");
+      String status = value['word_status'] ?? '';
+      exportList.add("$key:$n:$i:$ef:$time:$status");
     });
     await _prefs?.setStringList('userprogress', exportList);
   }
@@ -785,23 +808,51 @@ void main() async {
       debugPrint('FlutterError: ${details.exception}');
     };
 
-    try { await ThemeManager().init(); } catch (e) { debugPrint('ThemeManager init error: $e'); }
-    try { await ProgressManager().init(); } catch (e) { debugPrint('ProgressManager init error: $e'); }
-    try { await NotificationManager().init(); } catch (e) { debugPrint('NotificationManager init error: $e'); }
-    try { await PurchaseManager().init(); } catch (e) { debugPrint('PurchaseManager init error: $e'); }
-    try { await AdManager().init(); } catch (e) { debugPrint('AdManager init error: $e'); }
-    try { await StreakManager().init(); } catch (e) { debugPrint('StreakManager init error: $e'); }
+    try {
+      await ThemeManager().init();
+    } catch (e) {
+      debugPrint('ThemeManager init error: $e');
+    }
+    try {
+      await ProgressManager().init();
+    } catch (e) {
+      debugPrint('ProgressManager init error: $e');
+    }
+    try {
+      await NotificationManager().init();
+    } catch (e) {
+      debugPrint('NotificationManager init error: $e');
+    }
+    try {
+      await PurchaseManager().init();
+    } catch (e) {
+      debugPrint('PurchaseManager init error: $e');
+    }
+    try {
+      await AdManager().init();
+    } catch (e) {
+      debugPrint('AdManager init error: $e');
+    }
+    try {
+      await StreakManager().init();
+    } catch (e) {
+      debugPrint('StreakManager init error: $e');
+    }
 
     final prefs = await SharedPreferences.getInstance();
     final int userAcceptedVersion = prefs.getInt('accepted_terms_version') ?? 0;
     final bool hasChosenDetermination =
         prefs.getBool('hasChosenDetermination') ?? false;
+    final bool shownInstructions =
+        prefs.getBool('shown_practice_instructions') ?? false;
 
     Widget firstScreen;
     if (userAcceptedVersion != currentTermsVersion) {
       firstScreen = const TermsOfServiceScreen();
     } else if (!hasChosenDetermination) {
       firstScreen = const DeterminationScreen();
+    } else if (!shownInstructions) {
+      firstScreen = const InstructionsScreen();
     } else {
       firstScreen = const HomeScreen();
     }
@@ -953,41 +1004,52 @@ class _MiliPainter extends CustomPainter {
 
     // Drop shadow
     canvas.drawOval(
-      Rect.fromCenter(center: Offset(100 * s, 182 * s), width: 112 * s, height: 14 * s),
+      Rect.fromCenter(
+          center: Offset(100 * s, 182 * s), width: 112 * s, height: 14 * s),
       Paint()..color = Colors.black.withOpacity(0.10),
     );
     // Body
     canvas.drawOval(
-      Rect.fromCenter(center: Offset(100 * s, 105 * s), width: 144 * s, height: 136 * s),
+      Rect.fromCenter(
+          center: Offset(100 * s, 105 * s), width: 144 * s, height: 136 * s),
       Paint()..color = kBluePrimary,
     );
     // Highlight
     canvas.drawOval(
-      Rect.fromCenter(center: Offset(75 * s, 78 * s), width: 44 * s, height: 28 * s),
+      Rect.fromCenter(
+          center: Offset(75 * s, 78 * s), width: 44 * s, height: 28 * s),
       Paint()..color = Colors.white.withOpacity(0.22),
     );
     // Left eye
     canvas.drawOval(
-      Rect.fromCenter(center: Offset(78 * s, 100 * s), width: 22 * s, height: 26 * s),
+      Rect.fromCenter(
+          center: Offset(78 * s, 100 * s), width: 22 * s, height: 26 * s),
       Paint()..color = const Color(0xFF1A1A2E),
     );
     // Right eye
     canvas.drawOval(
-      Rect.fromCenter(center: Offset(122 * s, 100 * s), width: 22 * s, height: 26 * s),
+      Rect.fromCenter(
+          center: Offset(122 * s, 100 * s), width: 22 * s, height: 26 * s),
       Paint()..color = const Color(0xFF1A1A2E),
     );
     // Eye sparkles
-    canvas.drawCircle(Offset(82 * s, 95 * s), 3.5 * s, Paint()..color = Colors.white);
-    canvas.drawCircle(Offset(126 * s, 95 * s), 3.5 * s, Paint()..color = Colors.white);
-    canvas.drawCircle(Offset(75 * s, 106 * s), 2 * s, Paint()..color = Colors.white);
-    canvas.drawCircle(Offset(119 * s, 106 * s), 2 * s, Paint()..color = Colors.white);
+    canvas.drawCircle(
+        Offset(82 * s, 95 * s), 3.5 * s, Paint()..color = Colors.white);
+    canvas.drawCircle(
+        Offset(126 * s, 95 * s), 3.5 * s, Paint()..color = Colors.white);
+    canvas.drawCircle(
+        Offset(75 * s, 106 * s), 2 * s, Paint()..color = Colors.white);
+    canvas.drawCircle(
+        Offset(119 * s, 106 * s), 2 * s, Paint()..color = Colors.white);
     // Cheeks
     canvas.drawOval(
-      Rect.fromCenter(center: Offset(64 * s, 125 * s), width: 20 * s, height: 14 * s),
+      Rect.fromCenter(
+          center: Offset(64 * s, 125 * s), width: 20 * s, height: 14 * s),
       Paint()..color = Colors.pink.withOpacity(0.35),
     );
     canvas.drawOval(
-      Rect.fromCenter(center: Offset(136 * s, 125 * s), width: 20 * s, height: 14 * s),
+      Rect.fromCenter(
+          center: Offset(136 * s, 125 * s), width: 20 * s, height: 14 * s),
       Paint()..color = Colors.pink.withOpacity(0.35),
     );
     // Smile
@@ -1004,11 +1066,13 @@ class _MiliPainter extends CustomPainter {
     );
     // Waving hand (small ellipses off right side)
     canvas.drawOval(
-      Rect.fromCenter(center: Offset(166 * s, 118 * s), width: 24 * s, height: 20 * s),
+      Rect.fromCenter(
+          center: Offset(166 * s, 118 * s), width: 24 * s, height: 20 * s),
       Paint()..color = kBluePrimary,
     );
     canvas.drawOval(
-      Rect.fromCenter(center: Offset(170 * s, 110 * s), width: 14 * s, height: 12 * s),
+      Rect.fromCenter(
+          center: Offset(170 * s, 110 * s), width: 14 * s, height: 12 * s),
       Paint()..color = kBluePrimary,
     );
 
@@ -1156,12 +1220,26 @@ class ProgressSegments extends StatelessWidget {
 
   Color _color(String state) {
     switch (state) {
-      case 'again':   return kAgainRed;
-      case 'hard':    return kHardOrange;
-      case 'good':    return kGoodBlue;
-      case 'easy':    return kEasyGreen;
-      case 'current': return kPurplePrimary;
-      default:        return const Color(0xFFE4E7EE);
+      // new 3-button outcomes
+      case 'lo_hevanti':
+        return kAgainRed;
+      case 'kacha_kacha':
+        return const Color(0xFFFFB800);
+      case 'muvvan':
+        return kEasyGreen;
+      // legacy (review mode fallback)
+      case 'again':
+        return kAgainRed;
+      case 'hard':
+        return kHardOrange;
+      case 'good':
+        return kGoodBlue;
+      case 'easy':
+        return kEasyGreen;
+      case 'current':
+        return kPurplePrimary;
+      default:
+        return const Color(0xFFE4E7EE);
     }
   }
 
@@ -1227,9 +1305,7 @@ class SRSButton extends StatelessWidget {
           children: [
             Text(label,
                 style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                    color: color)),
+                    fontWeight: FontWeight.bold, fontSize: 15, color: color)),
             const SizedBox(height: 2),
             Text(sublabel,
                 style: TextStyle(
@@ -1237,6 +1313,42 @@ class SRSButton extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                     color: Colors.grey[500])),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── ResponseButton (3-button system) ──────────────────────────────────────
+class _ResponseButton extends StatelessWidget {
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+  const _ResponseButton(
+      {required this.label, required this.color, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedButton(
+      onTap: onTap,
+      child: Container(
+        height: 52,
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+                color: color.withValues(alpha: 0.40),
+                offset: const Offset(0, 3),
+                blurRadius: 0),
+          ],
+        ),
+        child: Center(
+          child: Text(label,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold)),
         ),
       ),
     );
@@ -1268,8 +1380,8 @@ class _MascotCheerState extends State<MascotCheer>
     super.initState();
     _ctrl = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 400));
-    _scale = Tween<double>(begin: 0.0, end: 1.0).animate(
-        CurvedAnimation(parent: _ctrl, curve: Curves.elasticOut));
+    _scale = Tween<double>(begin: 0.0, end: 1.0)
+        .animate(CurvedAnimation(parent: _ctrl, curve: Curves.elasticOut));
     _ctrl.forward();
     Future.delayed(const Duration(seconds: 3), () {
       if (mounted) widget.onDismiss();
@@ -1369,7 +1481,8 @@ class _ConfettiPainter extends CustomPainter {
       canvas.rotate(p.rotation + progress * 6.28 * p.speed);
       paint.color = p.color;
       canvas.drawRect(
-        Rect.fromCenter(center: Offset.zero, width: p.size, height: p.size * 0.45),
+        Rect.fromCenter(
+            center: Offset.zero, width: p.size, height: p.size * 0.45),
         paint,
       );
       canvas.restore();
@@ -1387,26 +1500,34 @@ class Confetti extends StatefulWidget {
   State<Confetti> createState() => _ConfettiState();
 }
 
-class _ConfettiState extends State<Confetti> with SingleTickerProviderStateMixin {
+class _ConfettiState extends State<Confetti>
+    with SingleTickerProviderStateMixin {
   late AnimationController _ctrl;
   late List<_ConfettiParticle> _particles;
 
   static const _colors = [
-    kBluePrimary, kPurplePrimary, kAgainRed, kEasyGreen, Colors.amber, Colors.pink,
+    kBluePrimary,
+    kPurplePrimary,
+    kAgainRed,
+    kEasyGreen,
+    Colors.amber,
+    Colors.pink,
   ];
 
   @override
   void initState() {
     super.initState();
     final rng = math.Random();
-    _particles = List.generate(50, (i) => _ConfettiParticle(
-      x: rng.nextDouble(),
-      size: 7 + rng.nextDouble() * 6,
-      speed: 0.8 + rng.nextDouble() * 0.6,
-      delay: rng.nextDouble(),
-      color: _colors[i % _colors.length],
-      rotation: rng.nextDouble() * 6.28,
-    ));
+    _particles = List.generate(
+        50,
+        (i) => _ConfettiParticle(
+              x: rng.nextDouble(),
+              size: 7 + rng.nextDouble() * 6,
+              speed: 0.8 + rng.nextDouble() * 0.6,
+              delay: rng.nextDouble(),
+              color: _colors[i % _colors.length],
+              rotation: rng.nextDouble() * 6.28,
+            ));
     _ctrl = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 4),
@@ -1490,23 +1611,23 @@ class _HomeScreenState extends State<HomeScreen>
             parent: _buttonsController, curve: Curves.easeOutCubic));
 
     // Background blobs — gentle floating
-    _blob1Ctrl = AnimationController(
-        vsync: this, duration: const Duration(seconds: 7))
-      ..repeat(reverse: true);
+    _blob1Ctrl =
+        AnimationController(vsync: this, duration: const Duration(seconds: 7))
+          ..repeat(reverse: true);
     _blob1Anim = Tween<Offset>(
             begin: Offset.zero, end: const Offset(0.04, -0.05))
         .animate(CurvedAnimation(parent: _blob1Ctrl, curve: Curves.easeInOut));
 
-    _blob2Ctrl = AnimationController(
-        vsync: this, duration: const Duration(seconds: 9))
-      ..repeat(reverse: true);
+    _blob2Ctrl =
+        AnimationController(vsync: this, duration: const Duration(seconds: 9))
+          ..repeat(reverse: true);
     _blob2Anim = Tween<Offset>(
             begin: Offset.zero, end: const Offset(-0.05, 0.04))
         .animate(CurvedAnimation(parent: _blob2Ctrl, curve: Curves.easeInOut));
 
-    _blob3Ctrl = AnimationController(
-        vsync: this, duration: const Duration(seconds: 6))
-      ..repeat(reverse: true);
+    _blob3Ctrl =
+        AnimationController(vsync: this, duration: const Duration(seconds: 6))
+          ..repeat(reverse: true);
     _blob3Anim = Tween<Offset>(
             begin: Offset.zero, end: const Offset(0.03, 0.04))
         .animate(CurvedAnimation(parent: _blob3Ctrl, curve: Curves.easeInOut));
@@ -1539,10 +1660,14 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) async {
     final prefs = await SharedPreferences.getInstance();
+    final bool notificationsEnabled =
+        prefs.getBool('notifications_enabled') ?? true;
     final int hours = prefs.getInt('determination_hours') ?? 24;
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.detached) {
-      await NotificationManager().scheduleInactivityNotification(hours);
+      if (notificationsEnabled) {
+        await NotificationManager().scheduleInactivityNotification(hours);
+      }
     } else if (state == AppLifecycleState.resumed) {
       await NotificationManager().cancelNotifications();
     }
@@ -1550,9 +1675,9 @@ class _HomeScreenState extends State<HomeScreen>
 
   String _greeting() {
     final h = DateTime.now().hour;
-    if (h >= 5 && h < 12) return 'בוקר טוב, אתגר היום מחכה';
-    if (h >= 12 && h < 17) return 'צהריים טובים, אתגר היום מחכה';
-    if (h >= 17 && h < 21) return 'ערב טוב, אתגר היום מחכה';
+    if (h >= 5 && h < 12) return 'בוקר טוב, המילים מחכות לך';
+    if (h >= 12 && h < 17) return 'צהריים טובים, המילים מחכות לך';
+    if (h >= 17 && h < 21) return 'ערב טוב, המילים מחכות לך';
     return 'לילה טוב, אתגר היום מחכה';
   }
 
@@ -1615,8 +1740,7 @@ class _HomeScreenState extends State<HomeScreen>
                 height: 200,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: kPurplePrimary
-                      .withValues(alpha: isDark ? 0.07 : 0.15),
+                  color: kPurplePrimary.withValues(alpha: isDark ? 0.07 : 0.15),
                 ),
               ),
             ),
@@ -1643,8 +1767,8 @@ class _HomeScreenState extends State<HomeScreen>
               children: [
                 // Top bar
                 Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -1662,17 +1786,14 @@ class _HomeScreenState extends State<HomeScreen>
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color:
-                                    Colors.black.withValues(alpha: 0.08),
+                                color: Colors.black.withValues(alpha: 0.08),
                                 blurRadius: 10,
                                 offset: const Offset(0, 3),
                               )
                             ],
                           ),
                           child: Icon(Icons.settings_rounded,
-                              color: isDark
-                                  ? Colors.white70
-                                  : Colors.grey[700],
+                              color: isDark ? Colors.white70 : Colors.grey[700],
                               size: 22),
                         ),
                       ),
@@ -1688,13 +1809,8 @@ class _HomeScreenState extends State<HomeScreen>
                           ),
                           child: AnimatedButton(
                             onTap: () {
-                              if (PurchaseManager().isPro.value) {
-                                Navigator.push(ctx,
-                                    _slideRoute(const StreakScreen()));
-                              } else {
-                                Navigator.push(ctx,
-                                    _slideRoute(const PaywallScreen()));
-                              }
+                              Navigator.push(
+                                  ctx, _slideRoute(const StreakScreen()));
                             },
                             child: Container(
                               padding: const EdgeInsets.symmetric(
@@ -1706,8 +1822,7 @@ class _HomeScreenState extends State<HomeScreen>
                                 borderRadius: BorderRadius.circular(999),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black
-                                        .withValues(alpha: 0.08),
+                                    color: Colors.black.withValues(alpha: 0.08),
                                     blurRadius: 10,
                                     offset: const Offset(0, 3),
                                   )
@@ -1751,9 +1866,7 @@ class _HomeScreenState extends State<HomeScreen>
                         _greeting(),
                         style: TextStyle(
                           fontSize: 14,
-                          color: isDark
-                              ? Colors.white38
-                              : Colors.grey[500],
+                          color: isDark ? Colors.white38 : Colors.grey[500],
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -1771,8 +1884,7 @@ class _HomeScreenState extends State<HomeScreen>
                               borderRadius: BorderRadius.circular(28),
                               boxShadow: [
                                 BoxShadow(
-                                  color:
-                                      Colors.black.withValues(alpha: 0.18),
+                                  color: Colors.black.withValues(alpha: 0.18),
                                   blurRadius: 28,
                                   offset: const Offset(0, 10),
                                 )
@@ -1799,8 +1911,7 @@ class _HomeScreenState extends State<HomeScreen>
                       FadeTransition(
                         opacity: _logoFade,
                         child: ShaderMask(
-                          shaderCallback: (bounds) =>
-                              const LinearGradient(
+                          shaderCallback: (bounds) => const LinearGradient(
                             colors: [kBluePrimary, kPurplePrimary],
                           ).createShader(bounds),
                           child: const Text(
@@ -1822,9 +1933,7 @@ class _HomeScreenState extends State<HomeScreen>
                           'מילים לפסיכומטרי',
                           style: TextStyle(
                             fontSize: 15,
-                            color: isDark
-                                ? Colors.white38
-                                : Colors.grey[500],
+                            color: isDark ? Colors.white38 : Colors.grey[500],
                           ),
                         ),
                       ),
@@ -1880,7 +1989,32 @@ class _HomeScreenState extends State<HomeScreen>
                           ),
                         ),
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 16),
+                      GestureDetector(
+                        onTap: () => Navigator.push(
+                            context, _slideRoute(const InstructionsScreen())),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Transform.flip(
+                              flipX: true,
+                              child: Icon(Icons.help_outline_rounded,
+                                  size: 16,
+                                  color: isDark
+                                      ? Colors.white38
+                                      : Colors.black38),
+                            ),
+                            const SizedBox(width: 5),
+                            Text('איך זה עובד?',
+                                style: TextStyle(
+                                    fontSize: 13,
+                                    color: isDark
+                                        ? Colors.white38
+                                        : Colors.black38)),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
                     ],
                   ),
                 ),
@@ -1912,72 +2046,184 @@ class UnitSelectorScreen extends StatefulWidget {
 }
 
 class _UnitSelectorScreenState extends State<UnitSelectorScreen> {
-  Map<int, List<Word>> units = {};
-  Map<int, int> learnedCounts = {};
   bool isLoading = true;
   int totalFailedCount = 0;
+  int kachaKachaCount = 0;
+  int muvvanCount = 0;
 
   @override
   void initState() {
     super.initState();
-    loadAndOrganizeData();
+    _loadCounts();
   }
 
-  Future<void> loadAndOrganizeData() async {
+  Future<void> _loadCounts() async {
     try {
       final String response = await rootBundle.loadString(widget.jsonPath);
-      final data = await json.decode(response);
-      var list = data["words"] as List;
-      List<Word> allWords = list.map((w) => Word.fromJson(w)).toList();
+      final data = json.decode(response);
+      final list = data['words'] as List;
+      final allWords = list.map((w) => Word.fromJson(w)).toList();
 
-      Map<int, List<Word>> tempUnits = {};
-      Map<int, int> tempCounts = {};
       int failedCounter = 0;
-
+      int kachaCounter = 0;
+      int muvvanCounter = 0;
       for (var word in allWords) {
-        int u = word.unitNumber;
-        if (u == 0) continue;
-        if (!tempUnits.containsKey(u)) {
-          tempUnits[u] = [];
-          tempCounts[u] = 0;
-        }
-        tempUnits[u]!.add(word);
-        var progress = ProgressManager().getWordProgress(word.uniqueId);
+        final progress = ProgressManager().getWordProgress(word.uniqueId);
         if (progress != null) {
-          int reps = progress['repetitions'] ?? 0;
-          if (reps > 0) tempCounts[u] = tempCounts[u]! + 1;
+          final reps = progress['repetitions'] ?? 0;
+          final status = progress['word_status'] ?? '';
           if (reps == 0) failedCounter++;
+          if (status == 'kacha_kacha') kachaCounter++;
+          if (status == 'muvvan') muvvanCounter++;
         }
       }
 
       if (!mounted) return;
       setState(() {
-        units = tempUnits;
-        learnedCounts = tempCounts;
         totalFailedCount = failedCounter;
+        kachaKachaCount = kachaCounter;
+        muvvanCount = muvvanCounter;
         isLoading = false;
       });
     } catch (e) {
       if (!mounted) return;
       setState(() => isLoading = false);
-      print("Error loading data: $e");
     }
+  }
+
+  Widget _modeButton({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required List<Color> colors,
+    required VoidCallback onTap,
+  }) {
+    return AnimatedButton(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16, left: 4, right: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+              colors: colors,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: colors.last.withValues(alpha: 0.35),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
+            )
+          ],
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 30, color: Colors.white),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 17,
+                          color: Colors.white)),
+                  Text(subtitle,
+                      style:
+                          const TextStyle(fontSize: 13, color: Colors.white70)),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios,
+                size: 16, color: Colors.white70),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    var sortedKeys = units.keys.toList()..sort();
-    bool isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Scaffold(
-      appBar: AppBar(title: Text("בחר יחידה - ${widget.title}")),
+      appBar: AppBar(title: Text(widget.title)),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
               padding: const EdgeInsets.all(20),
               children: [
-                // ── Level-based study button ──────────────────────────
-                AnimatedButton(
+                const SizedBox(height: 4),
+
+                // ── מובן — browse (conditional) ──────────────────────
+                if (muvvanCount > 0)
+                  _modeButton(
+                    title: 'מובן — מילים שהבנת',
+                    subtitle: '$muvvanCount מילים שסיימת',
+                    icon: Icons.check_circle_rounded,
+                    colors: [kEasyGreen, const Color(0xFF0C6B29)],
+                    onTap: () async {
+                      await Navigator.push(
+                          context,
+                          _slideRoute(
+                              KachaKachaScreen(jsonPath: widget.jsonPath)));
+                      _loadCounts();
+                    },
+                  ),
+
+                // ── ככה ככה — practice (conditional) ─────────────────
+                if (kachaKachaCount > 0)
+                  _modeButton(
+                    title: 'תרגול — ככה ככה',
+                    subtitle: '$kachaKachaCount מילים לתרגול נוסף',
+                    icon: Icons.replay_rounded,
+                    colors: const [Color(0xFFFFB800), Color(0xFFE57300)],
+                    onTap: () async {
+                      await Navigator.push(
+                          context,
+                          _slideRoute(KachaKachaSelectorScreen(
+                              jsonPath: widget.jsonPath)));
+                      _loadCounts();
+                    },
+                  ),
+
+                // ── לא הבנתי (conditional) ────────────────────────────
+                if (totalFailedCount > 0)
+                  _modeButton(
+                    title: 'חזרה על מילים שלא הכרת',
+                    subtitle: '$totalFailedCount מילים לחיזוק',
+                    icon: Icons.refresh_rounded,
+                    colors: [Colors.red.shade400, Colors.red.shade800],
+                    onTap: () async {
+                      await Navigator.push(
+                          context,
+                          _slideRoute(FailedWordsSelectorScreen(
+                              jsonPath: widget.jsonPath)));
+                      _loadCounts();
+                    },
+                  ),
+
+                // ── תרגול לפי יחידה ──────────────────────────────────
+                _modeButton(
+                  title: 'תרגול לפי יחידה',
+                  subtitle: 'יחידות 1–10',
+                  icon: Icons.layers_rounded,
+                  colors: const [Color(0xFF1A1A2E), Color(0xFF3D4070)],
+                  onTap: () async {
+                    await Navigator.push(
+                        context,
+                        _slideRoute(UnitListScreen(
+                            jsonPath: widget.jsonPath, title: widget.title)));
+                    _loadCounts();
+                  },
+                ),
+
+                // ── תרגול לפי רמת קושי ────────────────────────────────
+                _modeButton(
+                  title: 'תרגול לפי רמת קושי',
+                  subtitle: '5 רמות — מבסיסי עד קיצוני',
+                  icon: Icons.bar_chart_rounded,
+                  colors: const [Color(0xFF7A3DFD), Color(0xFF3D8BFD)],
                   onTap: () async {
                     final prefix =
                         widget.jsonPath.contains('hebrew') ? 'heb' : 'eng';
@@ -1985,176 +2231,70 @@ class _UnitSelectorScreenState extends State<UnitSelectorScreen> {
                         context,
                         _slideRoute(LevelSelectorScreen(
                             langPrefix: prefix, title: widget.title)));
-                    loadAndOrganizeData();
+                    _loadCounts();
                   },
-                  child: Container(
-                    margin: const EdgeInsets.only(
-                        bottom: 16, left: 5, right: 5),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 15, vertical: 14),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF7A3DFD), Color(0xFF3D8BFD)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF7A3DFD)
-                              .withValues(alpha: 0.35),
-                          blurRadius: 12,
-                          offset: const Offset(0, 6),
-                        )
-                      ],
-                    ),
-                    child: const Row(
-                      children: [
-                        Icon(Icons.bar_chart_rounded,
-                            size: 32, color: Colors.white),
-                        SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('תרגול לפי רמת קושי',
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 17,
-                                      color: Colors.white)),
-                              Text('5 רמות — מבסיסי עד קיצוני',
-                                  style: TextStyle(
-                                      fontSize: 13,
-                                      color: Colors.white70)),
-                            ],
-                          ),
-                        ),
-                        Icon(Icons.arrow_forward_ios,
-                            size: 16, color: Colors.white70),
-                      ],
-                    ),
-                  ),
                 ),
-                // ─────────────────────────────────────────────────────
-                if (totalFailedCount > 0) ...[
-                  AnimatedButton(
-                    onTap: () async {
-                      await Navigator.push(
-                          context,
-                          _slideRoute(FailedWordsSelectorScreen(
-                              jsonPath: widget.jsonPath)));
-                      loadAndOrganizeData();
-                    },
-                    child: Container(
-                      margin:
-                          const EdgeInsets.only(bottom: 20, left: 5, right: 5),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 15, vertical: 14),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [Colors.red.shade300, Colors.red.shade700],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.red.withOpacity(0.35),
-                            blurRadius: 12,
-                            offset: const Offset(0, 6),
-                          )
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.refresh_rounded,
-                              size: 32, color: Colors.white),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text("חזרה על מילים שלא הכרת",
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 17,
-                                        color: Colors.white)),
-                                Text("יש לך $totalFailedCount מילים לחיזוק",
-                                    style: const TextStyle(
-                                        fontSize: 13, color: Colors.white70)),
-                              ],
-                            ),
-                          ),
-                          const Icon(Icons.arrow_forward_ios,
-                              size: 16, color: Colors.white70),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-                ...sortedKeys.map((unitNum) {
-                  int total = units[unitNum]!.length;
-                  int learned = learnedCounts[unitNum]!;
-                  double progress = total > 0 ? learned / total : 0.0;
-                  Color unitColor = getUnitColor(unitNum, isDark);
-                  Color textColor = getTextColorForBackground(unitNum, isDark);
-
-                  return AnimatedButton(
-                    onTap: () => _showOptionsDialog(context, unitNum),
-                    child: Container(
-                      margin: const EdgeInsets.only(bottom: 14),
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: unitColor,
-                        borderRadius: BorderRadius.circular(18),
-                        boxShadow: [
-                          BoxShadow(
-                            color: unitColor.withOpacity(0.4),
-                            blurRadius: 10,
-                            offset: const Offset(0, 5),
-                          )
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Text("יחידה $unitNum",
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 18,
-                                      color: textColor)),
-                              const Spacer(),
-                              Icon(Icons.arrow_forward_ios,
-                                  size: 16, color: textColor),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Text("התקדמות: $learned / $total מילים",
-                              style: TextStyle(
-                                  color: textColor.withOpacity(0.8),
-                                  fontSize: 13)),
-                          const SizedBox(height: 6),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(4),
-                            child: LinearProgressIndicator(
-                              value: progress,
-                              backgroundColor: Colors.white.withOpacity(0.4),
-                              color: textColor == Colors.white
-                                  ? Colors.greenAccent
-                                  : Colors.blue,
-                              minHeight: 8,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }).toList(),
               ],
             ),
     );
+  }
+}
+
+// ==========================================
+// 9b. Unit List Screen (unit cards 1-N)
+// ==========================================
+class UnitListScreen extends StatefulWidget {
+  final String jsonPath;
+  final String title;
+  const UnitListScreen(
+      {super.key, required this.jsonPath, required this.title});
+
+  @override
+  State<UnitListScreen> createState() => _UnitListScreenState();
+}
+
+class _UnitListScreenState extends State<UnitListScreen> {
+  Map<int, List<Word>> units = {};
+  Map<int, int> learnedCounts = {};
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    try {
+      final String response = await rootBundle.loadString(widget.jsonPath);
+      final data = json.decode(response);
+      final list = data['words'] as List;
+      final allWords = list.map((w) => Word.fromJson(w)).toList();
+
+      Map<int, List<Word>> tempUnits = {};
+      Map<int, int> tempCounts = {};
+
+      for (var word in allWords) {
+        final u = word.unitNumber;
+        if (u == 0) continue;
+        tempUnits.putIfAbsent(u, () => []).add(word);
+        tempCounts.putIfAbsent(u, () => 0);
+        final progress = ProgressManager().getWordProgress(word.uniqueId);
+        if (progress != null && (progress['repetitions'] ?? 0) > 0) {
+          tempCounts[u] = tempCounts[u]! + 1;
+        }
+      }
+
+      if (!mounted) return;
+      setState(() {
+        units = tempUnits;
+        learnedCounts = tempCounts;
+        isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => isLoading = false);
+    }
   }
 
   void _showOptionsDialog(BuildContext context, int unitNum) {
@@ -2172,7 +2312,7 @@ class _UnitSelectorScreenState extends State<UnitSelectorScreen> {
                         context,
                         _slideRoute(LearningScreen(
                             jsonPath: widget.jsonPath, unitFilter: unitNum)));
-                    loadAndOrganizeData();
+                    _loadData();
                   },
                   child: const Padding(
                     padding: EdgeInsets.symmetric(vertical: 10),
@@ -2192,7 +2332,7 @@ class _UnitSelectorScreenState extends State<UnitSelectorScreen> {
                         context,
                         _slideRoute(VocabularyListScreen(
                             jsonPath: widget.jsonPath, unitFilter: unitNum)));
-                    loadAndOrganizeData();
+                    _loadData();
                   },
                   child: const Padding(
                     padding: EdgeInsets.symmetric(vertical: 10),
@@ -2206,10 +2346,86 @@ class _UnitSelectorScreenState extends State<UnitSelectorScreen> {
               ],
             ));
   }
+
+  @override
+  Widget build(BuildContext context) {
+    final sortedKeys = units.keys.toList()..sort();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Scaffold(
+      appBar: AppBar(title: Text("יחידות — ${widget.title}")),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : ListView(
+              padding: const EdgeInsets.all(20),
+              children: sortedKeys.map((unitNum) {
+                final total = units[unitNum]!.length;
+                final learned = learnedCounts[unitNum]!;
+                final progress = total > 0 ? learned / total : 0.0;
+                final unitColor = getUnitColor(unitNum, isDark);
+                final textColor = getTextColorForBackground(unitNum, isDark);
+
+                return AnimatedButton(
+                  onTap: () => _showOptionsDialog(context, unitNum),
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 14),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: unitColor,
+                      borderRadius: BorderRadius.circular(18),
+                      boxShadow: [
+                        BoxShadow(
+                          color: unitColor.withValues(alpha: 0.4),
+                          blurRadius: 10,
+                          offset: const Offset(0, 5),
+                        )
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text("יחידה $unitNum",
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
+                                    color: textColor)),
+                            const Spacer(),
+                            Icon(Icons.arrow_forward_ios,
+                                size: 16, color: textColor),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text("התקדמות: $learned / $total מילים",
+                            style: TextStyle(
+                                color: textColor.withValues(alpha: 0.8),
+                                fontSize: 13)),
+                        const SizedBox(height: 6),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: progress,
+                            backgroundColor:
+                                Colors.white.withValues(alpha: 0.4),
+                            color: textColor == Colors.white
+                                ? Colors.greenAccent
+                                : Colors.blue,
+                            minHeight: 8,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+    );
+  }
 }
 
 // ==========================================
-// 9b. Level Selector Screen
+// 9c. Level Selector Screen
 // ==========================================
 class _LevelMeta {
   final String label;
@@ -2220,16 +2436,16 @@ class _LevelMeta {
 }
 
 const _kLevelMeta = [
-  _LevelMeta('בסיסי', 'מילים יומיומיות ושכיחות', Color(0xFF3D8BFD),
-      Color(0xFF1A5FC4)),
+  _LevelMeta(
+      'בסיסי', 'מילים יומיומיות ושכיחות', Color(0xFF3D8BFD), Color(0xFF1A5FC4)),
   _LevelMeta('בינוני', 'עיתונות ופודקאסטים איכותיים', Color(0xFF1AA84A),
       Color(0xFF0C6B29)),
-  _LevelMeta('גבוה', 'אקדמי, ספרותי ומשנה', Color(0xFFFF8C3D),
-      Color(0xFFB85C10)),
+  _LevelMeta(
+      'גבוה', 'אקדמי, ספרותי ומשנה', Color(0xFFFF8C3D), Color(0xFFB85C10)),
   _LevelMeta('מתקדם', 'ארכאי, ארמי, מלכודות פסיכומטרי', Color(0xFFE14F4F),
       Color(0xFFA02020)),
-  _LevelMeta('קיצוני', 'תנ"כי ועתיק מאוד', Color(0xFF7A3DFD),
-      Color(0xFF4A1AC0)),
+  _LevelMeta(
+      'קיצוני', 'תנ"כי ועתיק מאוד', Color(0xFF7A3DFD), Color(0xFF4A1AC0)),
 ];
 
 class LevelSelectorScreen extends StatefulWidget {
@@ -2259,8 +2475,7 @@ class _LevelSelectorScreenState extends State<LevelSelectorScreen> {
 
     for (int lvl = 1; lvl <= 5; lvl++) {
       try {
-        final path =
-            'assets/levels/${widget.langPrefix}_level_$lvl.json';
+        final path = 'assets/levels/${widget.langPrefix}_level_$lvl.json';
         final String response = await rootBundle.loadString(path);
         final data = json.decode(response);
         final list = data['words'] as List;
@@ -2269,10 +2484,8 @@ class _LevelSelectorScreenState extends State<LevelSelectorScreen> {
         int learnedCount = 0;
         for (final w in list) {
           final word = Word.fromJson(w);
-          final progress =
-              ProgressManager().getWordProgress(word.uniqueId);
-          if (progress != null &&
-              (progress['repetitions'] ?? 0) > 0) {
+          final progress = ProgressManager().getWordProgress(word.uniqueId);
+          if (progress != null && (progress['repetitions'] ?? 0) > 0) {
             learnedCount++;
           }
         }
@@ -2295,15 +2508,14 @@ class _LevelSelectorScreenState extends State<LevelSelectorScreen> {
         builder: (ctx) => SimpleDialog(
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20)),
-              title: Text('רמה $levelNum — $label',
-                  textAlign: TextAlign.center),
+              title:
+                  Text('רמה $levelNum — $label', textAlign: TextAlign.center),
               children: [
                 SimpleDialogOption(
                   onPressed: () async {
                     Navigator.pop(ctx);
                     await Navigator.push(
-                        context,
-                        _slideRoute(LearningScreen(jsonPath: path)));
+                        context, _slideRoute(LearningScreen(jsonPath: path)));
                     _loadCounts();
                   },
                   child: const Padding(
@@ -2312,8 +2524,7 @@ class _LevelSelectorScreenState extends State<LevelSelectorScreen> {
                       Icon(Icons.play_circle_fill,
                           color: Colors.blue, size: 30),
                       SizedBox(width: 15),
-                      Text('התחל תרגול',
-                          style: TextStyle(fontSize: 18))
+                      Text('התחל תרגול', style: TextStyle(fontSize: 18))
                     ]),
                   ),
                 ),
@@ -2321,10 +2532,8 @@ class _LevelSelectorScreenState extends State<LevelSelectorScreen> {
                 SimpleDialogOption(
                   onPressed: () async {
                     Navigator.pop(ctx);
-                    await Navigator.push(
-                        context,
-                        _slideRoute(
-                            VocabularyListScreen(jsonPath: path)));
+                    await Navigator.push(context,
+                        _slideRoute(VocabularyListScreen(jsonPath: path)));
                     _loadCounts();
                   },
                   child: const Padding(
@@ -2332,8 +2541,7 @@ class _LevelSelectorScreenState extends State<LevelSelectorScreen> {
                     child: Row(children: [
                       Icon(Icons.list, color: Colors.black87, size: 30),
                       SizedBox(width: 15),
-                      Text('רשימת מילים',
-                          style: TextStyle(fontSize: 18))
+                      Text('רשימת מילים', style: TextStyle(fontSize: 18))
                     ]),
                   ),
                 ),
@@ -2360,8 +2568,8 @@ class _LevelSelectorScreenState extends State<LevelSelectorScreen> {
                     'assets/levels/${widget.langPrefix}_level_$levelNum.json';
 
                 return AnimatedButton(
-                  onTap: () => _showOptionsDialog(
-                      context, levelNum, path, meta.label),
+                  onTap: () =>
+                      _showOptionsDialog(context, levelNum, path, meta.label),
                   child: Container(
                     margin: const EdgeInsets.only(bottom: 16),
                     padding: const EdgeInsets.all(18),
@@ -2385,10 +2593,8 @@ class _LevelSelectorScreenState extends State<LevelSelectorScreen> {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 10, vertical: 4),
                               decoration: BoxDecoration(
-                                color: Colors.white
-                                    .withValues(alpha: 0.25),
-                                borderRadius:
-                                    BorderRadius.circular(20),
+                                color: Colors.white.withValues(alpha: 0.25),
+                                borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text('רמה $levelNum',
                                   style: const TextStyle(
@@ -2631,12 +2837,14 @@ class LearningScreen extends StatefulWidget {
   final String jsonPath;
   final int? unitFilter;
   final bool onlyFailed;
+  final bool onlyKachaKacha;
 
   const LearningScreen({
     super.key,
     required this.jsonPath,
     this.unitFilter,
     this.onlyFailed = false,
+    this.onlyKachaKacha = false,
   });
 
   @override
@@ -2660,10 +2868,9 @@ class _LearningScreenState extends State<LearningScreen>
   int _sessionStreak = 0;
   final List<String> _outcomes = [];
   final Map<String, int> _stats = {
-    'again': 0,
-    'hard': 0,
-    'good': 0,
-    'easy': 0
+    'lo_hevanti': 0,
+    'kacha_kacha': 0,
+    'muvvan': 0,
   };
   String? _cheerMessage;
   // Tracks how many times each word was re-queued this session.
@@ -2723,20 +2930,29 @@ class _LearningScreenState extends State<LearningScreen>
         continue;
       }
 
+      if (widget.onlyKachaKacha) {
+        final status = progress != null ? (progress['word_status'] ?? '') : '';
+        if (status == 'kacha_kacha') {
+          sessionWords.add(w);
+          filteredTotal.add(w);
+        }
+        continue;
+      }
+
       filteredTotal.add(w);
       if (w.nextReview.isBefore(DateTime.now()) || w.repetitions == 0) {
         sessionWords.add(w);
       }
     }
 
-    if (widget.onlyFailed) {
+    if (widget.onlyFailed || widget.onlyKachaKacha) {
       sessionWords.shuffle();
     } else {
       sessionWords.sort((a, b) => a.nextReview.compareTo(b.nextReview));
     }
 
     int startIndex = 0;
-    if (!widget.onlyFailed) {
+    if (!widget.onlyFailed && !widget.onlyKachaKacha) {
       final prefs = await SharedPreferences.getInstance();
       final String? lastWordId = prefs.getString('last_session_word_id');
       if (lastWordId != null && sessionWords.isNotEmpty) {
@@ -2792,86 +3008,60 @@ class _LearningScreenState extends State<LearningScreen>
     });
   }
 
-  /// 4-level SRS update. level ∈ {'again','hard','good','easy'}
-  Future<void> updateWordProgress(String level) async {
+  /// 3-button response. action ∈ {'lo_hevanti','kacha_kacha','muvvan'}
+  Future<void> updateWordProgress(String action) async {
     if (studySession.isEmpty) return;
     Word word = studySession[_currentIndex];
 
     SharedPreferences.getInstance()
         .then((p) => p.setString('last_session_word_id', word.uniqueId));
 
-    final bool wasGoodOrEasy = level == 'good' || level == 'easy';
-    _lastExitLeft = level == 'again';
+    final bool isPositive = action != 'lo_hevanti';
+    _lastExitLeft = action == 'lo_hevanti';
 
-    // Session streak
-    if (wasGoodOrEasy) {
+    if (isPositive) {
       _sessionStreak++;
       _checkCheer();
     } else {
       _sessionStreak = 0;
     }
 
-    // Record outcome
-    _outcomes.add(level);
-    _stats[level] = (_stats[level] ?? 0) + 1;
+    _outcomes.add(action);
+    _stats[action] = (_stats[action] ?? 0) + 1;
+
+    switch (action) {
+      case 'lo_hevanti':
+        word.repetitions = 0;
+        word.interval = 1;
+        word.easinessFactor = 1.3;
+        break;
+      case 'kacha_kacha':
+        word.repetitions = 1;
+        word.interval = 1;
+        word.easinessFactor = 2.5;
+        break;
+      case 'muvvan':
+        word.repetitions = 3;
+        word.interval = 3;
+        word.easinessFactor = 2.5;
+        break;
+    }
+
+    word.nextReview = DateTime.now().add(Duration(days: word.interval));
+    await ProgressManager().updateWord(
+      word.uniqueId,
+      word.repetitions,
+      word.interval,
+      word.easinessFactor,
+      word.nextReview,
+      wordStatus: action,
+    );
+
+    _wordsStudiedThisSession++;
+    if (isPositive) StreakManager().recordStudySession(1);
 
     setState(() {
-      if (isReviewMode && !widget.onlyFailed) {
-        if (wasGoodOrEasy) {
-          studySession.removeAt(_currentIndex);
-        } else {
-          // Review mode: re-queue once, then drop to avoid infinite loops
-          final retries = (_sessionRetries[word.uniqueId] ?? 0) + 1;
-          _sessionRetries[word.uniqueId] = retries;
-          studySession.removeAt(_currentIndex);
-          if (retries <= 1) studySession.add(word);
-        }
-      } else {
-        // 4-level SM2
-        int quality;
-        switch (level) {
-          case 'again': quality = 0; break;
-          case 'hard':  quality = 2; break;
-          case 'easy':  quality = 5; break;
-          default:      quality = 4; // 'good'
-        }
-
-        if (quality < 3) {
-          word.repetitions = 0;
-          word.interval = 1;
-        } else {
-          if (word.repetitions == 0) {
-            word.interval = 1;
-          } else if (word.repetitions == 1) {
-            word.interval = 6;
-          } else if (level == 'easy') {
-            word.interval = (word.interval * word.easinessFactor * 1.3).round();
-          } else {
-            word.interval = (word.interval * word.easinessFactor).round();
-          }
-          word.repetitions++;
-          word.easinessFactor = word.easinessFactor +
-              (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02));
-          if (word.easinessFactor < 1.3) word.easinessFactor = 1.3;
-        }
-
-        word.nextReview = DateTime.now().add(Duration(days: word.interval));
-        ProgressManager().updateWord(word.uniqueId, word.repetitions,
-            word.interval, word.easinessFactor, word.nextReview);
-
-        if (wasGoodOrEasy) {
-          _wordsStudiedThisSession++;
-          studySession.removeAt(_currentIndex);
-          StreakManager().recordStudySession(1);
-        } else {
-          // Re-queue once per session, then drop — prevents infinite loops
-          final retries = (_sessionRetries[word.uniqueId] ?? 0) + 1;
-          _sessionRetries[word.uniqueId] = retries;
-          studySession.removeAt(_currentIndex);
-          if (retries <= 1) studySession.add(word);
-        }
-      }
-
+      studySession.removeAt(_currentIndex);
       if (_currentIndex >= studySession.length) {
         _currentIndex = studySession.isNotEmpty ? studySession.length - 1 : 0;
       }
@@ -2914,7 +3104,7 @@ class _LearningScreenState extends State<LearningScreen>
   Color _difficultyColor(int d) {
     if (d <= 3) return const Color(0xFF1AA84A); // green — easy
     if (d <= 6) return const Color(0xFFFF8C3D); // orange — medium
-    return const Color(0xFFE14F4F);              // red — hard
+    return const Color(0xFFE14F4F); // red — hard
   }
 
   String _difficultyLabel(int d) {
@@ -3034,12 +3224,9 @@ class _LearningScreenState extends State<LearningScreen>
           ),
           // Flip hint pill
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
-              color: isDark
-                  ? const Color(0xFF2A2A3A)
-                  : const Color(0xFFF0F0F5),
+              color: isDark ? const Color(0xFF2A2A3A) : const Color(0xFFF0F0F5),
               borderRadius: BorderRadius.circular(999),
             ),
             child: Text(
@@ -3081,8 +3268,7 @@ class _LearningScreenState extends State<LearningScreen>
           Align(
             alignment: Alignment.centerRight,
             child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 color: kBluePrimary.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(999),
@@ -3119,14 +3305,11 @@ class _LearningScreenState extends State<LearningScreen>
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: isDark
-                  ? const Color(0xFF2A2510)
-                  : const Color(0xFFFFF8E8),
+              color: isDark ? const Color(0xFF2A2510) : const Color(0xFFFFF8E8),
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                color: isDark
-                    ? const Color(0xFF3A3010)
-                    : const Color(0xFFFCE9C0),
+                color:
+                    isDark ? const Color(0xFF3A3010) : const Color(0xFFFCE9C0),
               ),
             ),
             child: Column(
@@ -3221,36 +3404,26 @@ class _LearningScreenState extends State<LearningScreen>
     );
   }
 
-  Widget _buildSRSRow() {
+  Widget _buildResponseRow() {
     return Row(
       children: [
         Expanded(
-            child: SRSButton(
-                label: 'שוב',
-                sublabel: "1 דק׳",
+            child: _ResponseButton(
+                label: 'לא הבנתי',
                 color: kAgainRed,
-                onTap: () => updateWordProgress('again'))),
+                onTap: () => updateWordProgress('lo_hevanti'))),
         const SizedBox(width: 8),
         Expanded(
-            child: SRSButton(
-                label: 'קשה',
-                sublabel: "10 דק׳",
-                color: kHardOrange,
-                onTap: () => updateWordProgress('hard'))),
+            child: _ResponseButton(
+                label: 'ככה ככה',
+                color: const Color(0xFFFFB800),
+                onTap: () => updateWordProgress('kacha_kacha'))),
         const SizedBox(width: 8),
         Expanded(
-            child: SRSButton(
-                label: 'טוב',
-                sublabel: "1 יום",
-                color: kGoodBlue,
-                onTap: () => updateWordProgress('good'))),
-        const SizedBox(width: 8),
-        Expanded(
-            child: SRSButton(
-                label: 'קל',
-                sublabel: "4 ימים",
+            child: _ResponseButton(
+                label: 'מובן',
                 color: kEasyGreen,
-                onTap: () => updateWordProgress('easy'))),
+                onTap: () => updateWordProgress('muvvan'))),
       ],
     );
   }
@@ -3264,7 +3437,9 @@ class _LearningScreenState extends State<LearningScreen>
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final titleText = widget.onlyFailed
         ? 'חזרה על שגיאות'
-        : 'יחידה ${widget.unitFilter ?? 'כללי'}';
+        : widget.onlyKachaKacha
+            ? 'תרגול ככה ככה'
+            : 'יחידה ${widget.unitFilter ?? 'כללי'}';
     final displayTotal = _deckSize > 0 ? _deckSize : studySession.length;
     final displayCurrent = _outcomes.length + 1;
 
@@ -3295,8 +3470,7 @@ class _LearningScreenState extends State<LearningScreen>
                         child: Column(
                           children: [
                             Row(
-                              mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 // Session streak
                                 Row(
@@ -3355,17 +3529,17 @@ class _LearningScreenState extends State<LearningScreen>
                                     }
                                   },
                                   child: AnimatedSwitcher(
-                                    duration:
-                                        const Duration(milliseconds: 400),
+                                    duration: const Duration(milliseconds: 400),
                                     switchInCurve: Curves.easeOutCubic,
                                     switchOutCurve: Curves.easeInCubic,
                                     transitionBuilder: (child, anim) {
                                       // Slide direction based on last answer
-                                      final isEntering =
-                                          child.key == ValueKey(
-                                              'front_${studySession[_currentIndex].uniqueId}') ||
-                                          child.key == ValueKey(
-                                              'back_${studySession[_currentIndex].uniqueId}');
+                                      final isEntering = child.key ==
+                                              ValueKey(
+                                                  'front_${studySession[_currentIndex].uniqueId}') ||
+                                          child.key ==
+                                              ValueKey(
+                                                  'back_${studySession[_currentIndex].uniqueId}');
                                       final offset = isEntering
                                           ? Tween<Offset>(
                                               begin: const Offset(1.0, 0),
@@ -3394,7 +3568,7 @@ class _LearningScreenState extends State<LearningScreen>
                       Padding(
                         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                         child: _isFlipped
-                            ? _buildSRSRow()
+                            ? _buildResponseRow()
                             : _buildFlipButton(),
                       ),
                     ],
@@ -3405,8 +3579,7 @@ class _LearningScreenState extends State<LearningScreen>
                 if (_cheerMessage != null)
                   MascotCheer(
                     message: _cheerMessage!,
-                    onDismiss: () =>
-                        setState(() => _cheerMessage = null),
+                    onDismiss: () => setState(() => _cheerMessage = null),
                   ),
               ],
             ),
@@ -3444,12 +3617,13 @@ class _SessionDoneScreenState extends State<SessionDoneScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final easy = (widget.stats['easy'] ?? 0) + (widget.stats['good'] ?? 0);
-    final hard = widget.stats['hard'] ?? 0;
-    final again = widget.stats['again'] ?? 0;
+    final muvvan = widget.stats['muvvan'] ?? 0;
+    final kachaKacha = widget.stats['kacha_kacha'] ?? 0;
+    final loHevanti = widget.stats['lo_hevanti'] ?? 0;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF1A1A2E) : const Color(0xFFF4F6FB),
+      backgroundColor:
+          isDark ? const Color(0xFF1A1A2E) : const Color(0xFFF4F6FB),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -3508,11 +3682,23 @@ class _SessionDoneScreenState extends State<SessionDoneScreen> {
                   // Stats row
                   Row(
                     children: [
-                      _StatBlock(value: easy,  label: 'זכרת',      color: kEasyGreen,  isDark: isDark),
+                      _StatBlock(
+                          value: muvvan,
+                          label: 'מובן',
+                          color: kEasyGreen,
+                          isDark: isDark),
                       const SizedBox(width: 10),
-                      _StatBlock(value: hard,  label: 'עוד עבודה', color: kHardOrange, isDark: isDark),
+                      _StatBlock(
+                          value: kachaKacha,
+                          label: 'ככה ככה',
+                          color: const Color(0xFFFFB800),
+                          isDark: isDark),
                       const SizedBox(width: 10),
-                      _StatBlock(value: again, label: 'לחזרה',     color: kAgainRed,   isDark: isDark),
+                      _StatBlock(
+                          value: loHevanti,
+                          label: 'לא הבנתי',
+                          color: kAgainRed,
+                          isDark: isDark),
                     ],
                   ),
                   const SizedBox(height: 40),
@@ -3532,7 +3718,10 @@ class _SessionDoneScreenState extends State<SessionDoneScreen> {
                         color: kDarkButton,
                         borderRadius: BorderRadius.circular(999),
                         boxShadow: const [
-                          BoxShadow(color: kDarkShadow, offset: Offset(0, 4), blurRadius: 0),
+                          BoxShadow(
+                              color: kDarkShadow,
+                              offset: Offset(0, 4),
+                              blurRadius: 0),
                         ],
                       ),
                       child: const Center(
@@ -3555,13 +3744,16 @@ class _SessionDoneScreenState extends State<SessionDoneScreen> {
                         color: isDark ? const Color(0xFF2A2A3E) : Colors.white,
                         borderRadius: BorderRadius.circular(999),
                         border: Border.all(
-                          color: isDark ? Colors.white24 : const Color(0xFFCDD0D8),
+                          color:
+                              isDark ? Colors.white24 : const Color(0xFFCDD0D8),
                         ),
                       ),
                       child: Center(
                         child: Text('חזרה לבית',
                             style: TextStyle(
-                                color: isDark ? Colors.white : const Color(0xFF1A1A2E),
+                                color: isDark
+                                    ? Colors.white
+                                    : const Color(0xFF1A1A2E),
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600)),
                       ),
@@ -3624,6 +3816,123 @@ class _StatBlock extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+// ==========================================
+// 11c. Kacha Kacha Screen — browse "ככה ככה" words
+// ==========================================
+class KachaKachaScreen extends StatefulWidget {
+  final String jsonPath;
+  const KachaKachaScreen({super.key, required this.jsonPath});
+
+  @override
+  State<KachaKachaScreen> createState() => _KachaKachaScreenState();
+}
+
+class _KachaKachaScreenState extends State<KachaKachaScreen> {
+  List<Word> _words = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadWords();
+  }
+
+  Future<void> _loadWords() async {
+    final String response = await rootBundle.loadString(widget.jsonPath);
+    final data = json.decode(response);
+    final list = data['words'] as List;
+    final allWords = list.map((w) => Word.fromJson(w)).toList();
+
+    final muvvanIds = ProgressManager().getAllByStatus('muvvan').toSet();
+    final filtered =
+        allWords.where((w) => muvvanIds.contains(w.uniqueId)).toList();
+
+    if (!mounted) return;
+    setState(() {
+      _words = filtered;
+      _isLoading = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Scaffold(
+      appBar: AppBar(title: const Text('מובן — מילים שהבנת')),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _words.isEmpty
+              ? const Center(
+                  child: Text('אין מילים ברשימה כרגע',
+                      style: TextStyle(fontSize: 16, color: Colors.grey)))
+              : ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: _words.length,
+                  itemBuilder: (context, i) {
+                    final w = _words[i];
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 14),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF1E2232) : Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: kEasyGreen.withValues(alpha: 0.45),
+                          width: 1.5,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.06),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(w.term,
+                                    style: TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                        color: isDark
+                                            ? Colors.white
+                                            : const Color(0xFF1A1A2E))),
+                                const SizedBox(height: 4),
+                                Text(w.translation,
+                                    style: const TextStyle(
+                                        fontSize: 14,
+                                        color: kBluePrimary,
+                                        fontWeight: FontWeight.w600)),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: kEasyGreen.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: const Text('מובן',
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: kEasyGreen)),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
     );
   }
 }
@@ -3907,13 +4216,28 @@ class AboutScreen extends StatelessWidget {
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 32, vertical: 14),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30)),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 36),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Image.asset(
+                  'assets/logo.jpg',
+                  width: 180,
+                  fit: BoxFit.contain,
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text("Pappo Studios",
+                  style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey)),
+              const SizedBox(height: 16),
               const Text("© 2026 כל הזכויות שמורות",
                   style: TextStyle(fontSize: 12, color: Colors.grey)),
             ],
@@ -3946,9 +4270,6 @@ class _StatsScreenState extends State<StatsScreen> {
   int _hebrewTotal = 0, _hebrewStudied = 0;
   int _englishTotal = 0, _englishStudied = 0;
 
-  // מילים חלשות
-  List<Map<String, dynamic>> _weakWordsList = [];
-
   // 7 ימים אחרונים
   List<int> _last7DaysCounts = List.filled(7, 0);
 
@@ -3962,13 +4283,14 @@ class _StatsScreenState extends State<StatsScreen> {
     final allProgress = ProgressManager().getAllProgress();
 
     // טעינת שתי שפות
-    final hebrewData = await _loadJson('assets/hebrew_with_difficulty.json', 'hebrew');
-    final englishData = await _loadJson('assets/english_with_difficulty.json', 'english');
+    final hebrewData =
+        await _loadJson('assets/hebrew_with_difficulty.json', 'hebrew');
+    final englishData =
+        await _loadJson('assets/english_with_difficulty.json', 'english');
     final allWords = [...hebrewData, ...englishData];
 
     int total = 0, studied = 0, mastered = 0, weak = 0;
     int hTotal = 0, hStudied = 0, eTotal = 0, eStudied = 0;
-    List<Map<String, dynamic>> weakList = [];
 
     for (final w in allWords) {
       total++;
@@ -3993,21 +4315,8 @@ class _StatsScreenState extends State<StatsScreen> {
       }
       if (reps >= 3) mastered++;
 
-      final bool isWeak = (reps == 0) || (ef < 2.0);
-      if (isWeak) {
-        weak++;
-        weakList.add({
-          'term': w['term'],
-          'translation': w['translation'],
-          'ef': ef,
-          'reps': reps,
-          'lang': w['lang'],
-        });
-      }
+      if ((reps == 0) || (ef < 2.0)) weak++;
     }
-
-    // מיון מילים חלשות — הכי קשה ראשון (EF הכי נמוך)
-    weakList.sort((a, b) => (a['ef'] as double).compareTo(b['ef'] as double));
 
     // 7 ימים אחרונים מ-SharedPreferences
     final prefs = await SharedPreferences.getInstance();
@@ -4028,7 +4337,6 @@ class _StatsScreenState extends State<StatsScreen> {
       _hebrewStudied = hStudied;
       _englishTotal = eTotal;
       _englishStudied = eStudied;
-      _weakWordsList = weakList;
       _last7DaysCounts = last7;
       _isLoading = false;
     });
@@ -4156,101 +4464,6 @@ class _StatsScreenState extends State<StatsScreen> {
                     }),
                   ),
                 ),
-
-                const SizedBox(height: 24),
-
-                // ── מילים לחיזוק ─────────────────────────
-                _sectionTitle(
-                    'מילים לחיזוק (${_weakWordsList.length})', isDark),
-                const SizedBox(height: 10),
-
-                if (_weakWordsList.isEmpty)
-                  _card(
-                    isDark,
-                    child: const Row(children: [
-                      Text('💪', style: TextStyle(fontSize: 28)),
-                      SizedBox(width: 12),
-                      Expanded(
-                          child: Text('אין מילים חלשות — כל הכבוד!',
-                              style: TextStyle(fontSize: 15))),
-                    ]),
-                  )
-                else
-                  ..._weakWordsList.take(50).map((w) {
-                    final double ef = w['ef'] as double;
-                    final int reps = w['reps'] as int;
-                    final Color dot = ef < 1.6
-                        ? Colors.red
-                        : ef < 2.0
-                            ? Colors.orange
-                            : Colors.amber;
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: isDark
-                            ? Colors.white.withOpacity(0.06)
-                            : Colors.white,
-                        borderRadius: BorderRadius.circular(14),
-                        boxShadow: isDark
-                            ? []
-                            : [
-                                BoxShadow(
-                                    color: Colors.black.withOpacity(0.05),
-                                    blurRadius: 6,
-                                    offset: const Offset(0, 2))
-                              ],
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 10,
-                            height: 10,
-                            margin: const EdgeInsets.only(left: 10),
-                            decoration: BoxDecoration(
-                                color: dot, shape: BoxShape.circle),
-                          ),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(w['term'] as String,
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 15)),
-                                Text(w['translation'] as String,
-                                    style: TextStyle(
-                                        fontSize: 13,
-                                        color: isDark
-                                            ? Colors.white54
-                                            : Colors.black54)),
-                              ],
-                            ),
-                          ),
-                          Text(
-                            reps == 0 ? 'נכשל' : 'EF ${ef.toStringAsFixed(1)}',
-                            style: TextStyle(
-                                fontSize: 12,
-                                color: dot,
-                                fontWeight: FontWeight.w600),
-                          ),
-                        ],
-                      ),
-                    );
-                  }),
-
-                if (_weakWordsList.length > 50)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Text(
-                      '+ ${_weakWordsList.length - 50} מילים נוספות',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          color: isDark ? Colors.white38 : Colors.black38,
-                          fontSize: 13),
-                    ),
-                  ),
 
                 const SizedBox(height: 20),
               ],
@@ -4810,154 +5023,6 @@ class _StreakScreenState extends State<StreakScreen> {
 }
 
 // ==========================================
-// 16. Paywall Screen
-// ==========================================
-class PaywallScreen extends StatefulWidget {
-  const PaywallScreen({super.key});
-
-  @override
-  State<PaywallScreen> createState() => _PaywallScreenState();
-}
-
-class _PaywallScreenState extends State<PaywallScreen> {
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
-          child: Column(
-            children: [
-              Align(
-                alignment: Alignment.centerLeft,
-                child: IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                width: 90,
-                height: 90,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF00BCD4), Color(0xFF006064)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: const Center(
-                  child: Text('📚', style: TextStyle(fontSize: 44)),
-                ),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                'מילומטרי פרו — בקרוב',
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'השדרוג המלא יגיע בקרוב',
-                style: TextStyle(
-                    fontSize: 16,
-                    color: isDark ? Colors.white70 : Colors.black54),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 32),
-              _buildTierCard(
-                isDark: isDark,
-                title: 'חינמי',
-                icon: Icons.lock_open_rounded,
-                color: isDark ? Colors.grey.shade700 : Colors.grey.shade200,
-                textColor: isDark ? Colors.white70 : Colors.black54,
-                features: const [
-                  'כל היחידות והמילים',
-                  'כל מצבי הלמידה',
-                  'מעקב התקדמות בסיסי',
-                  'מודעות פרסום',
-                ],
-              ),
-              const SizedBox(height: 14),
-              _buildTierCard(
-                isDark: isDark,
-                title: 'גרסה מלאה',
-                icon: Icons.workspace_premium_rounded,
-                color: const Color(0xFF006064),
-                textColor: Colors.white,
-                features: const [
-                  'ללא מודעות פרסום 🚫',
-                  'רצף ימים + שיא אישי 🔥',
-                  'סטטיסטיקות: נלמדו, הושלמו, חלשות',
-                  'גרף 7 ימים + רשימת מילים חלשות',
-                  'תשלום חד-פעמי, לנצח',
-                ],
-                highlighted: true,
-              ),
-              const SizedBox(height: 24),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTierCard({
-    required bool isDark,
-    required String title,
-    required IconData icon,
-    required Color color,
-    required Color textColor,
-    required List<String> features,
-    bool highlighted = false,
-  }) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(18),
-        border: highlighted
-            ? Border.all(color: const Color(0xFF00BCD4), width: 2)
-            : null,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, color: textColor, size: 22),
-              const SizedBox(width: 8),
-              Text(title,
-                  style: TextStyle(
-                      color: textColor,
-                      fontSize: 17,
-                      fontWeight: FontWeight.bold)),
-            ],
-          ),
-          const SizedBox(height: 12),
-          ...features.map((f) => Padding(
-                padding: const EdgeInsets.only(bottom: 6),
-                child: Row(
-                  children: [
-                    Icon(Icons.check_circle_outline,
-                        color: highlighted ? Colors.greenAccent : textColor,
-                        size: 18),
-                    const SizedBox(width: 8),
-                    Text(f, style: TextStyle(color: textColor, fontSize: 14)),
-                  ],
-                ),
-              )),
-        ],
-      ),
-    );
-  }
-}
-
-// ==========================================
 // 16. Settings Screen
 // ==========================================
 class SettingsScreen extends StatefulWidget {
@@ -4970,6 +5035,7 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   double ttsSpeed = 0.5;
   String _currentDetermination = "";
+  bool _notificationsEnabled = true;
   final String _email = "pappostudios@gmail.com";
 
   @override
@@ -4995,7 +5061,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() {
       ttsSpeed = prefs.getDouble('tts_speed') ?? 0.5;
       _currentDetermination = determinationText;
+      _notificationsEnabled = prefs.getBool('notifications_enabled') ?? true;
     });
+  }
+
+  Future<void> _setNotificationsEnabled(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('notifications_enabled', enabled);
+    if (!enabled) {
+      await NotificationManager().cancelNotifications();
+    }
+    setState(() => _notificationsEnabled = enabled);
   }
 
   Future<void> _updateSpeed(double newSpeed) async {
@@ -5076,93 +5152,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: ListView(
         children: [
           const SizedBox(height: 20),
-          // --- שדרוג לגרסה מלאה ---
-          ValueListenableBuilder<bool>(
-            valueListenable: PurchaseManager().isPro,
-            builder: (context, isPro, _) {
-              if (isPro) {
-                return Column(children: [
-                  ListTile(
-                    leading: const Icon(Icons.workspace_premium_rounded,
-                        color: Colors.amber),
-                    title: const Text("גרסה מלאה פעילה ✓",
-                        style: TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: const Text("תודה על התמיכה!"),
-                  ),
-                  ListTile(
-                    leading:
-                        const Icon(Icons.bar_chart_rounded, color: Colors.blue),
-                    title: const Text("סטטיסטיקות"),
-                    subtitle: const Text("מילים נלמדו, חלשות, התקדמות"),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                    onTap: () => Navigator.push(
-                        context, _slideRoute(const StatsScreen())),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.local_fire_department,
-                        color: Colors.orange),
-                    title: const Text("רצף"),
-                    subtitle: const Text("הרצף היומי והשיא שלך"),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                    onTap: () => Navigator.push(
-                        context, _slideRoute(const StreakScreen())),
-                  ),
-                ]);
-              }
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                    child: AnimatedButton(
-                      onTap: () => Navigator.push(
-                          context, _slideRoute(const PaywallScreen())),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF00BCD4), Color(0xFF006064)],
-                            begin: Alignment.centerLeft,
-                            end: Alignment.centerRight,
-                          ),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.workspace_premium_rounded,
-                                color: Colors.white),
-                            SizedBox(width: 8),
-                            Text(
-                              'שדרג לגרסה מלאה',
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  /*ListTile(
-                    leading: const Icon(Icons.restore, color: Colors.grey),
-                    title: const Text("שחזר רכישה"),
-                    subtitle: const Text("רכשת בעבר? שחזר כאן"),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                    onTap: () async {
-                      await PurchaseManager().restorePurchases(context);
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text('בודק רכישות קודמות...')));
-                      }
-                    },
-                  ),*/
-                ],
-              );
-            },
+          _buildSectionHeader("מעקב והתקדמות"),
+          ListTile(
+            leading: const Icon(Icons.bar_chart_rounded, color: Colors.blue),
+            title: const Text("סטטיסטיקות"),
+            subtitle: const Text("מילים נלמדו, חלשות, התקדמות"),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () =>
+                Navigator.push(context, _slideRoute(const StatsScreen())),
+          ),
+          ListTile(
+            leading:
+                const Icon(Icons.local_fire_department, color: Colors.orange),
+            title: const Text("רצף"),
+            subtitle: const Text("הרצף היומי והשיא שלך"),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () =>
+                Navigator.push(context, _slideRoute(const StreakScreen())),
           ),
           const Divider(),
           _buildSectionHeader("כללי"),
@@ -5173,14 +5179,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onChanged: (val) => ThemeManager().toggleTheme(),
           ),
           const Divider(),
-          _buildSectionHeader("נחישות ותזכורות"),
+          _buildSectionHeader("הגדרות התראה"),
+          SwitchListTile(
+            secondary: Icon(
+              _notificationsEnabled
+                  ? Icons.notifications_active
+                  : Icons.notifications_off,
+              color: _notificationsEnabled ? Colors.orange : Colors.grey,
+            ),
+            title: const Text("ללא התראות"),
+            subtitle: const Text("השבתת תזכורות הלימוד"),
+            value: !_notificationsEnabled,
+            onChanged: (val) => _setNotificationsEnabled(!val),
+          ),
           ListTile(
+            enabled: _notificationsEnabled,
             leading: const Icon(Icons.psychology, color: Colors.orange),
             title: const Text("הגדרת רמת נחישות"),
             subtitle: Text(_currentDetermination),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-            onTap: () => Navigator.push(
-                context, _slideRoute(const DeterminationScreen())),
+            onTap: () async {
+              await Navigator.push(
+                  context, _slideRoute(const DeterminationScreen()));
+              _loadSettings();
+            },
           ),
           const Divider(),
           _buildSectionHeader("הקראת מילים (אנגלית)"),
@@ -5205,6 +5227,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
             subtitle: const Text("דיווח על תקלות, הצעות או סתם דיבור"),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: _showContactOptions,
+          ),
+          ListTile(
+            leading: const Icon(Icons.description_outlined, color: Colors.grey),
+            title: const Text("תנאי שימוש ופרטיות"),
+            subtitle: const Text("קרא את התנאים המלאים"),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () => launchUrl(
+              Uri.parse(
+                  'https://docs.google.com/document/d/1DLOkIcNFniOLqtGhn-IgsLBikPmWuRKIB7f-ClBuWhw/edit?usp=sharing'),
+              mode: LaunchMode.externalApplication,
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.coffee_rounded, color: Color(0xFFFFDD00)),
+            title: const Text("קנה לי קפה ☕"),
+            subtitle: const Text("תומכ/ת בפיתוח האפליקציה"),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () => launchUrl(
+                Uri.parse('https://buymeacoffee.com/pappostudios'),
+                mode: LaunchMode.externalApplication),
           ),
           const Divider(),
           _buildSectionHeader("ניהול נתונים"),
@@ -5248,35 +5290,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onTap: () =>
                 Navigator.push(context, _slideRoute(const AboutScreen())),
           ),
-
-          // ── Debug-only: toggle paid / free mode without the store ──────────
-          if (kDebugMode) ...[
-            const Divider(thickness: 2, color: Colors.red),
-            _buildSectionHeader('🛠 Debug Testing'),
-            ValueListenableBuilder<bool>(
-              valueListenable: PurchaseManager().isPro,
-              builder: (context, isPro, _) => SwitchListTile(
-                secondary: Icon(
-                  isPro ? Icons.workspace_premium : Icons.money_off,
-                  color: isPro ? Colors.amber : Colors.grey,
-                ),
-                title: Text(isPro ? 'Paid Mode ✓' : 'Free Mode'),
-                subtitle: const Text('Simulate purchase state (debug only)'),
-                value: isPro,
-                onChanged: (val) async {
-                  await PurchaseManager().setProDebug(val);
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text(val
-                          ? '✅ Paid Mode – ads hidden'
-                          : '🔓 Free Mode – ads visible'),
-                      backgroundColor: val ? Colors.green : Colors.orange,
-                    ));
-                  }
-                },
-              ),
-            ),
-          ],
         ],
       ),
     );
@@ -5343,7 +5356,7 @@ class _TermsOfServiceScreenState extends State<TermsOfServiceScreen> {
                       '''
 מדיניות פרטיות ותנאי שימוש – אפליקציית מילומטרי
 
-עדכון אחרון: 02/01/2026
+עדכון אחרון: 19/06/2026
 
 1.	כללי:
 
@@ -5387,7 +5400,15 @@ b.	העדר התחייבות למחיר: המשתמש מאשר כי ידוע ל�
 
 a.	היוצר ו/או המפתח אינו אחראי לכל נזק, ישיר או עקיף, שייגרם למשתמש או לצד שלישי כלשהו כתוצאה משימוש באפליקציה, חוסר יכולת להשתמש בה, תקלות טכניות, או הסתמכות על התכנים המופיעים בה. השירות מסופק במתכונת "As Is".
 
-8.	יצירת קשר:
+8.	רמות קושי:
+
+a.	רמות הקושי המוצגות באפליקציה (בסיסי, בינוני, גבוה, מתקדם, קיצוני) מהוות הערכה כללית בלבד, המבוססת על תדירות שימוש, מורכבות לשונית ואופי הבחינה הפסיכומטרית.
+
+b.	הסיווג הוא ממוצעי ומתאים לרוב האוכלוסייה, אולם אינו אבסולוטי: מילה המסווגת כ"קשה" עשויה להיות מוכרת היטב לחלק מהמשתמשים, ומילה המסווגת כ"קלה" עשויה להיות לא מוכרת לאחרים.
+
+c.	המפתח אינו אחראי לאי-התאמה בין רמת הקושי המוצגת באפליקציה לבין רמת הקושי הסובייקטיבית של המשתמש.
+
+9.	יצירת קשר:
 
 a.	בכל שאלה, בקשה או דיווח על תקלה בנוגע לאפליקציה או למדיניות הפרטיות, ניתן לפנות אלינו בכתובת המייל [pappostudios@gmail.com].
                       ''',
@@ -5451,8 +5472,10 @@ class DeterminationScreen extends StatelessWidget {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('determination_hours', hours);
     await prefs.setBool('hasChosenDetermination', true);
+    // Choosing a determination level implies the user wants reminders.
+    await prefs.setBool('notifications_enabled', true);
     if (!context.mounted) return;
-    Navigator.pushReplacement(context, _slideRoute(const HomeScreen()));
+    Navigator.pushReplacement(context, _slideRoute(const InstructionsScreen()));
   }
 
   @override
@@ -5627,6 +5650,7 @@ class _FailedWordsSelectorScreenState extends State<FailedWordsSelectorScreen> {
           : ListView(
               padding: const EdgeInsets.all(20),
               children: [
+                // ── Shuffle all ───────────────────────────────────────
                 AnimatedButton(
                   onTap: () {
                     Navigator.pushReplacement(
@@ -5636,7 +5660,7 @@ class _FailedWordsSelectorScreenState extends State<FailedWordsSelectorScreen> {
                   },
                   child: Container(
                     margin:
-                        const EdgeInsets.only(bottom: 25, left: 5, right: 5),
+                        const EdgeInsets.only(bottom: 14, left: 5, right: 5),
                     padding: const EdgeInsets.symmetric(
                         horizontal: 15, vertical: 14),
                     decoration: BoxDecoration(
@@ -5648,7 +5672,7 @@ class _FailedWordsSelectorScreenState extends State<FailedWordsSelectorScreen> {
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.red.withOpacity(0.35),
+                          color: Colors.red.withValues(alpha: 0.35),
                           blurRadius: 12,
                           offset: const Offset(0, 6),
                         )
@@ -5675,6 +5699,62 @@ class _FailedWordsSelectorScreenState extends State<FailedWordsSelectorScreen> {
                           ),
                         ),
                         const Icon(Icons.arrow_forward_ios,
+                            size: 16, color: Colors.white70),
+                      ],
+                    ),
+                  ),
+                ),
+                // ── By difficulty ─────────────────────────────────────
+                AnimatedButton(
+                  onTap: () {
+                    final prefix =
+                        widget.jsonPath.contains('hebrew') ? 'heb' : 'eng';
+                    Navigator.push(
+                        context,
+                        _slideRoute(
+                            FailedLevelSelectorScreen(langPrefix: prefix)));
+                  },
+                  child: Container(
+                    margin:
+                        const EdgeInsets.only(bottom: 25, left: 5, right: 5),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 15, vertical: 14),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF7A3DFD), Color(0xFF3D8BFD)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Color(0xFF7A3DFD).withValues(alpha: 0.35),
+                          blurRadius: 12,
+                          offset: const Offset(0, 6),
+                        )
+                      ],
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.bar_chart_rounded,
+                            color: Colors.white, size: 28),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text("תרגל לפי רמת קושי",
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18)),
+                              Text("5 רמות — רק המילים שלא הכרת",
+                                  style: TextStyle(
+                                      color: Colors.white70, fontSize: 13)),
+                            ],
+                          ),
+                        ),
+                        Icon(Icons.arrow_forward_ios,
                             size: 16, color: Colors.white70),
                       ],
                     ),
@@ -5739,6 +5819,532 @@ class _FailedWordsSelectorScreenState extends State<FailedWordsSelectorScreen> {
                 }).toList(),
               ],
             ),
+    );
+  }
+}
+
+// ==========================================
+// 18b. Failed Level Selector Screen
+// ==========================================
+class FailedLevelSelectorScreen extends StatefulWidget {
+  final String langPrefix; // 'heb' or 'eng'
+  const FailedLevelSelectorScreen({super.key, required this.langPrefix});
+
+  @override
+  State<FailedLevelSelectorScreen> createState() =>
+      _FailedLevelSelectorScreenState();
+}
+
+class _FailedLevelSelectorScreenState extends State<FailedLevelSelectorScreen> {
+  final List<int> _failedCounts = List.filled(5, 0);
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCounts();
+  }
+
+  Future<void> _loadCounts() async {
+    for (int lvl = 1; lvl <= 5; lvl++) {
+      try {
+        final path = 'assets/levels/${widget.langPrefix}_level_$lvl.json';
+        final String response = await rootBundle.loadString(path);
+        final data = json.decode(response);
+        final list = data['words'] as List;
+        int count = 0;
+        for (final w in list) {
+          final word = Word.fromJson(w);
+          final progress = ProgressManager().getWordProgress(word.uniqueId);
+          if (progress != null && (progress['repetitions'] ?? 0) == 0) {
+            count++;
+          }
+        }
+        _failedCounts[lvl - 1] = count;
+      } catch (_) {}
+    }
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('תרגול לפי רמת קושי — לא הכרתי')),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : ListView.builder(
+              padding: const EdgeInsets.all(20),
+              itemCount: 5,
+              itemBuilder: (context, index) {
+                final lvl = index + 1;
+                final meta = _kLevelMeta[index];
+                final failedCount = _failedCounts[index];
+                final path =
+                    'assets/levels/${widget.langPrefix}_level_$lvl.json';
+
+                return AnimatedButton(
+                  onTap: failedCount == 0
+                      ? () {}
+                      : () {
+                          Navigator.push(
+                              context,
+                              _slideRoute(LearningScreen(
+                                  jsonPath: path, onlyFailed: true)));
+                        },
+                  child: Opacity(
+                    opacity: failedCount == 0 ? 0.45 : 1.0,
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 14),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 14),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [meta.color, meta.shadow],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: meta.shadow.withValues(alpha: 0.4),
+                            blurRadius: 10,
+                            offset: const Offset(0, 5),
+                          )
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 42,
+                            height: 42,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Center(
+                              child: Text('$lvl',
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18)),
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(meta.label,
+                                    style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 17)),
+                                Text(
+                                    failedCount == 0
+                                        ? 'אין מילים לחזרה ✓'
+                                        : '$failedCount מילים לחיזוק',
+                                    style: const TextStyle(
+                                        color: Colors.white70, fontSize: 13)),
+                              ],
+                            ),
+                          ),
+                          const Icon(Icons.arrow_forward_ios,
+                              size: 16, color: Colors.white70),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+    );
+  }
+}
+
+// ==========================================
+// 18c. Kacha Kacha Practice Selector Screen
+// ==========================================
+class KachaKachaSelectorScreen extends StatefulWidget {
+  final String jsonPath;
+  const KachaKachaSelectorScreen({super.key, required this.jsonPath});
+
+  @override
+  State<KachaKachaSelectorScreen> createState() =>
+      _KachaKachaSelectorScreenState();
+}
+
+class _KachaKachaSelectorScreenState extends State<KachaKachaSelectorScreen> {
+  Map<int, int> _countsPerUnit = {};
+  int _totalCount = 0;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    final String response = await rootBundle.loadString(widget.jsonPath);
+    final data = json.decode(response);
+    final list = data['words'] as List;
+    final allWords = list.map((w) => Word.fromJson(w)).toList();
+
+    Map<int, int> tempCounts = {};
+    int tempTotal = 0;
+
+    for (var w in allWords) {
+      final progress = ProgressManager().getWordProgress(w.uniqueId);
+      final status = progress != null ? (progress['word_status'] ?? '') : '';
+      if (status == 'kacha_kacha') {
+        tempCounts[w.unitNumber] = (tempCounts[w.unitNumber] ?? 0) + 1;
+        tempTotal++;
+      }
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _countsPerUnit = tempCounts;
+      _totalCount = tempTotal;
+      _isLoading = false;
+    });
+  }
+
+  Widget _modeButton({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return AnimatedButton(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 14, left: 5, right: 5),
+        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 14),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFFFFB800), Color(0xFFE57300)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFFFB800).withValues(alpha: 0.35),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
+            )
+          ],
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: Colors.white, size: 28),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18)),
+                  Text(subtitle,
+                      style:
+                          const TextStyle(color: Colors.white70, fontSize: 13)),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios,
+                size: 16, color: Colors.white70),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final sortedUnits = _countsPerUnit.keys.toList()..sort();
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('תרגול — ככה ככה')),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : ListView(
+              padding: const EdgeInsets.all(20),
+              children: [
+                _modeButton(
+                  icon: Icons.shuffle,
+                  title: 'תרגל הכל (ערבוב)',
+                  subtitle: 'כל $_totalCount המילים שהיו ככה ככה',
+                  onTap: () => Navigator.pushReplacement(
+                      context,
+                      _slideRoute(LearningScreen(
+                          jsonPath: widget.jsonPath, onlyKachaKacha: true))),
+                ),
+                const Text('בחר יחידה ספציפית:',
+                    style:
+                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 15),
+                ...sortedUnits.map((unitNum) {
+                  final count = _countsPerUnit[unitNum]!;
+                  final unitColor = getUnitColor(unitNum, isDark);
+                  final textColor = getTextColorForBackground(unitNum, isDark);
+
+                  return AnimatedButton(
+                    onTap: () => Navigator.pushReplacement(
+                        context,
+                        _slideRoute(LearningScreen(
+                            jsonPath: widget.jsonPath,
+                            onlyKachaKacha: true,
+                            unitFilter: unitNum))),
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: unitColor,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: unitColor.withValues(alpha: 0.4),
+                            blurRadius: 10,
+                            offset: const Offset(0, 5),
+                          )
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('יחידה $unitNum',
+                                    style: TextStyle(
+                                        color: textColor,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 17)),
+                                Text('יש לך $count מילים ככה ככה ביחידה זו',
+                                    style: TextStyle(
+                                        color: textColor.withValues(alpha: 0.8),
+                                        fontSize: 13)),
+                              ],
+                            ),
+                          ),
+                          Icon(Icons.arrow_forward_ios,
+                              color: textColor, size: 16),
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+              ],
+            ),
+    );
+  }
+}
+
+// ==========================================
+// Instructions Screen
+// ==========================================
+class InstructionsScreen extends StatelessWidget {
+  const InstructionsScreen({super.key});
+
+  Future<void> _markSeen(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('shown_practice_instructions', true);
+    if (!context.mounted) return;
+    Navigator.pushReplacement(context, _slideRoute(const HomeScreen()));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? const Color(0xFF121212) : const Color(0xFFF4F6FB);
+    final cardBg = isDark ? const Color(0xFF1E2232) : Colors.white;
+
+    return Scaffold(
+      backgroundColor: bg,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        automaticallyImplyLeading: false,
+        title: const Text('איך משתמשים?',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+        centerTitle: true,
+      ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 12),
+                      Text(
+                        'בזמן תרגול מילים תראה שלושה כפתורים.\nהנה מה שכל אחד עושה:',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            fontSize: 15,
+                            color: isDark ? Colors.white70 : Colors.black54),
+                      ),
+                      const SizedBox(height: 28),
+                      _instructionCard(
+                        cardBg: cardBg,
+                        borderColor: kAgainRed,
+                        label: 'לא הבנתי',
+                        labelColor: kAgainRed,
+                        icon: Icons.close_rounded,
+                        iconColor: kAgainRed,
+                        description:
+                            'לא הכרת את המילה. היא תעבור לרשימת "חזרה על מילים שלא הכרת" כדי שתתרגל אותה שוב.',
+                        isDark: isDark,
+                      ),
+                      const SizedBox(height: 14),
+                      _instructionCard(
+                        cardBg: cardBg,
+                        borderColor: const Color(0xFFFFB800),
+                        label: 'ככה ככה',
+                        labelColor: const Color(0xFFB87800),
+                        icon: Icons.thumbs_up_down_rounded,
+                        iconColor: const Color(0xFFFFB800),
+                        description:
+                            'הכרת את המילה בערך. היא תישמר ברשימת "תרגול ככה ככה" לחזרה קצרה.',
+                        isDark: isDark,
+                      ),
+                      const SizedBox(height: 14),
+                      _instructionCard(
+                        cardBg: cardBg,
+                        borderColor: kEasyGreen,
+                        label: 'מובן',
+                        labelColor: kEasyGreen,
+                        icon: Icons.check_rounded,
+                        iconColor: kEasyGreen,
+                        description:
+                            'ידעת את המילה היטב. היא תסומן כ"הושלמה" ותופיע ברשימת מילים שהבנת.',
+                        isDark: isDark,
+                      ),
+                      const SizedBox(height: 28),
+                      const Divider(),
+                      const SizedBox(height: 16),
+                      Text(
+                        'תרגול לפי יחידה מול תרגול לפי רמת קושי',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : kDarkButton),
+                      ),
+                      const SizedBox(height: 12),
+                      _instructionCard(
+                        cardBg: cardBg,
+                        borderColor: kBluePrimary,
+                        label: 'מה ההבדל?',
+                        labelColor: kBluePrimary,
+                        icon: Icons.compare_arrows_rounded,
+                        iconColor: kBluePrimary,
+                        description:
+                            'המילים אשר מופיעות בשני התרגולים הן אותן מילים, ההבדל הוא באיך שאתם יכולים לתרגל אותם — בין אם אתם רוצים לפי רמת קושי או שאתם רק רוצים לתרגל בלי לחשוב על איזו רמה אתם מתרגלים. היחידות לא מדורגות לפי רמות קושי, והסדר שלהן הוא ללא משמעות.',
+                        isDark: isDark,
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              AnimatedButton(
+                onTap: () => _markSeen(context),
+                child: Container(
+                  width: double.infinity,
+                  height: 58,
+                  decoration: BoxDecoration(
+                    color: kDarkButton,
+                    borderRadius: BorderRadius.circular(999),
+                    boxShadow: const [
+                      BoxShadow(
+                          color: kDarkShadow,
+                          offset: Offset(0, 4),
+                          blurRadius: 0)
+                    ],
+                  ),
+                  child: const Center(
+                    child: Text('הבנתי, בואו נתחיל!',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 28),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _instructionCard({
+    required Color cardBg,
+    required Color borderColor,
+    required String label,
+    required Color labelColor,
+    required IconData icon,
+    required Color iconColor,
+    required String description,
+    required bool isDark,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(16),
+        border:
+            Border.all(color: borderColor.withValues(alpha: 0.5), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 8,
+              offset: const Offset(0, 3))
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+                color: borderColor.withValues(alpha: 0.12),
+                shape: BoxShape.circle),
+            child: Icon(icon, color: iconColor, size: 22),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label,
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: labelColor)),
+                const SizedBox(height: 4),
+                Text(description,
+                    style: TextStyle(
+                        fontSize: 13,
+                        color: isDark ? Colors.white60 : Colors.black54,
+                        height: 1.4)),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
