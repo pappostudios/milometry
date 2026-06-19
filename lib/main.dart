@@ -2000,9 +2000,8 @@ class _HomeScreenState extends State<HomeScreen>
                               flipX: true,
                               child: Icon(Icons.help_outline_rounded,
                                   size: 16,
-                                  color: isDark
-                                      ? Colors.white38
-                                      : Colors.black38),
+                                  color:
+                                      isDark ? Colors.white38 : Colors.black38),
                             ),
                             const SizedBox(width: 5),
                             Text('איך זה עובד?',
@@ -2438,11 +2437,11 @@ class _LevelMeta {
 const _kLevelMeta = [
   _LevelMeta(
       'בסיסי', 'מילים יומיומיות ושכיחות', Color(0xFF3D8BFD), Color(0xFF1A5FC4)),
-  _LevelMeta('בינוני', 'עיתונות ופודקאסטים איכותיים', Color(0xFF1AA84A),
+  _LevelMeta('בינוני', 'עיתונות', Color(0xFF1AA84A),
       Color(0xFF0C6B29)),
   _LevelMeta(
       'גבוה', 'אקדמי, ספרותי ומשנה', Color(0xFFFF8C3D), Color(0xFFB85C10)),
-  _LevelMeta('מתקדם', 'ארכאי, ארמי, מלכודות פסיכומטרי', Color(0xFFE14F4F),
+  _LevelMeta('מתקדם', 'ארכאי, מלכודות פסיכומטרי', Color(0xFFE14F4F),
       Color(0xFFA02020)),
   _LevelMeta(
       'קיצוני', 'תנ"כי ועתיק מאוד', Color(0xFF7A3DFD), Color(0xFF4A1AC0)),
@@ -2643,6 +2642,44 @@ class _LevelSelectorScreenState extends State<LevelSelectorScreen> {
 }
 
 // ==========================================
+// Shared helper: apply a 3-button status to a word
+// (mirrors LearningScreen.updateWordProgress mapping)
+// ==========================================
+Future<void> applyWordStatus(String uniqueId, String action) async {
+  int reps, interval;
+  double ef;
+  switch (action) {
+    case 'lo_hevanti':
+      reps = 0;
+      interval = 1;
+      ef = 1.3;
+      break;
+    case 'kacha_kacha':
+      reps = 1;
+      interval = 1;
+      ef = 2.5;
+      break;
+    case 'muvvan':
+      reps = 3;
+      interval = 3;
+      ef = 2.5;
+      break;
+    default:
+      reps = 0;
+      interval = 1;
+      ef = 2.5;
+  }
+  await ProgressManager().updateWord(
+    uniqueId,
+    reps,
+    interval,
+    ef,
+    DateTime.now().add(Duration(days: interval)),
+    wordStatus: action,
+  );
+}
+
+// ==========================================
 // 10. Vocabulary List Screen
 // ==========================================
 class VocabularyListScreen extends StatefulWidget {
@@ -2658,6 +2695,7 @@ class VocabularyListScreen extends StatefulWidget {
 class _VocabularyListScreenState extends State<VocabularyListScreen> {
   List<Word> filteredWords = [];
   Map<String, int> wordLevels = {};
+  Map<String, String> wordStatuses = {};
   bool isLoading = true;
 
   @override
@@ -2673,6 +2711,7 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
     List<Word> allWords = list.map((w) => Word.fromJson(w)).toList();
 
     Map<String, int> levels = {};
+    Map<String, String> statuses = {};
     List<Word> relevantWords = [];
 
     for (var w in allWords) {
@@ -2683,6 +2722,7 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
       var progress = ProgressManager().getWordProgress(w.uniqueId);
       if (progress != null) {
         levels[w.uniqueId] = progress['repetitions'] ?? 0;
+        statuses[w.uniqueId] = progress['word_status'] ?? '';
       }
     }
 
@@ -2690,21 +2730,35 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
     setState(() {
       filteredWords = relevantWords;
       wordLevels = levels;
+      wordStatuses = statuses;
       isLoading = false;
     });
   }
 
-  Future<void> manuallyUpdateStatus(Word word, int newLevel) async {
-    if (newLevel == -1) {
-      await ProgressManager().resetWord(word.uniqueId);
-    } else if (newLevel == 0) {
-      await ProgressManager()
-          .updateWord(word.uniqueId, 0, 0, 2.5, DateTime.now());
-    } else {
-      await ProgressManager().updateWord(word.uniqueId, 1, 1, 2.5,
-          DateTime.now().add(const Duration(days: 1)));
-    }
+  Future<void> setWordStatus(Word word, String action) async {
+    await applyWordStatus(word.uniqueId, action);
     loadData();
+  }
+
+  // Returns the leading status icon based on the new 3-button system,
+  // falling back to legacy repetition data for words marked before the change.
+  Icon _statusIcon(Word word) {
+    final status = wordStatuses[word.uniqueId] ?? '';
+    switch (status) {
+      case 'muvvan':
+        return const Icon(Icons.check_circle, color: kEasyGreen);
+      case 'kacha_kacha':
+        return const Icon(Icons.adjust, color: Color(0xFFFFB800));
+      case 'lo_hevanti':
+        return const Icon(Icons.cancel, color: kAgainRed);
+    }
+    // Legacy fallback
+    if (!wordLevels.containsKey(word.uniqueId)) {
+      return const Icon(Icons.remove_circle_outline, color: Colors.grey);
+    } else if (wordLevels[word.uniqueId]! > 0) {
+      return const Icon(Icons.check_circle, color: Colors.blue);
+    }
+    return const Icon(Icons.cancel, color: kAgainRed);
   }
 
   @override
@@ -2722,19 +2776,9 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
               separatorBuilder: (c, i) => const Divider(height: 1),
               itemBuilder: (context, index) {
                 final word = filteredWords[index];
-                Icon statusIcon;
-                if (!wordLevels.containsKey(word.uniqueId)) {
-                  statusIcon = const Icon(Icons.remove_circle_outline,
-                      color: Colors.grey);
-                } else if (wordLevels[word.uniqueId]! > 0) {
-                  statusIcon =
-                      const Icon(Icons.check_circle, color: Colors.blue);
-                } else {
-                  statusIcon = const Icon(Icons.cancel, color: Colors.red);
-                }
 
                 return ListTile(
-                  leading: statusIcon,
+                  leading: _statusIcon(word),
                   title: Hero(
                     tag: word.uniqueId,
                     child: Material(
@@ -2765,12 +2809,13 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
                                   Text(word.term, textAlign: TextAlign.center),
                               children: [
                                 SimpleDialogOption(
-                                  onPressed: () {
+                                  onPressed: () async {
                                     Navigator.pop(ctx);
-                                    Navigator.push(
+                                    await Navigator.push(
                                         context,
                                         _slideRoute(
                                             SingleCardScreen(word: word)));
+                                    loadData();
                                   },
                                   child: const Padding(
                                     padding: EdgeInsets.symmetric(vertical: 10),
@@ -2788,36 +2833,35 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
                                 SimpleDialogOption(
                                   onPressed: () {
                                     Navigator.pop(ctx);
-                                    manuallyUpdateStatus(word, 1);
+                                    setWordStatus(word, 'muvvan');
                                   },
                                   child: const Row(children: [
-                                    Icon(Icons.check_circle,
-                                        color: Colors.blue),
+                                    Icon(Icons.check_circle, color: kEasyGreen),
                                     SizedBox(width: 10),
-                                    Text("סמן כ'יודע'")
+                                    Text("מובן")
                                   ]),
                                 ),
                                 SimpleDialogOption(
                                   onPressed: () {
                                     Navigator.pop(ctx);
-                                    manuallyUpdateStatus(word, 0);
+                                    setWordStatus(word, 'kacha_kacha');
                                   },
                                   child: const Row(children: [
-                                    Icon(Icons.cancel, color: Colors.red),
+                                    Icon(Icons.adjust,
+                                        color: Color(0xFFFFB800)),
                                     SizedBox(width: 10),
-                                    Text("סמן כ'לא יודע'")
+                                    Text("ככה ככה")
                                   ]),
                                 ),
                                 SimpleDialogOption(
                                   onPressed: () {
                                     Navigator.pop(ctx);
-                                    manuallyUpdateStatus(word, -1);
+                                    setWordStatus(word, 'lo_hevanti');
                                   },
                                   child: const Row(children: [
-                                    Icon(Icons.remove_circle_outline,
-                                        color: Colors.grey),
+                                    Icon(Icons.cancel, color: kAgainRed),
                                     SizedBox(width: 10),
-                                    Text("אפס (כאילו לא נלמד)")
+                                    Text("לא הבנתי")
                                   ]),
                                 ),
                               ],
@@ -3281,8 +3325,8 @@ class _LearningScreenState extends State<LearningScreen>
             ),
           ),
           const SizedBox(height: 10),
-          // "תרגום" label
-          Text('תרגום',
+          // translation label
+          Text(word.language == 'hebrew' ? 'פירוש' : 'תרגום',
               textAlign: TextAlign.center,
               style: TextStyle(
                   fontSize: 12,
@@ -3956,6 +4000,12 @@ class _SingleCardScreenState extends State<SingleCardScreen> {
     await flutterTts.speak(text);
   }
 
+  Future<void> _markAndExit(String action) async {
+    await applyWordStatus(widget.word.uniqueId, action);
+    if (!mounted) return;
+    Navigator.pop(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -3978,32 +4028,36 @@ class _SingleCardScreenState extends State<SingleCardScreen> {
               ),
             ),
             const Spacer(),
-            AnimatedButton(
-              onTap: () => Navigator.pop(context),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF42A5F5), Color(0xFF1565C0)],
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.blue.withOpacity(0.35),
-                      blurRadius: 12,
-                      offset: const Offset(0, 6),
-                    )
-                  ],
+            Text("איך הכרת את המילה?",
+                style: TextStyle(
+                    fontSize: 14,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white60
+                        : Colors.black54)),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _ResponseButton(
+                      label: 'לא הבנתי',
+                      color: kAgainRed,
+                      onTap: () => _markAndExit('lo_hevanti')),
                 ),
-                child: const Center(
-                  child: Text("חזור לרשימה",
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold)),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _ResponseButton(
+                      label: 'ככה ככה',
+                      color: const Color(0xFFFFB800),
+                      onTap: () => _markAndExit('kacha_kacha')),
                 ),
-              ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _ResponseButton(
+                      label: 'מובן',
+                      color: kEasyGreen,
+                      onTap: () => _markAndExit('muvvan')),
+                ),
+              ],
             ),
             const SizedBox(height: 20),
           ],
@@ -4046,7 +4100,7 @@ class _SingleCardScreenState extends State<SingleCardScreen> {
           Text(
               isFront
                   ? (word.language == 'english' ? "🇬🇧 אנגלית" : "🇮🇱 עברית")
-                  : "תרגום",
+                  : (word.language == 'hebrew' ? "פירוש" : "תרגום"),
               style: TextStyle(color: textColor.withOpacity(0.6))),
           const SizedBox(height: 20),
           if (isFront) ...[
@@ -4184,21 +4238,18 @@ class AboutScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF4FC3F7), Color(0xFF1565C0)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      shape: BoxShape.circle),
-                  child: const Icon(Icons.school_rounded,
-                      size: 60, color: Colors.white)),
+              ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: Image.asset(
+                    'assets/icon.png',
+                    width: 120,
+                    height: 120,
+                    fit: BoxFit.contain,
+                  )),
               const SizedBox(height: 20),
               const Text("מילומטרי",
                   style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-              const Text("גרסה 1.0.2", style: TextStyle(color: Colors.grey)),
+              const Text("גרסה 1.1.0", style: TextStyle(color: Colors.grey)),
               const SizedBox(height: 30),
               const Text(
                   "ברוכים הבאים לאפליקציית מילומטרי!\n\nהאפליקציה נועדה לעזור לכם ללמוד מילים לפסיכומטרי בצורה כיפית וקלה.\nתוכלו לתרגל מילים בעברית ובאנגלית ולעקוב אחרי ההתקדמות שלכם.\n\nפותח על ידי Pappo Studios.\nבהצלחה במבחן!",
@@ -5220,7 +5271,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             trailing: Text("${(ttsSpeed * 100).toInt()}%"),
           ),
           const Divider(),
-          _buildSectionHeader("צור קשר"),
+          _buildSectionHeader("צרו קשר"),
           ListTile(
             leading: const Icon(Icons.chat_bubble_outline, color: Colors.blue),
             title: const Text("דברו איתי"),
@@ -5231,7 +5282,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ListTile(
             leading: const Icon(Icons.description_outlined, color: Colors.grey),
             title: const Text("תנאי שימוש ופרטיות"),
-            subtitle: const Text("קרא את התנאים המלאים"),
+            subtitle: const Text("קראו את התנאים המלאים"),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () => launchUrl(
               Uri.parse(
