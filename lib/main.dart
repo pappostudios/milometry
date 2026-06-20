@@ -2007,6 +2007,7 @@ class _HomeScreenState extends State<HomeScreen>
                             Text('איך זה עובד?',
                                 style: TextStyle(
                                     fontSize: 13,
+                                    fontWeight: FontWeight.bold,
                                     color: isDark
                                         ? Colors.white38
                                         : Colors.black38)),
@@ -2437,8 +2438,7 @@ class _LevelMeta {
 const _kLevelMeta = [
   _LevelMeta(
       'בסיסי', 'מילים יומיומיות ושכיחות', Color(0xFF3D8BFD), Color(0xFF1A5FC4)),
-  _LevelMeta('בינוני', 'עיתונות', Color(0xFF1AA84A),
-      Color(0xFF0C6B29)),
+  _LevelMeta('בינוני', 'עיתונות', Color(0xFF1AA84A), Color(0xFF0C6B29)),
   _LevelMeta(
       'גבוה', 'אקדמי, ספרותי ומשנה', Color(0xFFFF8C3D), Color(0xFFB85C10)),
   _LevelMeta('מתקדם', 'ארכאי, מלכודות פסיכומטרי', Color(0xFFE14F4F),
@@ -6299,7 +6299,7 @@ class InstructionsScreen extends StatelessWidget {
                         icon: Icons.compare_arrows_rounded,
                         iconColor: kBluePrimary,
                         description:
-                            'המילים אשר מופיעות בשני התרגולים הן אותן מילים, ההבדל הוא באיך שאתם יכולים לתרגל אותם — בין אם אתם רוצים לפי רמת קושי או שאתם רק רוצים לתרגל בלי לחשוב על איזו רמה אתם מתרגלים. היחידות לא מדורגות לפי רמות קושי, והסדר שלהן הוא ללא משמעות.',
+                            'בשני התרגולים מופיעות אותן המילים — ההבדל הוא רק בדרך התרגול: לפי רמת קושי, או תרגול חופשי בלי להתייחס לרמה. שימו לב שהיחידות אינן מסודרות לפי רמת קושי, והסדר שלהן שרירותי וחסר משמעות.',
                         isDark: isDark,
                       ),
                       const SizedBox(height: 16),
