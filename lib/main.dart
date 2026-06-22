@@ -3183,6 +3183,22 @@ class _LearningScreenState extends State<LearningScreen>
 
   // ── Card face builders ───────────────────────────────────────────────────
 
+  Widget _audioButton(Word word, {double size = 50}) {
+    return GestureDetector(
+      onTap: () => speak(word.term, word.language),
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: kBluePrimary.withValues(alpha: 0.12),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(Icons.volume_up_rounded,
+            color: kBluePrimary, size: size * 0.52),
+      ),
+    );
+  }
+
   Widget _buildFrontFace(Word word) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final langLabel = word.language == 'english' ? '🇬🇧 אנגלית' : '🇮🇱 עברית';
@@ -3222,28 +3238,7 @@ class _LearningScreenState extends State<LearningScreen>
                         fontWeight: FontWeight.w800,
                         color: kBluePrimary)),
               ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildDifficultyBadge(word.difficulty),
-                  if (word.language == 'english') ...[
-                    const SizedBox(width: 8),
-                    GestureDetector(
-                      onTap: () => speak(word.term, word.language),
-                      child: Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: kBluePrimary.withValues(alpha: 0.12),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(Icons.volume_up_rounded,
-                            color: kBluePrimary, size: 18),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
+              _buildDifficultyBadge(word.difficulty),
             ],
           ),
           // Word — centered, big
@@ -3266,6 +3261,9 @@ class _LearningScreenState extends State<LearningScreen>
               ),
             ),
           ),
+          // Audio button under the word
+          _audioButton(word),
+          const SizedBox(height: 16),
           // Flip hint pill
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
@@ -3344,6 +3342,8 @@ class _LearningScreenState extends State<LearningScreen>
                 color: kBluePrimary,
                 height: 1.25),
           ),
+          const SizedBox(height: 12),
+          Center(child: _audioButton(word)),
           const SizedBox(height: 16),
           // Example sentence box
           Container(
@@ -3568,9 +3568,7 @@ class _LearningScreenState extends State<LearningScreen>
                           child: studySession.isNotEmpty
                               ? GestureDetector(
                                   onTap: () {
-                                    if (!_isFlipped) {
-                                      setState(() => _isFlipped = true);
-                                    }
+                                    setState(() => _isFlipped = !_isFlipped);
                                   },
                                   child: AnimatedSwitcher(
                                     duration: const Duration(milliseconds: 400),

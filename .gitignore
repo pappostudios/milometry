@@ -54,5 +54,5 @@ android/key.properties
 *.cer
 *.pem
 
-# Local build helper scripts / scratch
-build_elsewhere.ps1
+# Generated screenshot output (regenerate with process_screenshots.py)
+/output/
