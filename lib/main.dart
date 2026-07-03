@@ -3994,7 +3994,10 @@ class _SingleCardScreenState extends State<SingleCardScreen> {
   final _NativeTts flutterTts = _NativeTts();
 
   Future<void> speak(String text, String language) async {
+    final prefs = await SharedPreferences.getInstance();
+    double speed = prefs.getDouble('tts_speed') ?? 0.5;
     await flutterTts.setLanguage(language == 'hebrew' ? 'he-IL' : 'en-US');
+    await flutterTts.setSpeechRate(speed);
     await flutterTts.speak(text);
   }
 
