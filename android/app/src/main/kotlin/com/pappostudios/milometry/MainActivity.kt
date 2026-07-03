@@ -1,6 +1,7 @@
 package com.pappostudios.milometry
 
 import android.speech.tts.TextToSpeech
+import android.speech.tts.Voice
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -46,11 +47,39 @@ class MainActivity : FlutterActivity() {
     private fun speakNow(text: String, language: String, rate: Float) {
         val locale = if (language.startsWith("he")) Locale("he", "IL") else Locale.US
         tts?.language = locale
+        selectBestVoice(locale)
         // Dart passes ~0.5 as "normal" (matching iOS AVSpeech default); Android's
         // normal rate is 1.0, so scale by 2 to keep the speed slider consistent.
         tts?.setSpeechRate((rate * 2f).coerceIn(0.1f, 3.0f))
         tts?.stop()
         tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "milometry-utterance")
+    }
+
+    // Cache the best voice chosen per language tag so we don't re-scan each call.
+    private val voiceCache = HashMap<String, Voice>()
+
+    /// Picks the clearest installed voice for a locale, preferring higher
+    /// quality and voices that don't require a network fetch. Addresses the
+    /// "robotic voice" complaint the same way iOS enhanced-voice selection does.
+    private fun selectBestVoice(locale: Locale) {
+        val engine = tts ?: return
+        val key = locale.language
+        voiceCache[key]?.let { engine.voice = it; return }
+
+        val best = try {
+            engine.voices
+                ?.filter { it.locale.language == locale.language }
+                ?.filterNot { it.isNetworkConnectionRequired }
+                ?.filterNot { it.features?.contains(TextToSpeech.Engine.KEY_FEATURE_NOT_INSTALLED) == true }
+                ?.maxByOrNull { it.quality }
+        } catch (e: Exception) {
+            null
+        }
+
+        if (best != null) {
+            engine.voice = best
+            voiceCache[key] = best
+        }
     }
 
     override fun onDestroy() {

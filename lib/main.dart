@@ -10,6 +10,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:in_app_review/in_app_review.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:url_launcher/url_launcher.dart';
@@ -53,13 +55,21 @@ class _NativeTts {
 // ==========================================
 const int currentTermsVersion = 3;
 
-// Set to true once real iOS AdMob unit IDs are added to _AdIds
-const bool kAdsEnabled = false;
+// Ads master switch. Real AdMob unit IDs must be set in _AdIds before release.
+const bool kAdsEnabled = true;
 
 // ==========================================
 // הגדרות רכישה
 // ==========================================
-const String kFullVersionProductId = 'milometry_full_version';
+// מזהי המוצרים בחנות. הליבטיים (רכישה חד-פעמית) הוא הישן; שני המנויים חדשים.
+const String kFullVersionProductId = 'milometry_full_version'; // Lifetime ₪89
+const String kSub1MonthProductId = 'milometry_sub_1month'; // ₪9.90 / month
+const String kSub3MonthProductId = 'milometry_sub_3month'; // ₪24.90 / 3 months
+const Set<String> kProductIds = {
+  kFullVersionProductId,
+  kSub1MonthProductId,
+  kSub3MonthProductId,
+};
 const String kAppStoreId = '6762563156';
 
 // ==========================================
@@ -72,7 +82,10 @@ class PurchaseManager {
 
   final ValueNotifier<bool> isPro = ValueNotifier(false);
   StreamSubscription<List<PurchaseDetails>>? _subscription;
-  ProductDetails? _productDetails;
+  // Live product details keyed by product ID, populated from the store.
+  final Map<String, ProductDetails> _products = {};
+  // Notifies the purchase page when prices finish loading.
+  final ValueNotifier<int> productsVersion = ValueNotifier(0);
 
   Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
@@ -87,33 +100,41 @@ class PurchaseManager {
       onError: (error) => print('Purchase stream error: $error'),
     );
 
-    // טעינת פרטי המוצר מהחנות
+    // טעינת פרטי המוצרים מהחנות
     await _loadProductDetails();
   }
 
   Future<void> _loadProductDetails() async {
     try {
       final ProductDetailsResponse response = await InAppPurchase.instance
-          .queryProductDetails({kFullVersionProductId}).timeout(
-              const Duration(seconds: 8));
+          .queryProductDetails(kProductIds)
+          .timeout(const Duration(seconds: 8));
       if (response.productDetails.isNotEmpty) {
-        _productDetails = response.productDetails.first;
+        for (final p in response.productDetails) {
+          _products[p.id] = p;
+        }
+        productsVersion.value++;
       }
     } catch (_) {
-      // timed out or store unavailable — _productDetails stays null
+      // timed out or store unavailable — _products stays as-is
     }
   }
 
-  ProductDetails? get productDetails => _productDetails;
+  /// Live product details for a given tier, or null if not yet loaded.
+  ProductDetails? productFor(String id) => _products[id];
+
+  /// Backwards-compatible accessor: the lifetime product.
+  ProductDetails? get productDetails => _products[kFullVersionProductId];
 
   Future<void> reloadProductDetails() => _loadProductDetails();
 
   Future<void> _onPurchaseUpdate(List<PurchaseDetails> purchases) async {
     for (final purchase in purchases) {
-      if (purchase.productID == kFullVersionProductId) {
+      // Any of our three tiers (lifetime, 1-month, 3-month) grants Pro.
+      if (kProductIds.contains(purchase.productID)) {
         if (purchase.status == PurchaseStatus.purchased ||
             purchase.status == PurchaseStatus.restored) {
-          await _setPro(true);
+          await _setPro(true, productId: purchase.productID);
         } else if (purchase.status == PurchaseStatus.error) {
           print('Purchase error: ${purchase.error}');
         }
@@ -124,29 +145,43 @@ class PurchaseManager {
     }
   }
 
-  Future<void> _setPro(bool value) async {
+  Future<void> _setPro(bool value, {String? productId}) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('is_pro', value);
+    // Record which tier granted Pro and when (used for display; expiry is not
+    // server-verified — see plan B3).
+    if (value && productId != null) {
+      await prefs.setString('pro_product_id', productId);
+      await prefs.setString(
+          'pro_purchased_at', DateTime.now().toIso8601String());
+    }
     isPro.value = value;
   }
 
-  /// מפעיל את תהליך הרכישה
-  Future<bool> buyFullVersion(BuildContext context) async {
+  /// מפעיל את תהליך הרכישה עבור מוצר נתון (מנוי או חד-פעמי).
+  Future<bool> buy(BuildContext context, String productId) async {
     final bool available = await InAppPurchase.instance.isAvailable();
     if (!available) {
       _showError(context, 'החנות אינה זמינה כרגע. נסה שוב מאוחר יותר.');
       return false;
     }
-    if (_productDetails == null) {
+    if (_products[productId] == null) {
       await _loadProductDetails();
     }
-    if (_productDetails == null) {
+    final product = _products[productId];
+    if (product == null) {
       _showError(context, 'לא הצלחנו לטעון את פרטי הרכישה. נסה שוב.');
       return false;
     }
-    final PurchaseParam param = PurchaseParam(productDetails: _productDetails!);
+    final PurchaseParam param = PurchaseParam(productDetails: product);
+    // buyNonConsumable is the correct call for both non-consumables AND
+    // auto-renewing subscriptions in the in_app_purchase plugin.
     return await InAppPurchase.instance.buyNonConsumable(purchaseParam: param);
   }
+
+  /// תאימות לאחור — רכישת הגרסה המלאה (ליבטיים).
+  Future<bool> buyFullVersion(BuildContext context) =>
+      buy(context, kFullVersionProductId);
 
   /// שחזור רכישות קודמות
   Future<void> restorePurchases(BuildContext context) async {
@@ -177,21 +212,170 @@ class PurchaseManager {
 }
 
 // ==========================================
-// AD MANAGER — stubbed out while kAdsEnabled = false.
-// To re-enable: uncomment google_mobile_ads in pubspec.yaml,
-// uncomment the import above, fill in real iOS ad unit IDs,
-// and restore the full AdManager implementation.
+// AD UNIT IDs
+// ⚠️ These are Google's official TEST IDs. Replace with the real AdMob unit
+// IDs from your AdMob account before releasing to production. The App IDs also
+// need to go in ios/Runner/Info.plist and android/.../AndroidManifest.xml.
 // ==========================================
+class _AdIds {
+  // Google test banner IDs
+  static String get banner => kIsWeb
+      ? ''
+      : (defaultTargetPlatform == TargetPlatform.iOS
+          ? 'ca-app-pub-3940256099942544/2934735716'
+          : 'ca-app-pub-3940256099942544/6300978111');
 
+  // Google test interstitial IDs
+  static String get interstitial => kIsWeb
+      ? ''
+      : (defaultTargetPlatform == TargetPlatform.iOS
+          ? 'ca-app-pub-3940256099942544/4411468910'
+          : 'ca-app-pub-3940256099942544/1033173712');
+}
+
+// ==========================================
+// AD MANAGER — banner on home (free users) + interstitial after a session ends.
+// Never shows ads mid-practice, and never for Pro users (callers guard on isPro).
+// ==========================================
 class AdManager {
   static final AdManager _instance = AdManager._internal();
   factory AdManager() => _instance;
   AdManager._internal();
 
-  Future<void> init() async {}
-  Widget buildBanner() => const SizedBox.shrink();
-  void showInterstitial() {}
-  void dispose() {}
+  bool _initialized = false;
+  InterstitialAd? _interstitial;
+  int _sessionsSinceLastAd = 0;
+  // Show an interstitial at most once every N finished sessions.
+  static const int _interstitialEverySessions = 2;
+
+  bool get _adsSupported =>
+      kAdsEnabled &&
+      !kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.android ||
+          defaultTargetPlatform == TargetPlatform.iOS);
+
+  Future<void> init() async {
+    if (!_adsSupported || _initialized) return;
+    // Ask for tracking permission before serving personalized ads (iOS ATT).
+    // On Android / when denied this simply yields non-personalized ads.
+    try {
+      final status =
+          await AppTrackingTransparency.trackingAuthorizationStatus;
+      if (status == TrackingStatus.notDetermined) {
+        await AppTrackingTransparency.requestTrackingAuthorization();
+      }
+    } catch (_) {
+      // ATT not available (e.g. Android) — continue with non-personalized ads.
+    }
+    await MobileAds.instance.initialize();
+    _initialized = true;
+    _preloadInterstitial();
+  }
+
+  Widget buildBanner() {
+    if (!_adsSupported) return const SizedBox.shrink();
+    return const _BannerAdWidget();
+  }
+
+  void _preloadInterstitial() {
+    if (!_adsSupported || _interstitial != null) return;
+    InterstitialAd.load(
+      adUnitId: _AdIds.interstitial,
+      request: const AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (ad) => _interstitial = ad,
+        onAdFailedToLoad: (_) => _interstitial = null,
+      ),
+    );
+  }
+
+  void showInterstitial() {
+    if (!_adsSupported) return;
+    // Frequency cap so it never feels spammy.
+    _sessionsSinceLastAd++;
+    if (_sessionsSinceLastAd < _interstitialEverySessions) {
+      _preloadInterstitial();
+      return;
+    }
+    final ad = _interstitial;
+    if (ad == null) {
+      _preloadInterstitial();
+      return;
+    }
+    _sessionsSinceLastAd = 0;
+    ad.fullScreenContentCallback = FullScreenContentCallback(
+      onAdDismissedFullScreenContent: (ad) {
+        ad.dispose();
+        _interstitial = null;
+        _preloadInterstitial();
+      },
+      onAdFailedToShowFullScreenContent: (ad, _) {
+        ad.dispose();
+        _interstitial = null;
+        _preloadInterstitial();
+      },
+    );
+    ad.show();
+    _interstitial = null;
+  }
+
+  void dispose() {
+    _interstitial?.dispose();
+    _interstitial = null;
+  }
+}
+
+// Self-contained banner: loads an adaptive banner and manages its lifecycle.
+class _BannerAdWidget extends StatefulWidget {
+  const _BannerAdWidget();
+
+  @override
+  State<_BannerAdWidget> createState() => _BannerAdWidgetState();
+}
+
+class _BannerAdWidgetState extends State<_BannerAdWidget> {
+  BannerAd? _ad;
+  bool _loaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  void _load() {
+    final ad = BannerAd(
+      adUnitId: _AdIds.banner,
+      size: AdSize.banner,
+      request: const AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (_) {
+          if (mounted) setState(() => _loaded = true);
+        },
+        onAdFailedToLoad: (ad, _) {
+          ad.dispose();
+        },
+      ),
+    );
+    ad.load();
+    _ad = ad;
+  }
+
+  @override
+  void dispose() {
+    _ad?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_loaded || _ad == null) return const SizedBox.shrink();
+    return SizedBox(
+      width: _ad!.size.width.toDouble(),
+      height: _ad!.size.height.toDouble(),
+      child: AdWidget(ad: _ad!),
+    );
+  }
 }
 
 // ==========================================
@@ -1809,8 +1993,14 @@ class _HomeScreenState extends State<HomeScreen>
                           ),
                           child: AnimatedButton(
                             onTap: () {
+                              // Streak is a Pro feature; free users see the
+                              // purchase page. Navigation gate only — the streak
+                              // data itself is untouched and keeps accruing.
                               Navigator.push(
-                                  ctx, _slideRoute(const StreakScreen()));
+                                  ctx,
+                                  _slideRoute(PurchaseManager().isPro.value
+                                      ? const StreakScreen()
+                                      : const PaywallScreen()));
                             },
                             child: Container(
                               padding: const EdgeInsets.symmetric(
@@ -2097,6 +2287,7 @@ class _UnitSelectorScreenState extends State<UnitSelectorScreen> {
     required IconData icon,
     required List<Color> colors,
     required VoidCallback onTap,
+    bool locked = false,
   }) {
     return AnimatedButton(
       onTap: onTap,
@@ -2125,22 +2316,48 @@ class _UnitSelectorScreenState extends State<UnitSelectorScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 17,
-                          color: Colors.white)),
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(title,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 17,
+                                color: Colors.white)),
+                      ),
+                      if (locked) ...[
+                        const SizedBox(width: 6),
+                        _proBadge(),
+                      ],
+                    ],
+                  ),
                   Text(subtitle,
                       style:
                           const TextStyle(fontSize: 13, color: Colors.white70)),
                 ],
               ),
             ),
-            const Icon(Icons.arrow_forward_ios,
+            Icon(locked ? Icons.lock_rounded : Icons.arrow_forward_ios,
                 size: 16, color: Colors.white70),
           ],
         ),
       ),
+    );
+  }
+
+  // Small "פרו" pill shown on Pro-gated buttons for free users.
+  Widget _proBadge() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFC107),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: const Text('פרו',
+          style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1A1A2E))),
     );
   }
 
@@ -2218,13 +2435,23 @@ class _UnitSelectorScreenState extends State<UnitSelectorScreen> {
                   },
                 ),
 
-                // ── תרגול לפי רמת קושי ────────────────────────────────
+                // ── תרגול לפי רמת קושי (פרו) ──────────────────────────
                 _modeButton(
                   title: 'תרגול לפי רמת קושי',
                   subtitle: '5 רמות — מבסיסי עד קיצוני',
                   icon: Icons.bar_chart_rounded,
                   colors: const [Color(0xFF7A3DFD), Color(0xFF3D8BFD)],
+                  locked: !PurchaseManager().isPro.value,
                   onTap: () async {
+                    // Pro feature: difficulty-level practice. Free users see the
+                    // purchase page instead. This gates navigation only — no
+                    // progress data is touched.
+                    if (!PurchaseManager().isPro.value) {
+                      await Navigator.push(
+                          context, _slideRoute(const PaywallScreen()));
+                      setState(() {});
+                      return;
+                    }
                     final prefix =
                         widget.jsonPath.contains('hebrew') ? 'heb' : 'eng';
                     await Navigator.push(
@@ -2236,6 +2463,262 @@ class _UnitSelectorScreenState extends State<UnitSelectorScreen> {
                 ),
               ],
             ),
+    );
+  }
+}
+
+// ==========================================
+// 9a2. מילומטרי פרו — Purchase Page
+// ==========================================
+class PaywallScreen extends StatefulWidget {
+  const PaywallScreen({super.key});
+
+  @override
+  State<PaywallScreen> createState() => _PaywallScreenState();
+}
+
+class _PaywallScreenState extends State<PaywallScreen> {
+  bool _busy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Refresh live prices when the page opens (safe if already loaded).
+    PurchaseManager().reloadProductDetails();
+  }
+
+  Future<void> _buy(String productId) async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      await PurchaseManager().buy(context, productId);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _restore() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      await PurchaseManager().restorePurchases(context);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('בודק רכישות קודמות...')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Scaffold(
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          child: Column(
+            children: [
+              Align(
+                alignment: Alignment.centerLeft,
+                child: IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ),
+              Container(
+                width: 88,
+                height: 88,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF7A3DFD), Color(0xFF3D8BFD)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(22),
+                ),
+                child: const Center(
+                  child: Icon(Icons.workspace_premium_rounded,
+                      size: 46, color: Colors.white),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'מילומטרי פרו',
+                style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'למד חכם יותר, השג ציונים טובים יותר',
+                style: TextStyle(
+                    fontSize: 16,
+                    color: isDark ? Colors.white70 : Colors.black54),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              // מה מקבלים בפרו
+              _proFeatureRow('תרגול לפי רמת קושי — 5 רמות'),
+              _proFeatureRow('רצף יומי ושיא אישי'),
+              _proFeatureRow('ללא פרסומות'),
+              const SizedBox(height: 8),
+              Text(
+                'הקראה ברורה וכל המילים — נשארים חינם לכולם',
+                style: TextStyle(
+                    fontSize: 12,
+                    color: isDark ? Colors.white38 : Colors.black38),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              // תוכניות — נטענות מהחנות
+              ValueListenableBuilder<int>(
+                valueListenable: PurchaseManager().productsVersion,
+                builder: (context, _, __) {
+                  final m = PurchaseManager();
+                  return Column(
+                    children: [
+                      _planButton(
+                        productId: kSub3MonthProductId,
+                        title: '3 חודשים',
+                        priceText: m.productFor(kSub3MonthProductId)?.price,
+                        badge: 'המשתלם ביותר',
+                        highlighted: true,
+                      ),
+                      const SizedBox(height: 12),
+                      _planButton(
+                        productId: kSub1MonthProductId,
+                        title: 'חודש',
+                        priceText: m.productFor(kSub1MonthProductId)?.price,
+                      ),
+                      const SizedBox(height: 12),
+                      _planButton(
+                        productId: kFullVersionProductId,
+                        title: 'לתמיד — תשלום חד-פעמי',
+                        priceText: m.productFor(kFullVersionProductId)?.price,
+                      ),
+                    ],
+                  );
+                },
+              ),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: _busy ? null : _restore,
+                child: const Text('שחזר רכישה',
+                    style: TextStyle(fontSize: 14, color: Colors.grey)),
+              ),
+              Text(
+                'מנוי מתחדש אוטומטית וניתן לביטול בכל עת דרך החנות.',
+                style: TextStyle(
+                    fontSize: 11,
+                    color: isDark ? Colors.white38 : Colors.black38),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _proFeatureRow(String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 5),
+      child: Row(
+        children: [
+          const Icon(Icons.check_circle, color: Color(0xFF3D8BFD), size: 22),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(text, style: const TextStyle(fontSize: 15)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _planButton({
+    required String productId,
+    required String title,
+    String? priceText,
+    String? badge,
+    bool highlighted = false,
+  }) {
+    // Button always renders immediately; price fills in when loaded (avoids
+    // the indefinite-spinner problem that caused earlier App Store rejections).
+    return AnimatedButton(
+      onTap: () => _buy(productId),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 18),
+        decoration: BoxDecoration(
+          gradient: highlighted
+              ? const LinearGradient(
+                  colors: [Color(0xFF7A3DFD), Color(0xFF3D8BFD)])
+              : null,
+          color: highlighted ? null : Colors.grey.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(16),
+          border: highlighted
+              ? null
+              : Border.all(color: Colors.grey.withValues(alpha: 0.4)),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          title,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: highlighted ? Colors.white : null,
+                          ),
+                        ),
+                      ),
+                      if (badge != null) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFC107),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(badge,
+                              style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF1A1A2E))),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            _busy
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2.4),
+                  )
+                : Text(
+                    priceText ?? '—',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: highlighted ? Colors.white : null,
+                    ),
+                  ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -3114,7 +3597,11 @@ class _LearningScreenState extends State<LearningScreen>
 
     if (studySession.isEmpty && !isReviewMode && !_sessionRecorded) {
       _sessionRecorded = true;
-      AdManager().showInterstitial();
+      // Interstitial only for free users, and only here — after a session ends,
+      // never mid-practice.
+      if (!PurchaseManager().isPro.value) {
+        AdManager().showInterstitial();
+      }
       if (mounted) {
         Navigator.pushReplacement(
           context,
@@ -3994,7 +4481,10 @@ class _SingleCardScreenState extends State<SingleCardScreen> {
   final _NativeTts flutterTts = _NativeTts();
 
   Future<void> speak(String text, String language) async {
+    final prefs = await SharedPreferences.getInstance();
+    double speed = prefs.getDouble('tts_speed') ?? 0.5;
     await flutterTts.setLanguage(language == 'hebrew' ? 'he-IL' : 'en-US');
+    await flutterTts.setSpeechRate(speed);
     await flutterTts.speak(text);
   }
 
@@ -5201,7 +5691,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: ListView(
         children: [
           const SizedBox(height: 20),
+          // ── מילומטרי פרו — סטטוס / שדרוג ──────────────────────
+          ValueListenableBuilder<bool>(
+            valueListenable: PurchaseManager().isPro,
+            builder: (context, isPro, _) {
+              if (isPro) {
+                return ListTile(
+                  leading: const Icon(Icons.workspace_premium_rounded,
+                      color: Color(0xFFFFC107)),
+                  title: const Text("מילומטרי פרו פעיל ✓",
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: const Text("תודה על התמיכה!"),
+                );
+              }
+              return ListTile(
+                leading: const Icon(Icons.workspace_premium_rounded,
+                    color: Color(0xFF7A3DFD)),
+                title: const Text("שדרג למילומטרי פרו",
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: const Text("תרגול לפי רמת קושי, רצף וללא פרסומות"),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                onTap: () =>
+                    Navigator.push(context, _slideRoute(const PaywallScreen())),
+              );
+            },
+          ),
+          const Divider(),
           _buildSectionHeader("מעקב והתקדמות"),
+          // סטטיסטיקות — חינם לכולם
           ListTile(
             leading: const Icon(Icons.bar_chart_rounded, color: Colors.blue),
             title: const Text("סטטיסטיקות"),
@@ -5210,15 +5727,54 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onTap: () =>
                 Navigator.push(context, _slideRoute(const StatsScreen())),
           ),
-          ListTile(
-            leading:
-                const Icon(Icons.local_fire_department, color: Colors.orange),
-            title: const Text("רצף"),
-            subtitle: const Text("הרצף היומי והשיא שלך"),
-            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-            onTap: () =>
-                Navigator.push(context, _slideRoute(const StreakScreen())),
+          // רצף — פרו
+          ValueListenableBuilder<bool>(
+            valueListenable: PurchaseManager().isPro,
+            builder: (context, isPro, _) => ListTile(
+              leading:
+                  const Icon(Icons.local_fire_department, color: Colors.orange),
+              title: Row(
+                children: [
+                  const Text("רצף"),
+                  if (!isPro) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFC107),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Text('פרו',
+                          style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF1A1A2E))),
+                    ),
+                  ],
+                ],
+              ),
+              subtitle: const Text("הרצף היומי והשיא שלך"),
+              trailing: Icon(isPro ? Icons.arrow_forward_ios : Icons.lock_rounded,
+                  size: 16),
+              // Navigation gate only — streak data keeps accruing regardless.
+              onTap: () => Navigator.push(
+                  context,
+                  _slideRoute(
+                      isPro ? const StreakScreen() : const PaywallScreen())),
+            ),
           ),
+          // מתג בדיקה — זמין רק ב-debug, מוסר אוטומטית מגרסת הרילים.
+          if (kDebugMode)
+            ValueListenableBuilder<bool>(
+              valueListenable: PurchaseManager().isPro,
+              builder: (context, isPro, _) => SwitchListTile(
+                secondary: const Icon(Icons.bug_report, color: Colors.green),
+                title: const Text("[DEBUG] דמה מצב פרו"),
+                value: isPro,
+                onChanged: (v) => PurchaseManager().setProDebug(v),
+              ),
+            ),
           const Divider(),
           _buildSectionHeader("כללי"),
           SwitchListTile(

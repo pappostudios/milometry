@@ -60,12 +60,43 @@ import ObjectiveC
     }
   }
 
+  // Cache the best voice chosen per language so we don't re-scan every utterance.
+  private var voiceCache: [String: AVSpeechSynthesisVoice] = [:]
+
   private func nativeSpeak(text: String, language: String, rate: Float) {
     synthesizer.stopSpeaking(at: .immediate)
     let utterance = AVSpeechUtterance(string: text)
-    utterance.voice = AVSpeechSynthesisVoice(language: language)
+    utterance.voice = bestVoice(for: language)
     utterance.rate = rate
     synthesizer.speak(utterance)
+  }
+
+  /// Picks the clearest available voice for a language, preferring premium >
+  /// enhanced > default quality. Addresses the "robotic voice" complaint.
+  /// Enhanced/premium voices are used automatically when the user has them
+  /// installed (Settings > Accessibility > Spoken Content > Voices).
+  private func bestVoice(for language: String) -> AVSpeechSynthesisVoice? {
+    if let cached = voiceCache[language] { return cached }
+
+    let prefix = String(language.prefix(2)).lowercased()
+    let candidates = AVSpeechSynthesisVoice.speechVoices().filter {
+      $0.language.lowercased().hasPrefix(prefix)
+    }
+
+    let chosen: AVSpeechSynthesisVoice?
+    if #available(iOS 16.0, *) {
+      chosen = candidates.first(where: { $0.quality == .premium })
+        ?? candidates.first(where: { $0.quality == .enhanced })
+        ?? candidates.first(where: { $0.quality == .default })
+        ?? AVSpeechSynthesisVoice(language: language)
+    } else {
+      chosen = candidates.first(where: { $0.quality == .enhanced })
+        ?? candidates.first(where: { $0.quality == .default })
+        ?? AVSpeechSynthesisVoice(language: language)
+    }
+
+    if let chosen = chosen { voiceCache[language] = chosen }
+    return chosen
   }
 
   private static func swizzleFlutterVSyncClient() {
