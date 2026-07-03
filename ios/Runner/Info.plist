@@ -12,10 +12,9 @@
 	<string>מילומטרי</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
-	<!-- AdMob application identifier. ⚠️ Replace with your real AdMob iOS App ID
-	     before release (this is Google's public TEST app id). -->
+	<!-- AdMob application identifier (real, from AdMob console). -->
 	<key>GADApplicationIdentifier</key>
-	<string>ca-app-pub-3940256099942544~1458002511</string>
+	<string>ca-app-pub-3533479369162122~2268107708</string>
 	<key>NSUserTrackingUsageDescription</key>
 	<string>נשתמש במזהה שלך כדי להציג פרסומות רלוונטיות יותר. ניתן לדלג ולראות פרסומות כלליות.</string>
 	<key>SKAdNetworkItems</key>

@@ -10,11 +10,10 @@
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon">
 
-        <!-- AdMob application ID. ⚠️ Replace with your real AdMob Android App ID
-             before release (this is Google's public TEST app id). -->
+        <!-- AdMob application ID (real, from AdMob console). -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3940256099942544~3347511713"/>
+            android:value="ca-app-pub-3533479369162122~7871495627"/>
         
         <activity
             android:name=".MainActivity"

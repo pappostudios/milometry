@@ -218,19 +218,19 @@ class PurchaseManager {
 // need to go in ios/Runner/Info.plist and android/.../AndroidManifest.xml.
 // ==========================================
 class _AdIds {
-  // Google test banner IDs
+  // Real banner ad unit IDs (from AdMob console).
   static String get banner => kIsWeb
       ? ''
       : (defaultTargetPlatform == TargetPlatform.iOS
-          ? 'ca-app-pub-3940256099942544/2934735716'
-          : 'ca-app-pub-3940256099942544/6300978111');
+          ? 'ca-app-pub-3533479369162122/8960443870'
+          : 'ca-app-pub-3533479369162122/2030356445');
 
-  // Google test interstitial IDs
+  // Real interstitial ad unit IDs (from AdMob console).
   static String get interstitial => kIsWeb
       ? ''
       : (defaultTargetPlatform == TargetPlatform.iOS
-          ? 'ca-app-pub-3940256099942544/4411468910'
-          : 'ca-app-pub-3940256099942544/1033173712');
+          ? 'ca-app-pub-3533479369162122/9049897619'
+          : 'ca-app-pub-3533479369162122/1180309203');
 }
 
 // ==========================================
