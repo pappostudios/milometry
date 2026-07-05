@@ -624,14 +624,16 @@ class ReviewManager {
     final int daysSince = DateTime.now().toUtc().difference(lastDate).inDays;
     if (daysSince < _daysBetweenAsks) return;
 
-    // Ask for a review
-    final InAppReview inAppReview = InAppReview.instance;
-    if (await inAppReview.isAvailable()) {
-      await inAppReview.requestReview();
+    // Ask for a review — try/catch because isAvailable() can return false
+    // on iOS 26 even when StoreKit is functional.
+    try {
+      await InAppReview.instance.requestReview();
       if (!kDebugMode) {
         await prefs.setInt(
             _keyLastRequested, DateTime.now().toUtc().millisecondsSinceEpoch);
       }
+    } catch (_) {
+      // StoreKit not ready — will retry next session
     }
   }
 }
@@ -2930,9 +2932,6 @@ class _LearningScreenState extends State<LearningScreen>
 
   @override
   void dispose() {
-    if (_wordsStudiedThisSession >= 5) {
-      ReviewManager().recordSessionAndMaybeAsk();
-    }
     super.dispose();
   }
 
@@ -3656,6 +3655,14 @@ class SessionDoneScreen extends StatefulWidget {
 }
 
 class _SessionDoneScreenState extends State<SessionDoneScreen> {
+  @override
+  void initState() {
+    super.initState();
+    if (widget.sessionWordCount >= 5) {
+      ReviewManager().recordSessionAndMaybeAsk();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
