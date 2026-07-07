@@ -679,6 +679,7 @@ class ProgressManager {
           'nextReview':
               DateTime.fromMillisecondsSinceEpoch(int.parse(parts[4])),
           'word_status': parts.length >= 6 ? parts[5] : '',
+          'muvvan_repeat_done': parts.length >= 7 ? parts[6] == '1' : false,
         };
       } else if (parts.length == 3) {
         int lvl = int.parse(parts[1]);
@@ -734,6 +735,49 @@ class ProgressManager {
     await _saveToDisk();
   }
 
+  // ── "מובן — מילים שהבנת" repeat-practice tracking ──────────────
+  // Tracks, per word, whether it has already been re-practiced in the
+  // current "מובן" review cycle. Independent of word_status/repetitions —
+  // never touched by applyWordStatus/updateWord.
+  bool isMuvvanRepeatDone(String uniqueId) =>
+      _cache[uniqueId]?['muvvan_repeat_done'] ?? false;
+
+  Future<void> markMuvvanRepeatDone(String uniqueId) async {
+    final entry = _cache[uniqueId];
+    if (entry == null) return;
+    entry['muvvan_repeat_done'] = true;
+    await _saveToDisk();
+  }
+
+  /// Resets the repeat-practice flag. [uniqueIds] null = every word
+  /// (global reset); otherwise only the given words (scoped reset).
+  Future<void> resetMuvvanRepeatTracking({Set<String>? uniqueIds}) async {
+    if (uniqueIds == null) {
+      for (final v in _cache.values) {
+        v['muvvan_repeat_done'] = false;
+      }
+    } else {
+      for (final id in uniqueIds) {
+        _cache[id]?['muvvan_repeat_done'] = false;
+      }
+    }
+    await _saveToDisk();
+  }
+
+  List<String> getMuvvanWordsAwaitingRepeat() => _cache.entries
+      .where((e) =>
+          (e.value['word_status'] ?? '') == 'muvvan' &&
+          !(e.value['muvvan_repeat_done'] ?? false))
+      .map((e) => e.key)
+      .toList();
+
+  bool get allMuvvanRepeatDone {
+    final muvvanEntries =
+        _cache.values.where((v) => (v['word_status'] ?? '') == 'muvvan');
+    if (muvvanEntries.isEmpty) return false;
+    return muvvanEntries.every((v) => v['muvvan_repeat_done'] == true);
+  }
+
   Future<void> _saveToDisk() async {
     List<String> exportList = [];
     _cache.forEach((key, value) {
@@ -742,7 +786,8 @@ class ProgressManager {
       double ef = value['easinessFactor'];
       int time = (value['nextReview'] as DateTime).millisecondsSinceEpoch;
       String status = value['word_status'] ?? '';
-      exportList.add("$key:$n:$i:$ef:$time:$status");
+      bool repeatDone = value['muvvan_repeat_done'] ?? false;
+      exportList.add("$key:$n:$i:$ef:$time:$status:${repeatDone ? '1' : '0'}");
     });
     await _prefs?.setStringList('userprogress', exportList);
   }
@@ -2157,7 +2202,7 @@ class _UnitSelectorScreenState extends State<UnitSelectorScreen> {
               children: [
                 const SizedBox(height: 4),
 
-                // ── מובן — browse (conditional) ──────────────────────
+                // ── מובן — browse + practice (conditional) ────────────
                 if (muvvanCount > 0)
                   _modeButton(
                     title: 'מובן — מילים שהבנת',
@@ -2168,7 +2213,7 @@ class _UnitSelectorScreenState extends State<UnitSelectorScreen> {
                       await Navigator.push(
                           context,
                           _slideRoute(
-                              KachaKachaScreen(jsonPath: widget.jsonPath)));
+                              MuvvanSelectorScreen(jsonPath: widget.jsonPath)));
                       _loadCounts();
                     },
                   ),
@@ -2699,6 +2744,31 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
   Map<String, int> wordLevels = {};
   Map<String, String> wordStatuses = {};
   bool isLoading = true;
+  // 'default' = לפי סדר (no reordering). Otherwise one of the word_status
+  // values ('muvvan'/'kacha_kacha'/'lo_hevanti') or 'not_studied' for לא נלמד.
+  String _sortMode = 'default';
+
+  static const Map<String, String> _sortLabels = {
+    'default': 'לפי סדר',
+    'muvvan': 'מובן',
+    'kacha_kacha': 'ככה ככה',
+    'lo_hevanti': 'לא הבנתי',
+    'not_studied': 'לא נלמד',
+  };
+
+  // Stable "sort to top": words matching _sortMode float to the top,
+  // preserving relative order within each group. Nothing is hidden.
+  List<Word> get _displayWords {
+    if (_sortMode == 'default') return filteredWords;
+    final matching = <Word>[];
+    final rest = <Word>[];
+    for (final w in filteredWords) {
+      final status = wordStatuses[w.uniqueId] ?? '';
+      final isMatch = _sortMode == 'not_studied' ? status.isEmpty : status == _sortMode;
+      (isMatch ? matching : rest).add(w);
+    }
+    return [...matching, ...rest];
+  }
 
   @override
   void initState() {
@@ -2765,19 +2835,43 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final displayWords = _displayWords;
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.unitFilter != null
             ? "רשימה - יחידה ${widget.unitFilter}"
             : "כל המילים"),
+        actions: [
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.sort),
+            tooltip: 'מיין לפי',
+            initialValue: _sortMode,
+            onSelected: (mode) => setState(() => _sortMode = mode),
+            itemBuilder: (context) => _sortLabels.entries
+                .map((e) => PopupMenuItem<String>(
+                      value: e.key,
+                      child: Row(
+                        children: [
+                          if (e.key == _sortMode)
+                            const Icon(Icons.check, size: 18)
+                          else
+                            const SizedBox(width: 18),
+                          const SizedBox(width: 8),
+                          Text(e.value),
+                        ],
+                      ),
+                    ))
+                .toList(),
+          ),
+        ],
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView.separated(
-              itemCount: filteredWords.length,
+              itemCount: displayWords.length,
               separatorBuilder: (c, i) => const Divider(height: 1),
               itemBuilder: (context, index) {
-                final word = filteredWords[index];
+                final word = displayWords[index];
 
                 return ListTile(
                   leading: _statusIcon(word),
@@ -3981,6 +4075,884 @@ class _KachaKachaScreenState extends State<KachaKachaScreen> {
                       ),
                     );
                   },
+                ),
+    );
+  }
+}
+
+// ==========================================
+// 11d. Muvvan Selector Screen — list / by-unit / by-level / reset
+// ==========================================
+class MuvvanSelectorScreen extends StatefulWidget {
+  final String jsonPath;
+  const MuvvanSelectorScreen({super.key, required this.jsonPath});
+
+  @override
+  State<MuvvanSelectorScreen> createState() => _MuvvanSelectorScreenState();
+}
+
+class _MuvvanSelectorScreenState extends State<MuvvanSelectorScreen> {
+  Widget _optionButton({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required List<Color> colors,
+    required VoidCallback onTap,
+  }) {
+    return AnimatedButton(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 14, left: 5, right: 5),
+        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 14),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: colors,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: colors.last.withValues(alpha: 0.35),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
+            )
+          ],
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: Colors.white, size: 28),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18)),
+                  Text(subtitle,
+                      style:
+                          const TextStyle(color: Colors.white70, fontSize: 13)),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios,
+                size: 16, color: Colors.white70),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final prefix = widget.jsonPath.contains('hebrew') ? 'heb' : 'eng';
+    return Scaffold(
+      appBar: AppBar(title: const Text('מובן — מילים שהבנת')),
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          _optionButton(
+            icon: Icons.list_alt_rounded,
+            title: 'רשימת מילים שהבנת',
+            subtitle: 'צפייה בכל המילים שסימנת כמובנות',
+            colors: [kEasyGreen, const Color(0xFF0C6B29)],
+            onTap: () => Navigator.push(context,
+                _slideRoute(KachaKachaScreen(jsonPath: widget.jsonPath))),
+          ),
+          _optionButton(
+            icon: Icons.layers_rounded,
+            title: 'תרגול לפי יחידה',
+            subtitle: 'תרגול חוזר על מילים שהבנת, יחידה אחר יחידה',
+            colors: const [Color(0xFF1A1A2E), Color(0xFF3D4070)],
+            onTap: () => Navigator.push(context,
+                _slideRoute(MuvvanByUnitScreen(jsonPath: widget.jsonPath))),
+          ),
+          _optionButton(
+            icon: Icons.bar_chart_rounded,
+            title: 'תרגול לפי רמת קושי',
+            subtitle: '5 רמות — רק המילים שהבנת',
+            colors: const [Color(0xFF7A3DFD), Color(0xFF3D8BFD)],
+            onTap: () => Navigator.push(context,
+                _slideRoute(MuvvanByLevelScreen(langPrefix: prefix))),
+          ),
+          const SizedBox(height: 10),
+          _optionButton(
+            icon: Icons.restart_alt_rounded,
+            title: 'אפס תרגול חוזר',
+            subtitle: 'פעולה זאת מאפסת רק את התרגול החוזר ולא את ההתקדמות שלך במילון',
+            colors: [Colors.grey.shade600, Colors.grey.shade800],
+            onTap: () => Navigator.push(
+                context,
+                _slideRoute(MuvvanResetScopeScreen(
+                    jsonPath: widget.jsonPath, langPrefix: prefix))),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ==========================================
+// 11e. Muvvan By Unit Screen
+// ==========================================
+class MuvvanByUnitScreen extends StatefulWidget {
+  final String jsonPath;
+  const MuvvanByUnitScreen({super.key, required this.jsonPath});
+
+  @override
+  State<MuvvanByUnitScreen> createState() => _MuvvanByUnitScreenState();
+}
+
+class _MuvvanByUnitScreenState extends State<MuvvanByUnitScreen> {
+  Map<int, int> _countsPerUnit = {};
+  int _totalCount = 0;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    final String response = await rootBundle.loadString(widget.jsonPath);
+    final data = json.decode(response);
+    final list = data['words'] as List;
+    final allWords = list.map((w) => Word.fromJson(w)).toList();
+
+    Map<int, int> tempCounts = {};
+    int tempTotal = 0;
+
+    for (var w in allWords) {
+      final progress = ProgressManager().getWordProgress(w.uniqueId);
+      final status = progress != null ? (progress['word_status'] ?? '') : '';
+      final repeatDone = ProgressManager().isMuvvanRepeatDone(w.uniqueId);
+      if (status == 'muvvan' && !repeatDone) {
+        tempCounts[w.unitNumber] = (tempCounts[w.unitNumber] ?? 0) + 1;
+        tempTotal++;
+      }
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _countsPerUnit = tempCounts;
+      _totalCount = tempTotal;
+      _isLoading = false;
+    });
+  }
+
+  Widget _modeButton({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return AnimatedButton(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 14, left: 5, right: 5),
+        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 14),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [kEasyGreen, Color(0xFF0C6B29)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: kEasyGreen.withValues(alpha: 0.35),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
+            )
+          ],
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: Colors.white, size: 28),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18)),
+                  Text(subtitle,
+                      style:
+                          const TextStyle(color: Colors.white70, fontSize: 13)),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios,
+                size: 16, color: Colors.white70),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final sortedUnits = _countsPerUnit.keys.toList()..sort();
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('תרגול לפי יחידה — מובן')),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _totalCount == 0
+              ? const Center(
+                  child: Text('אין מילים לתרגול חוזר כרגע',
+                      style: TextStyle(fontSize: 16, color: Colors.grey)))
+              : ListView(
+                  padding: const EdgeInsets.all(20),
+                  children: [
+                    _modeButton(
+                      icon: Icons.shuffle,
+                      title: 'תרגל הכל (ערבוב)',
+                      subtitle: 'כל $_totalCount המילים שהבנת מכל היחידות',
+                      onTap: () => Navigator.push(
+                          context,
+                          _slideRoute(
+                              MuvvanReviewScreen(jsonPath: widget.jsonPath))),
+                    ),
+                    const Text('בחר יחידה ספציפית:',
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 15),
+                    ...sortedUnits.map((unitNum) {
+                      final count = _countsPerUnit[unitNum]!;
+                      final unitColor = getUnitColor(unitNum, isDark);
+                      final textColor =
+                          getTextColorForBackground(unitNum, isDark);
+
+                      return AnimatedButton(
+                        onTap: () => Navigator.push(
+                            context,
+                            _slideRoute(MuvvanReviewScreen(
+                                jsonPath: widget.jsonPath,
+                                unitFilter: unitNum))),
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: unitColor,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: unitColor.withValues(alpha: 0.4),
+                                blurRadius: 10,
+                                offset: const Offset(0, 5),
+                              )
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('יחידה $unitNum',
+                                        style: TextStyle(
+                                            color: textColor,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 17)),
+                                    Text('יש לך $count מילים שהבנת ביחידה זו',
+                                        style: TextStyle(
+                                            color: textColor.withValues(
+                                                alpha: 0.8),
+                                            fontSize: 13)),
+                                  ],
+                                ),
+                              ),
+                              Icon(Icons.arrow_forward_ios,
+                                  color: textColor, size: 16),
+                            ],
+                          ),
+                        ),
+                      );
+                    }),
+                  ],
+                ),
+    );
+  }
+}
+
+// ==========================================
+// 11f. Muvvan By Level Screen
+// ==========================================
+class MuvvanByLevelScreen extends StatefulWidget {
+  final String langPrefix; // 'heb' or 'eng'
+  const MuvvanByLevelScreen({super.key, required this.langPrefix});
+
+  @override
+  State<MuvvanByLevelScreen> createState() => _MuvvanByLevelScreenState();
+}
+
+class _MuvvanByLevelScreenState extends State<MuvvanByLevelScreen> {
+  final List<int> _counts = List.filled(5, 0);
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCounts();
+  }
+
+  Future<void> _loadCounts() async {
+    for (int lvl = 1; lvl <= 5; lvl++) {
+      try {
+        final path = 'assets/levels/${widget.langPrefix}_level_$lvl.json';
+        final String response = await rootBundle.loadString(path);
+        final data = json.decode(response);
+        final list = data['words'] as List;
+        int count = 0;
+        for (final w in list) {
+          final word = Word.fromJson(w);
+          final progress = ProgressManager().getWordProgress(word.uniqueId);
+          final status =
+              progress != null ? (progress['word_status'] ?? '') : '';
+          final repeatDone = ProgressManager().isMuvvanRepeatDone(word.uniqueId);
+          if (status == 'muvvan' && !repeatDone) count++;
+        }
+        _counts[lvl - 1] = count;
+      } catch (_) {}
+    }
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('תרגול לפי רמת קושי — מובן')),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : ListView.builder(
+              padding: const EdgeInsets.all(20),
+              itemCount: 5,
+              itemBuilder: (context, index) {
+                final lvl = index + 1;
+                final meta = _kLevelMeta[index];
+                final count = _counts[index];
+                final path =
+                    'assets/levels/${widget.langPrefix}_level_$lvl.json';
+
+                return AnimatedButton(
+                  onTap: count == 0
+                      ? () {}
+                      : () {
+                          Navigator.push(
+                              context,
+                              _slideRoute(
+                                  MuvvanReviewScreen(jsonPath: path)));
+                        },
+                  child: Opacity(
+                    opacity: count == 0 ? 0.45 : 1.0,
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 14),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 14),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [meta.color, meta.shadow],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: meta.shadow.withValues(alpha: 0.4),
+                            blurRadius: 10,
+                            offset: const Offset(0, 5),
+                          )
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 42,
+                            height: 42,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Center(
+                              child: Text('$lvl',
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18)),
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(meta.label,
+                                    style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 17)),
+                                Text(
+                                    count == 0
+                                        ? 'אין מילים לתרגול חוזר ✓'
+                                        : '$count מילים שהבנת',
+                                    style: const TextStyle(
+                                        color: Colors.white70, fontSize: 13)),
+                              ],
+                            ),
+                          ),
+                          const Icon(Icons.arrow_forward_ios,
+                              size: 16, color: Colors.white70),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+    );
+  }
+}
+
+// ==========================================
+// 11g. Muvvan Review Screen — single "הבנתי" button practice
+// ==========================================
+class MuvvanReviewScreen extends StatefulWidget {
+  final String jsonPath;
+  final int? unitFilter;
+  const MuvvanReviewScreen({super.key, required this.jsonPath, this.unitFilter});
+
+  @override
+  State<MuvvanReviewScreen> createState() => _MuvvanReviewScreenState();
+}
+
+class _MuvvanReviewScreenState extends State<MuvvanReviewScreen> {
+  List<Word> _session = [];
+  bool _isLoading = true;
+  int _totalCount = 0;
+  final _NativeTts flutterTts = _NativeTts();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadWords();
+  }
+
+  Future<void> speak(String text, String language) async {
+    final prefs = await SharedPreferences.getInstance();
+    double speed = prefs.getDouble('tts_speed') ?? 0.5;
+    await flutterTts.setLanguage(language == 'hebrew' ? 'he-IL' : 'en-US');
+    await flutterTts.setSpeechRate(speed);
+    await flutterTts.speak(text);
+  }
+
+  Future<void> _loadWords() async {
+    final String response = await rootBundle.loadString(widget.jsonPath);
+    final data = json.decode(response);
+    final list = data['words'] as List;
+    final allWords = list.map((w) => Word.fromJson(w)).toList();
+
+    final filtered = allWords.where((w) {
+      if (widget.unitFilter != null && w.unitNumber != widget.unitFilter) {
+        return false;
+      }
+      final progress = ProgressManager().getWordProgress(w.uniqueId);
+      final status = progress != null ? (progress['word_status'] ?? '') : '';
+      return status == 'muvvan' && !ProgressManager().isMuvvanRepeatDone(w.uniqueId);
+    }).toList();
+    filtered.shuffle();
+
+    if (!mounted) return;
+    setState(() {
+      _session = filtered;
+      _totalCount = filtered.length;
+      _isLoading = false;
+    });
+  }
+
+  Future<void> _markUnderstood() async {
+    if (_session.isEmpty) return;
+    final word = _session.first;
+    await ProgressManager().markMuvvanRepeatDone(word.uniqueId);
+
+    final justCompletedFullCycle = ProgressManager().allMuvvanRepeatDone;
+    if (justCompletedFullCycle) {
+      await ProgressManager().resetMuvvanRepeatTracking();
+    }
+
+    if (!mounted) return;
+    setState(() => _session.removeAt(0));
+
+    if (_session.isEmpty) {
+      AdManager().showInterstitial();
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        _slideRoute(MuvvanReviewDoneScreen(
+          wordCount: _totalCount,
+          fullCycleCompleted: justCompletedFullCycle,
+        )),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    if (_session.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('תרגול חוזר — מובן')),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Text(
+              'השלמת את כל המילים שהבנת! אפשר לאפס תרגול חוזר במסך הקודם כדי להתחיל סבב חדש.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
+            ),
+          ),
+        ),
+      );
+    }
+
+    final word = _session.first;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final progressDone = _totalCount - _session.length;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('תרגול חוזר — ${progressDone + 1} / $_totalCount'),
+      ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            children: [
+              Expanded(
+                child: Center(
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(28),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF1E2232) : Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                          color: kEasyGreen.withValues(alpha: 0.45), width: 1.5),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.06),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Flexible(
+                              child: Text(word.term,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                      fontSize: 26,
+                                      fontWeight: FontWeight.bold,
+                                      color: isDark
+                                          ? Colors.white
+                                          : const Color(0xFF1A1A2E))),
+                            ),
+                            if (word.language == 'english') ...[
+                              const SizedBox(width: 8),
+                              IconButton(
+                                icon: const Icon(Icons.volume_up_rounded,
+                                    color: kBluePrimary),
+                                onPressed: () =>
+                                    speak(word.term, word.language),
+                              ),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 14),
+                        Text(word.translation,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                                fontSize: 18,
+                                color: kBluePrimary,
+                                fontWeight: FontWeight.w600)),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: AnimatedButton(
+                  onTap: _markUnderstood,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [kEasyGreen, Color(0xFF0C6B29)],
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                      ),
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: const Center(
+                      child: Text('הבנתי',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ==========================================
+// 11h. Muvvan Review Done Screen
+// ==========================================
+class MuvvanReviewDoneScreen extends StatelessWidget {
+  final int wordCount;
+  final bool fullCycleCompleted;
+  const MuvvanReviewDoneScreen(
+      {super.key, required this.wordCount, required this.fullCycleCompleted});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.celebration_rounded,
+                    color: kEasyGreen, size: 64),
+                const SizedBox(height: 20),
+                Text('סיימת תרגול חוזר של $wordCount מילים 🎉',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                        fontSize: 20, fontWeight: FontWeight.bold)),
+                if (fullCycleCompleted) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                      'תרגלת מחדש את כל המילים שהבנת! הרשימה התאפסה כדי שתוכל להתחיל סבב חדש.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontSize: 14, color: Colors.grey.shade600)),
+                ],
+                const SizedBox(height: 28),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.of(context)
+                        .popUntil((route) => route.isFirst),
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 14),
+                      child: Text('חזרה למסך הבית'),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ==========================================
+// 11i. Muvvan Reset Scope Screen — reset all / unit / level
+// ==========================================
+class MuvvanResetScopeScreen extends StatefulWidget {
+  final String jsonPath;
+  final String langPrefix;
+  const MuvvanResetScopeScreen(
+      {super.key, required this.jsonPath, required this.langPrefix});
+
+  @override
+  State<MuvvanResetScopeScreen> createState() =>
+      _MuvvanResetScopeScreenState();
+}
+
+class _MuvvanResetScopeScreenState extends State<MuvvanResetScopeScreen> {
+  bool _isLoading = true;
+  int _totalMuvvan = 0;
+  // unitNumber -> set of uniqueIds with word_status == 'muvvan'
+  final Map<int, Set<String>> _unitGreenIds = {};
+  // level (1-5) -> set of uniqueIds with word_status == 'muvvan'
+  final Map<int, Set<String>> _levelGreenIds = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    final String response = await rootBundle.loadString(widget.jsonPath);
+    final data = json.decode(response);
+    final list = data['words'] as List;
+    final allWords = list.map((w) => Word.fromJson(w)).toList();
+
+    final greenIds = ProgressManager().getAllByStatus('muvvan').toSet();
+    _totalMuvvan = greenIds.length;
+
+    for (final w in allWords) {
+      if (!greenIds.contains(w.uniqueId)) continue;
+      _unitGreenIds
+          .putIfAbsent(w.unitNumber, () => {})
+          .add(w.uniqueId);
+    }
+
+    for (int lvl = 1; lvl <= 5; lvl++) {
+      try {
+        final path = 'assets/levels/${widget.langPrefix}_level_$lvl.json';
+        final String levelResponse = await rootBundle.loadString(path);
+        final levelData = json.decode(levelResponse);
+        final levelList = levelData['words'] as List;
+        for (final w in levelList) {
+          final word = Word.fromJson(w);
+          if (greenIds.contains(word.uniqueId)) {
+            _levelGreenIds.putIfAbsent(lvl, () => {}).add(word.uniqueId);
+          }
+        }
+      } catch (_) {}
+    }
+
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+  }
+
+  Future<void> _confirmAndReset({
+    required String title,
+    required String message,
+    Set<String>? uniqueIds,
+  }) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(title),
+        content: Text(
+            '$message\n\nפעולה זאת מאפסת רק את התרגול החוזר ולא את ההתקדמות שלך במילון.'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('ביטול')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('אפס')),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    await ProgressManager().resetMuvvanRepeatTracking(uniqueIds: uniqueIds);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('תרגול חוזר אופס בהצלחה')),
+    );
+    Navigator.pop(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final sortedUnits = _unitGreenIds.keys.toList()..sort();
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('אפס תרגול חוזר')),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _totalMuvvan == 0
+              ? const Center(
+                  child: Text('אין עדיין מילים שסימנת כמובנות',
+                      style: TextStyle(fontSize: 16, color: Colors.grey)))
+              : ListView(
+                  padding: const EdgeInsets.all(20),
+                  children: [
+                    ListTile(
+                      tileColor: kEasyGreen.withValues(alpha: 0.1),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14)),
+                      leading: const Icon(Icons.restart_alt_rounded,
+                          color: kEasyGreen),
+                      title: const Text('אפס את כל המילים שהבנת',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      subtitle: Text('$_totalMuvvan מילים'),
+                      onTap: () => _confirmAndReset(
+                        title: 'איפוס כל המילים שהבנת',
+                        message: 'לאפס את התרגול החוזר לכל $_totalMuvvan המילים שהבנת?',
+                      ),
+                    ),
+                    if (_unitGreenIds.isNotEmpty) ...[
+                      const SizedBox(height: 20),
+                      const Text('אפס יחידה ספציפית:',
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 10),
+                      ...sortedUnits.map((unit) {
+                        final ids = _unitGreenIds[unit]!;
+                        return ListTile(
+                          leading: const Icon(Icons.layers_rounded,
+                              color: Colors.grey),
+                          title: Text('יחידה $unit'),
+                          subtitle: Text('${ids.length} מילים שהבנת'),
+                          onTap: () => _confirmAndReset(
+                            title: 'איפוס יחידה $unit',
+                            message:
+                                'לאפס את התרגול החוזר ל-${ids.length} המילים שהבנת ביחידה $unit?',
+                            uniqueIds: ids,
+                          ),
+                        );
+                      }),
+                    ],
+                    if (_levelGreenIds.isNotEmpty) ...[
+                      const SizedBox(height: 20),
+                      const Text('אפס רמת קושי ספציפית:',
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 10),
+                      ...(_levelGreenIds.keys.toList()..sort()).map((lvl) {
+                        final ids = _levelGreenIds[lvl]!;
+                        final meta = _kLevelMeta[lvl - 1];
+                        return ListTile(
+                          leading:
+                              Icon(Icons.bar_chart_rounded, color: meta.color),
+                          title: Text('רמה $lvl — ${meta.label}'),
+                          subtitle: Text('${ids.length} מילים שהבנת'),
+                          onTap: () => _confirmAndReset(
+                            title: 'איפוס רמה $lvl',
+                            message:
+                                'לאפס את התרגול החוזר ל-${ids.length} המילים שהבנת ברמה $lvl?',
+                            uniqueIds: ids,
+                          ),
+                        );
+                      }),
+                    ],
+                  ],
                 ),
     );
   }
