@@ -4317,10 +4317,13 @@ class _MuvvanByUnitScreenState extends State<MuvvanByUnitScreen> {
                       icon: Icons.shuffle,
                       title: 'תרגל הכל (ערבוב)',
                       subtitle: 'כל $_totalCount המילים שהבנת מכל היחידות',
-                      onTap: () => Navigator.push(
-                          context,
-                          _slideRoute(
-                              MuvvanReviewScreen(jsonPath: widget.jsonPath))),
+                      onTap: () async {
+                        await Navigator.push(
+                            context,
+                            _slideRoute(MuvvanReviewScreen(
+                                jsonPath: widget.jsonPath)));
+                        _loadData();
+                      },
                     ),
                     const Text('בחר יחידה ספציפית:',
                         style: TextStyle(
@@ -4333,11 +4336,14 @@ class _MuvvanByUnitScreenState extends State<MuvvanByUnitScreen> {
                           getTextColorForBackground(unitNum, isDark);
 
                       return AnimatedButton(
-                        onTap: () => Navigator.push(
-                            context,
-                            _slideRoute(MuvvanReviewScreen(
-                                jsonPath: widget.jsonPath,
-                                unitFilter: unitNum))),
+                        onTap: () async {
+                          await Navigator.push(
+                              context,
+                              _slideRoute(MuvvanReviewScreen(
+                                  jsonPath: widget.jsonPath,
+                                  unitFilter: unitNum)));
+                          _loadData();
+                        },
                         child: Container(
                           margin: const EdgeInsets.only(bottom: 12),
                           padding: const EdgeInsets.all(16),
@@ -4447,11 +4453,12 @@ class _MuvvanByLevelScreenState extends State<MuvvanByLevelScreen> {
                 return AnimatedButton(
                   onTap: count == 0
                       ? () {}
-                      : () {
-                          Navigator.push(
+                      : () async {
+                          await Navigator.push(
                               context,
                               _slideRoute(
                                   MuvvanReviewScreen(jsonPath: path)));
+                          _loadCounts();
                         },
                   child: Opacity(
                     opacity: count == 0 ? 0.45 : 1.0,
@@ -4585,6 +4592,13 @@ class _MuvvanReviewScreenState extends State<MuvvanReviewScreen> {
     await ProgressManager().markMuvvanRepeatDone(word.uniqueId);
 
     final justCompletedFullCycle = ProgressManager().allMuvvanRepeatDone;
+    // When the whole cycle finishes, report the TOTAL number of green words
+    // in the cycle (which may have been practiced across several sessions
+    // over several days) — not just the small remaining batch from this
+    // final session.
+    final wordCountForDisplay = justCompletedFullCycle
+        ? ProgressManager().countByStatus('muvvan')
+        : _totalCount;
     if (justCompletedFullCycle) {
       await ProgressManager().resetMuvvanRepeatTracking();
     }
@@ -4598,7 +4612,7 @@ class _MuvvanReviewScreenState extends State<MuvvanReviewScreen> {
       Navigator.pushReplacement(
         context,
         _slideRoute(MuvvanReviewDoneScreen(
-          wordCount: _totalCount,
+          wordCount: wordCountForDisplay,
           fullCycleCompleted: justCompletedFullCycle,
         )),
       );
@@ -4813,6 +4827,9 @@ class _MuvvanResetScopeScreenState extends State<MuvvanResetScopeScreen> {
   }
 
   Future<void> _loadData() async {
+    _unitGreenIds.clear();
+    _levelGreenIds.clear();
+
     final String response = await rootBundle.loadString(widget.jsonPath);
     final data = json.decode(response);
     final list = data['words'] as List;
@@ -4871,11 +4888,14 @@ class _MuvvanResetScopeScreenState extends State<MuvvanResetScopeScreen> {
     if (confirmed != true) return;
 
     await ProgressManager().resetMuvvanRepeatTracking(uniqueIds: uniqueIds);
+    // Refresh in place (instead of leaving the screen) so the counts update
+    // immediately — lets the user reset another unit/level right away too.
+    if (mounted) setState(() => _isLoading = true);
+    await _loadData();
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('תרגול חוזר אופס בהצלחה')),
     );
-    Navigator.pop(context);
   }
 
   @override
