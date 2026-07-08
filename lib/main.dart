@@ -5249,7 +5249,7 @@ class AboutScreen extends StatelessWidget {
               const SizedBox(height: 20),
               const Text("מילומטרי",
                   style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-              const Text("גרסה 1.1.4", style: TextStyle(color: Colors.grey)),
+              const Text("גרסה 1.1.5", style: TextStyle(color: Colors.grey)),
               const SizedBox(height: 30),
               const Text(
                   "ברוכים הבאים לאפליקציית מילומטרי!\n\nהאפליקציה נועדה לעזור לכם ללמוד מילים לפסיכומטרי בצורה כיפית וקלה.\nתוכלו לתרגל מילים בעברית ובאנגלית ולעקוב אחרי ההתקדמות שלכם.\n\nפותח על ידי Pappo Studios.\nבהצלחה במבחן!",
@@ -5717,10 +5717,69 @@ class _StreakScreenState extends State<StreakScreen> {
                       );
                     }).toList(),
                   ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => _showManualGoalDialog(ctx, currentGoal),
+                      icon: const Icon(Icons.edit_rounded, size: 18),
+                      label: const Text('ערוך יעד מותאם אישית'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.orange.shade700,
+                        side: BorderSide(color: Colors.orange.shade300),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16)),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             );
           },
+        );
+      },
+    );
+  }
+
+  void _showManualGoalDialog(BuildContext context, int currentGoal) {
+    final controller = TextEditingController(text: '$currentGoal');
+    showDialog(
+      context: context,
+      builder: (dialogCtx) {
+        return AlertDialog(
+          title: const Text('יעד יומי מותאם אישית'),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              labelText: 'מספר מילים ליום',
+              suffixText: 'מילים',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogCtx),
+              child: const Text('ביטול'),
+            ),
+            TextButton(
+              onPressed: () async {
+                final goal = int.tryParse(controller.text.trim());
+                if (goal == null || goal <= 0) {
+                  ScaffoldMessenger.of(dialogCtx).showSnackBar(
+                    const SnackBar(content: Text('נא להזין מספר חיובי')),
+                  );
+                  return;
+                }
+                await StreakManager().setDailyGoal(goal);
+                if (mounted) setState(() {});
+                if (dialogCtx.mounted) Navigator.pop(dialogCtx);
+                if (context.mounted) Navigator.pop(context);
+              },
+              child: const Text('שמור'),
+            ),
+          ],
         );
       },
     );
