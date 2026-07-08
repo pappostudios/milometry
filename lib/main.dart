@@ -5249,7 +5249,7 @@ class AboutScreen extends StatelessWidget {
               const SizedBox(height: 20),
               const Text("מילומטרי",
                   style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-              const Text("גרסה 1.1.0", style: TextStyle(color: Colors.grey)),
+              const Text("גרסה 1.1.4", style: TextStyle(color: Colors.grey)),
               const SizedBox(height: 30),
               const Text(
                   "ברוכים הבאים לאפליקציית מילומטרי!\n\nהאפליקציה נועדה לעזור לכם ללמוד מילים לפסיכומטרי בצורה כיפית וקלה.\nתוכלו לתרגל מילים בעברית ובאנגלית ולעקוב אחרי ההתקדמות שלכם.\n\nפותח על ידי Pappo Studios.\nבהצלחה במבחן!",
