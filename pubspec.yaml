@@ -34,10 +34,9 @@ flutter:
   
   assets:
     - assets/logo.jpg
-    - assets/hebrew.json
-    - assets/english.json
     - assets/hebrew_with_difficulty.json
     - assets/english_with_difficulty.json
+    - assets/id_migration.json
     - assets/icon.png
     - assets/levels/
 
