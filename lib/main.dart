@@ -52,7 +52,7 @@ class _NativeTts {
 // ==========================================
 // הגדרות גלובליות
 // ==========================================
-const int currentTermsVersion = 3;
+const int currentTermsVersion = 4;
 
 // Set to true once real iOS AdMob unit IDs are added to _AdIds
 const bool kAdsEnabled = false;
