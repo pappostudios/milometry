@@ -7289,7 +7289,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () => launchUrl(
               Uri.parse(
-                  'https://docs.google.com/document/d/1DLOkIcNFniOLqtGhn-IgsLBikPmWuRKIB7f-ClBuWhw/edit?usp=sharing'),
+                  'https://pappostudios.github.io/milometry/terms_of_service.html'),
               mode: LaunchMode.externalApplication,
             ),
           ),
