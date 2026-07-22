@@ -14,6 +14,7 @@ import 'package:in_app_review/in_app_review.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:url_launcher/url_launcher.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 // ==========================================
 // Native TTS — replaces flutter_tts which crashes on iOS 26.
@@ -7372,7 +7373,25 @@ class TermsOfServiceScreen extends StatefulWidget {
 
 class _TermsOfServiceScreenState extends State<TermsOfServiceScreen> {
   bool _isChecked = false;
-  final ScrollController _scrollController = ScrollController();
+  bool _isPageLoading = true;
+  late final WebViewController _webViewController;
+
+  @override
+  void initState() {
+    super.initState();
+    _webViewController = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.disabled)
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onPageFinished: (_) {
+            if (mounted) setState(() => _isPageLoading = false);
+          },
+        ),
+      )
+      // The exact same file that's hosted on GitHub Pages and linked from
+      // Settings — this is the only copy that ever needs editing.
+      ..loadFlutterAsset('terms_of_service.html');
+  }
 
   Future<void> _acceptTerms() async {
     final prefs = await SharedPreferences.getInstance();
@@ -7397,83 +7416,17 @@ class _TermsOfServiceScreenState extends State<TermsOfServiceScreen> {
           children: [
             Expanded(
               child: Container(
-                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.grey),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Scrollbar(
-                  controller: _scrollController,
-                  thumbVisibility: true,
-                  child: SingleChildScrollView(
-                    controller: _scrollController,
-                    child: const Text(
-                      '''
-מדיניות פרטיות ותנאי שימוש – אפליקציית מילומטרי
-
-עדכון אחרון: 22/07/2026
-
-1.	כללי:
-
-a.	ברוכים הבאים לאפליקציית "מילומטרי", אשר פותחה על ידי Pappo" Studios"" הורדה ושימוש באפליקציה מהווים הסכמה מלאה ומחייבת לתנאים המפורטים במסמך זה.
-
-2.	מהות השירות:
-
-a.	האפליקציה נועדה לשמש ככלי עזר לתרגול, לימוד ושיפור אוצר המילים לקראת הבחינה הפסיכומטרית.
-
-b.	השימוש באפליקציה הוא באחריות המשתמש בלבד.
-
-c.	המפתח מבהיר כי השימוש באפליקציה אינו מבטיח קבלת ציון מסוים בבחינה ואינו מהווה תחליף לקורס פסיכומטרי מלא או לחומרים הרשמיים של המרכז הארצי לבחינות והערכה.
-
-3.	קניין רוחני:
-
-a.	כל זכויות הקניין הרוחני באפליקציה, לרבות העיצוב הגרפי, קוד המקור, הלוגו, בסיסי הנתונים והתכנים, הינם קניינו הבלעדי של המפתח (Pappo Studios).
-
-b.	אין להעתיק, לשכפל, להפיץ, לשווק או לעשות כל שימוש מסחרי בחלקים מהאפליקציה או בעיצובה ללא קבלת אישור מפורש ובכתב מהמפתח.
-
-4.	מדיניות פרטיות ואיסוף נתונים:
-
-אנו ב-Pappo Studios  מכבדים את פרטיותך.
-
-a.	איסוף נתונים אישיים: האפליקציה אינה אוספת מידע אישי מזהה (כגון שם, טלפון או מייל) באופן יזום ואינה מעבירה נתונים כאלו לשרתים שלנו.
-
-b.	אחסון מידע: כל נתוני המשתמש באפליקציה — לרבות התקדמות הלימוד, מילים מועדפות, תאריך המבחן והגדרות אישיות — נשמרים באופן מקומי (Locally) על גבי מכשיר המשתמש בלבד, ואינם מועברים לשום שרת חיצוני. מחיקת האפליקציה תוביל למחיקה סופית של כל הנתונים הללו, ולא ניתן יהיה לשחזרם.
-
-c.	התראות: לצורך תזכורות יומיות ללימוד, האפליקציה עשויה לבקש הרשאה לשליחת התראות (Notifications) במכשירך. ניתן לבטל הרשאה זו בכל עת דרך הגדרות המכשיר או הגדרות האפליקציה, מבלי שהדבר ישפיע על שאר הפונקציונליות של האפליקציה.
-
-5.	פרסומות:
-
-a.	האפליקציה נכון להיום(תאריך עדכון המסמך) לא מציגה פרסומות. בקריאה ואישור של מסמך זה - הינך(המשתמש) מסכים לכך שבעתיד ייתכן וכי בזמן שימושך באפליקציה יופיעו פרסומות המוגשות ע"י צד שלישי.
-
-b.	ספקים אלו עשויים להשתמש במידע אנונימי, מזהי מכשיר (Device ID) או טכנולוגיות מעקב כגון "Cookies" על מנת להציג פרסומות המותאמות לתחומי העניין של המשתמש ולשפר את חווית השימוש. השימוש במידע זה כפוף למדיניות הפרטיות של אותם ספקי פרסום.
-
-6.	תמחור ושינויים עתידיים:
-
-a.	שינוי מודל התמחור: המפתח שומר לעצמו את הזכות הבלעדית לשנות את מודל התמחור של האפליקציה בכל עת.(המשתמש לא יחויב בהוצאות כאלה ואחרות ללא הסכמתו האישית).
-
-b.	העדר התחייבות למחיר: המשתמש מאשר כי ידוע לו שהאפליקציה עשויה להפוך לבת-תשלום בעתיד, או כי פיצ'רים מסוימים שכרגע ניתנים בחינם עשויים לדרוש תשלום בגרסאות הבאות. אין בהורדת האפליקציה שום התחייבות של המפתח למחיר קבוע או לחינמיות השירות לצמיתות.
-
-7.	הגבלת אחריות:
-
-a.	היוצר ו/או המפתח אינו אחראי לכל נזק, ישיר או עקיף, שייגרם למשתמש או לצד שלישי כלשהו כתוצאה משימוש באפליקציה, חוסר יכולת להשתמש בה, תקלות טכניות, או הסתמכות על התכנים המופיעים בה. השירות מסופק במתכונת "As Is".
-
-8.	רמות קושי:
-
-a.	רמות הקושי המוצגות באפליקציה (בסיסי, בינוני, גבוה, מתקדם, קיצוני) מהוות הערכה כללית בלבד, המבוססת על תדירות שימוש, מורכבות לשונית ואופי הבחינה הפסיכומטרית.
-
-b.	הסיווג הוא ממוצעי ומתאים לרוב האוכלוסייה, אולם אינו אבסולוטי: מילה המסווגת כ"קשה" עשויה להיות מוכרת היטב לחלק מהמשתמשים, ומילה המסווגת כ"קלה" עשויה להיות לא מוכרת לאחרים.
-
-c.	המפתח אינו אחראי לאי-התאמה בין רמת הקושי המוצגת באפליקציה לבין רמת הקושי הסובייקטיבית של המשתמש.
-
-9.	יצירת קשר:
-
-a.	בכל שאלה, בקשה או דיווח על תקלה בנוגע לאפליקציה או למדיניות הפרטיות, ניתן לפנות אלינו בכתובת המייל [pappostudios@gmail.com].
-                      ''',
-                      style: TextStyle(fontSize: 16),
-                      textAlign: TextAlign.right,
-                      textDirection: TextDirection.rtl,
-                    ),
-                  ),
+                clipBehavior: Clip.antiAlias,
+                child: Stack(
+                  children: [
+                    WebViewWidget(controller: _webViewController),
+                    if (_isPageLoading)
+                      const Center(child: CircularProgressIndicator()),
+                  ],
                 ),
               ),
             ),
