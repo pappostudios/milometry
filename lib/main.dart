@@ -203,18 +203,32 @@ class StreakManager {
   StreakManager._internal();
 
   final ValueNotifier<int> currentStreak = ValueNotifier(0);
-  final ValueNotifier<int> dailyGoalNotifier = ValueNotifier(10);
-  final ValueNotifier<int> todayWordsNotifier = ValueNotifier(0);
   int longestStreak = 0;
-  int todayWordsStudied = 0;
-  int dailyGoal = 10;
+
+  // Per-language daily goals + today's progress. The fire streak below stays
+  // combined across both languages.
+  final ValueNotifier<int> dailyGoalHeNotifier = ValueNotifier(10);
+  final ValueNotifier<int> dailyGoalEnNotifier = ValueNotifier(10);
+  final ValueNotifier<int> todayWordsHeNotifier = ValueNotifier(0);
+  final ValueNotifier<int> todayWordsEnNotifier = ValueNotifier(0);
 
   Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
     currentStreak.value = prefs.getInt('streak_current') ?? 0;
     longestStreak = prefs.getInt('streak_longest') ?? 0;
-    dailyGoal = prefs.getInt('daily_goal') ?? 10;
-    dailyGoalNotifier.value = dailyGoal;
+
+    // One-time migration: seed both languages from the old combined goal.
+    final int? legacyGoal = prefs.getInt('daily_goal');
+    if (legacyGoal != null) {
+      if (prefs.getInt('daily_goal_hebrew') == null) {
+        await prefs.setInt('daily_goal_hebrew', legacyGoal);
+      }
+      if (prefs.getInt('daily_goal_english') == null) {
+        await prefs.setInt('daily_goal_english', legacyGoal);
+      }
+    }
+    dailyGoalHeNotifier.value = prefs.getInt('daily_goal_hebrew') ?? 10;
+    dailyGoalEnNotifier.value = prefs.getInt('daily_goal_english') ?? 10;
 
     final String today = _dateKey(DateTime.now());
     final String yesterday =
@@ -227,18 +241,31 @@ class StreakManager {
       await prefs.setInt('streak_current', 0);
     }
 
-    todayWordsStudied = prefs.getInt('streak_today_$today') ?? 0;
-    todayWordsNotifier.value = todayWordsStudied;
+    todayWordsHeNotifier.value = prefs.getInt('streak_today_hebrew_$today') ?? 0;
+    todayWordsEnNotifier.value = prefs.getInt('streak_today_english_$today') ?? 0;
   }
 
-  Future<void> setDailyGoal(int goal) async {
-    dailyGoal = goal;
-    dailyGoalNotifier.value = goal;
+  int goalFor(String language) => language == 'english'
+      ? dailyGoalEnNotifier.value
+      : dailyGoalHeNotifier.value;
+
+  int todayWordsFor(String language) => language == 'english'
+      ? todayWordsEnNotifier.value
+      : todayWordsHeNotifier.value;
+
+  Future<void> setDailyGoal(String language, int goal) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('daily_goal', goal);
+    if (language == 'english') {
+      dailyGoalEnNotifier.value = goal;
+      await prefs.setInt('daily_goal_english', goal);
+    } else {
+      dailyGoalHeNotifier.value = goal;
+      await prefs.setInt('daily_goal_hebrew', goal);
+    }
   }
 
-  Future<void> recordStudySession(int wordsStudied) async {
+  Future<void> recordStudySession(int wordsStudied,
+      {String language = 'hebrew'}) async {
     if (wordsStudied <= 0) return;
     final prefs = await SharedPreferences.getInstance();
     final String today = _dateKey(DateTime.now());
@@ -246,12 +273,16 @@ class StreakManager {
         _dateKey(DateTime.now().subtract(const Duration(days: 1)));
     final String? lastDate = prefs.getString('streak_last_date');
 
-    // עדכון מספר מילים היום
+    // עדכון מספר מילים היום — per-language
+    final String langKey = language == 'english' ? 'english' : 'hebrew';
     final int updatedCount =
-        (prefs.getInt('streak_today_$today') ?? 0) + wordsStudied;
-    await prefs.setInt('streak_today_$today', updatedCount);
-    todayWordsStudied = updatedCount;
-    todayWordsNotifier.value = updatedCount;
+        (prefs.getInt('streak_today_${langKey}_$today') ?? 0) + wordsStudied;
+    await prefs.setInt('streak_today_${langKey}_$today', updatedCount);
+    if (langKey == 'english') {
+      todayWordsEnNotifier.value = updatedCount;
+    } else {
+      todayWordsHeNotifier.value = updatedCount;
+    }
 
     // עדכון רצף
     if (lastDate == today) {
@@ -284,6 +315,128 @@ class StreakManager {
 
   String _dateKey(DateTime d) =>
       '${d.year}${d.month.toString().padLeft(2, '0')}${d.day.toString().padLeft(2, '0')}';
+}
+
+// ==========================================
+// FAVORITES MANAGER — starred words (per uniqueId, cross-language)
+// ==========================================
+class FavoritesManager {
+  static final FavoritesManager _instance = FavoritesManager._internal();
+  factory FavoritesManager() => _instance;
+  FavoritesManager._internal();
+
+  static const String _key = 'favorite_words';
+  final Set<String> _ids = {};
+
+  // Bumped on every change so widgets can rebuild reactively.
+  final ValueNotifier<int> revision = ValueNotifier(0);
+
+  Future<void> init() async {
+    final prefs = await SharedPreferences.getInstance();
+    _ids
+      ..clear()
+      ..addAll(prefs.getStringList(_key) ?? const []);
+    revision.value++;
+  }
+
+  bool isFavorite(String uniqueId) => _ids.contains(uniqueId);
+
+  List<String> get all => _ids.toList();
+
+  int countForLanguage(String language) =>
+      _ids.where((id) => id.startsWith('${language}_')).length;
+
+  Future<void> toggle(String uniqueId) async {
+    if (!_ids.remove(uniqueId)) {
+      _ids.add(uniqueId);
+    }
+    revision.value++;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(_key, _ids.toList());
+  }
+}
+
+// A star toggle bound to FavoritesManager. Rebuilds itself on any change.
+class FavoriteStar extends StatelessWidget {
+  final String uniqueId;
+  final double size;
+  const FavoriteStar({super.key, required this.uniqueId, this.size = 26});
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<int>(
+      valueListenable: FavoritesManager().revision,
+      builder: (context, _, __) {
+        final fav = FavoritesManager().isFavorite(uniqueId);
+        return IconButton(
+          visualDensity: VisualDensity.compact,
+          padding: EdgeInsets.zero,
+          constraints: BoxConstraints(minWidth: size + 12, minHeight: size + 12),
+          tooltip: fav ? 'הסר ממועדפים' : 'הוסף למועדפים',
+          icon: Icon(
+            fav ? Icons.star_rounded : Icons.star_border_rounded,
+            color: fav ? const Color(0xFFFFC107) : Colors.grey,
+            size: size,
+          ),
+          onPressed: () => FavoritesManager().toggle(uniqueId),
+        );
+      },
+    );
+  }
+}
+
+// ==========================================
+// TEST DATE MANAGER — the user's exam date (for the home-screen countdown)
+// ==========================================
+class TestDateManager {
+  static final TestDateManager _instance = TestDateManager._internal();
+  factory TestDateManager() => _instance;
+  TestDateManager._internal();
+
+  static const String _keyMillis = 'test_date_millis';
+  static const String _keyPrompted = 'test_date_prompted';
+
+  final ValueNotifier<DateTime?> testDate = ValueNotifier(null);
+
+  Future<void> init() async {
+    final prefs = await SharedPreferences.getInstance();
+    final millis = prefs.getInt(_keyMillis);
+    testDate.value =
+        millis == null ? null : DateTime.fromMillisecondsSinceEpoch(millis);
+  }
+
+  Future<void> setDate(DateTime date) async {
+    testDate.value = date;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_keyMillis, date.millisecondsSinceEpoch);
+  }
+
+  Future<void> clear() async {
+    testDate.value = null;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_keyMillis);
+  }
+
+  Future<bool> wasPrompted() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_keyPrompted) ?? false;
+  }
+
+  Future<void> markPrompted() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keyPrompted, true);
+  }
+
+  // Whole days from today (midnight) until the test date; null if unset or past.
+  int? get daysRemaining {
+    final d = testDate.value;
+    if (d == null) return null;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final target = DateTime(d.year, d.month, d.day);
+    final diff = target.difference(today).inDays;
+    return diff >= 0 ? diff : null;
+  }
 }
 
 // ==========================================
@@ -652,6 +805,41 @@ class ProgressManager {
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
     _loadFromDisk();
+    await _migrateIdsIfNeeded();
+  }
+
+  // One-time migration: the word bank's ids were reassigned (opaque, no
+  // unit/order encoding) to decouple it from the source course structure.
+  // Existing installs need their saved progress keys remapped so no
+  // streak/status data is lost.
+  Future<void> _migrateIdsIfNeeded() async {
+    const flagKey = 'id_migration_v2_done';
+    if (_prefs?.getBool(flagKey) == true) return;
+
+    try {
+      final raw = await rootBundle.loadString('assets/id_migration.json');
+      final Map<String, dynamic> migration = json.decode(raw);
+      bool changed = false;
+
+      for (final lang in migration.keys) {
+        final Map<String, dynamic> langMap = migration[lang];
+        for (final entry in langMap.entries) {
+          final oldKey = '${lang}_${entry.key}';
+          final newKey = '${lang}_${entry.value}';
+          final value = _cache.remove(oldKey);
+          if (value != null) {
+            _cache[newKey] = value;
+            changed = true;
+          }
+        }
+      }
+
+      if (changed) await _saveToDisk();
+    } catch (_) {
+      // Migration asset missing/unreadable — leave progress as-is rather
+      // than risk losing it.
+    }
+    await _prefs?.setBool(flagKey, true);
   }
 
   void _loadFromDisk() {
@@ -884,6 +1072,16 @@ void main() async {
       await StreakManager().init();
     } catch (e) {
       debugPrint('StreakManager init error: $e');
+    }
+    try {
+      await FavoritesManager().init();
+    } catch (e) {
+      debugPrint('FavoritesManager init error: $e');
+    }
+    try {
+      await TestDateManager().init();
+    } catch (e) {
+      debugPrint('TestDateManager init error: $e');
     }
 
     final prefs = await SharedPreferences.getInstance();
@@ -1690,6 +1888,64 @@ class _HomeScreenState extends State<HomeScreen>
     Future.delayed(const Duration(milliseconds: 400), () {
       if (mounted) _buttonsController.forward();
     });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _maybeShowUnitsReorganizedNotice();
+      await _maybeAskTestDate();
+    });
+  }
+
+  // One-time prompt asking for the user's exam date. Sets the "prompted"
+  // flag whether or not they choose a date, so it never reappears.
+  Future<void> _maybeAskTestDate() async {
+    if (await TestDateManager().wasPrompted()) return;
+    await TestDateManager().markPrompted();
+    if (!mounted) return;
+
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      helpText: 'מתי המבחן שלך?',
+      firstDate: now,
+      lastDate: now.add(const Duration(days: 365 * 3)),
+      initialDate: now.add(const Duration(days: 30)),
+    );
+    if (picked != null) {
+      await TestDateManager().setDate(picked);
+    }
+  }
+
+  // One-time notice shown after the units-reorganization update — the
+  // word bank's unit assignments were reshuffled to decouple them from
+  // the source course structure, so a word's unit number may have
+  // changed even though its progress is fully preserved.
+  Future<void> _maybeShowUnitsReorganizedNotice() async {
+    final prefs = await SharedPreferences.getInstance();
+    const flagKey = 'units_reorganized_notice_shown';
+    if (prefs.getBool(flagKey) == true) return;
+    await prefs.setBool(flagKey, true);
+
+    if (!mounted) return;
+    await showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('עדכון ביחידות המילים'),
+        content: const Text(
+          'שיפרנו את מנגנון יחידות המילים באפליקציה! סידרנו מחדש את היחידות '
+          'כדי שהלימוד שלכם יהיה יעיל והגיוני יותר. אל דאגה – כל המילים '
+          'שכבר למדתם נשמרו ויסומנו ככאלה לאורך כל הדרך.\n\n'
+          'ההבדל היחיד: מילה שאולי הופיעה לכם ביחידה 1, עכשיו עברה ליחידה 7, '
+          'ההתקדמות שלכם נשמרה.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('הבנתי'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -1988,6 +2244,40 @@ class _HomeScreenState extends State<HomeScreen>
                   ),
                 ),
 
+                // ── Test-date countdown (conditional) ──
+                ValueListenableBuilder<DateTime?>(
+                  valueListenable: TestDateManager().testDate,
+                  builder: (context, _, __) {
+                    final days = TestDateManager().daysRemaining;
+                    if (days == null) return const SizedBox.shrink();
+                    final label = days == 0
+                        ? 'המבחן היום! בהצלחה 🎯'
+                        : 'נותרו $days ימים למבחן 📅';
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Center(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: kBluePrimary.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(999),
+                            border: Border.all(
+                                color: kBluePrimary.withValues(alpha: 0.3)),
+                          ),
+                          child: Text(
+                            label,
+                            style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: kBluePrimary),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+
                 // ── Mascot + speech bubble ──
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -2098,6 +2388,9 @@ class _UnitSelectorScreenState extends State<UnitSelectorScreen> {
   int kachaKachaCount = 0;
   int muvvanCount = 0;
 
+  String get _language =>
+      widget.jsonPath.contains('hebrew') ? 'hebrew' : 'english';
+
   @override
   void initState() {
     super.initState();
@@ -2194,7 +2487,44 @@ class _UnitSelectorScreenState extends State<UnitSelectorScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.title)),
+      appBar: AppBar(
+        title: Text(widget.title),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(left: 12, right: 4),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(999),
+              onTap: () async {
+                await Navigator.push(
+                    context,
+                    _slideRoute(
+                        WordSearchScreen(jsonPath: widget.jsonPath)));
+                _loadCounts();
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white54
+                          : Colors.black,
+                      width: 1),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.search, size: 18),
+                    SizedBox(width: 5),
+                    Text('חיפוש מילה', style: TextStyle(fontSize: 13)),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
@@ -2281,8 +2611,264 @@ class _UnitSelectorScreenState extends State<UnitSelectorScreen> {
                     _loadCounts();
                   },
                 ),
+
+                // ── המילים המועדפות (conditional) ─────────────────────
+                ValueListenableBuilder<int>(
+                  valueListenable: FavoritesManager().revision,
+                  builder: (context, _, __) {
+                    final favCount =
+                        FavoritesManager().countForLanguage(_language);
+                    if (favCount == 0) return const SizedBox.shrink();
+                    return _modeButton(
+                      title: 'המילים המועדפות',
+                      subtitle: '$favCount מילים ששמרת',
+                      icon: Icons.star_rounded,
+                      colors: const [Color(0xFFFFC107), Color(0xFFFF8F00)],
+                      onTap: () async {
+                        await Navigator.push(
+                            context,
+                            _slideRoute(LearningScreen(
+                                jsonPath: widget.jsonPath,
+                                onlyFavorites: true)));
+                        _loadCounts();
+                      },
+                    );
+                  },
+                ),
               ],
             ),
+    );
+  }
+}
+
+// ==========================================
+// 9a2. Word Search Screen
+// ==========================================
+class WordSearchScreen extends StatefulWidget {
+  final String jsonPath;
+  const WordSearchScreen({super.key, required this.jsonPath});
+
+  @override
+  State<WordSearchScreen> createState() => _WordSearchScreenState();
+}
+
+class _WordSearchScreenState extends State<WordSearchScreen> {
+  final TextEditingController _controller = TextEditingController();
+  List<Word> _allWords = [];
+  final Map<String, int> _tierByUniqueId = {}; // uniqueId → level 1-5
+  bool _isLoading = true;
+  String _query = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadData() async {
+    try {
+      final String response = await rootBundle.loadString(widget.jsonPath);
+      final data = json.decode(response);
+      final list = data['words'] as List;
+      final words = list.map((w) => Word.fromJson(w)).toList();
+
+      // Build the uniqueId → difficulty-tier map from the 5 level files.
+      final prefix = widget.jsonPath.contains('hebrew') ? 'heb' : 'eng';
+      for (int lvl = 1; lvl <= 5; lvl++) {
+        try {
+          final lvlRaw = await rootBundle
+              .loadString('assets/levels/${prefix}_level_$lvl.json');
+          final lvlData = json.decode(lvlRaw);
+          for (final w in (lvlData['words'] as List)) {
+            final word = Word.fromJson(w);
+            _tierByUniqueId[word.uniqueId] = lvl;
+          }
+        } catch (_) {
+          // Missing level file — skip; tier will show as unknown.
+        }
+      }
+
+      if (!mounted) return;
+      setState(() {
+        _allWords = words;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+    }
+  }
+
+  // Strips Hebrew niqqud (vowel points, cantillation marks) so searching
+  // "אבניים" matches a stored term like "אָבְנַיִים".
+  String _stripNiqqud(String s) {
+    final buffer = StringBuffer();
+    for (final rune in s.runes) {
+      if (rune >= 0x0591 && rune <= 0x05C7) continue;
+      buffer.writeCharCode(rune);
+    }
+    return buffer.toString();
+  }
+
+  List<Word> get _results {
+    final q = _stripNiqqud(_query.trim());
+    if (q.isEmpty) return const [];
+    return _allWords
+        .where((w) =>
+            _stripNiqqud(w.term).contains(q) ||
+            _stripNiqqud(w.translation).contains(q))
+        .take(60)
+        .toList();
+  }
+
+  ({String label, IconData icon, Color color}) _statusInfo(Word word) {
+    final progress = ProgressManager().getWordProgress(word.uniqueId);
+    final status = progress?['word_status'] ?? '';
+    switch (status) {
+      case 'muvvan':
+        return (label: 'מובן', icon: Icons.check_circle, color: kEasyGreen);
+      case 'kacha_kacha':
+        return (
+          label: 'ככה ככה',
+          icon: Icons.adjust,
+          color: const Color(0xFFFFB800)
+        );
+      case 'lo_hevanti':
+        return (label: 'לא הבנתי', icon: Icons.cancel, color: kAgainRed);
+      default:
+        return (
+          label: 'לא סומן',
+          icon: Icons.remove_circle_outline,
+          color: Colors.grey
+        );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final results = _results;
+    return Scaffold(
+      appBar: AppBar(title: const Text('חיפוש מילה')),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            child: TextField(
+              controller: _controller,
+              autofocus: true,
+              onChanged: (v) => setState(() => _query = v),
+              decoration: InputDecoration(
+                hintText: 'הקלד מילה או תרגום...',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: _query.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          _controller.clear();
+                          setState(() => _query = '');
+                        },
+                      )
+                    : null,
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16)),
+              ),
+            ),
+          ),
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _query.trim().isEmpty
+                    ? const Center(
+                        child: Text('התחל להקליד כדי לחפש',
+                            style:
+                                TextStyle(color: Colors.grey, fontSize: 15)))
+                    : results.isEmpty
+                        ? const Center(
+                            child: Text('לא נמצאו מילים',
+                                style: TextStyle(
+                                    color: Colors.grey, fontSize: 15)))
+                        : ListView.separated(
+                            itemCount: results.length,
+                            separatorBuilder: (c, i) =>
+                                const Divider(height: 1),
+                            itemBuilder: (context, index) {
+                              final word = results[index];
+                              final st = _statusInfo(word);
+                              final tier = _tierByUniqueId[word.uniqueId];
+                              final tierLabel = tier != null
+                                  ? _kLevelMeta[tier - 1].label
+                                  : 'לא סווג';
+                              return ListTile(
+                                title: Directionality(
+                                  textDirection: word.language == 'english'
+                                      ? TextDirection.ltr
+                                      : TextDirection.rtl,
+                                  child: Text(word.term,
+                                      textAlign: word.language == 'english'
+                                          ? TextAlign.left
+                                          : TextAlign.right,
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 17)),
+                                ),
+                                subtitle: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  children: [
+                                    Text(word.translation),
+                                    const SizedBox(height: 4),
+                                    Wrap(
+                                      spacing: 6,
+                                      runSpacing: 4,
+                                      children: [
+                                        _chip(Icons.layers_rounded,
+                                            'יחידה ${word.unitNumber}'),
+                                        _chip(Icons.bar_chart_rounded,
+                                            tierLabel),
+                                        _chip(st.icon, st.label,
+                                            color: st.color),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                onTap: () async {
+                                  await Navigator.push(context,
+                                      _slideRoute(SingleCardScreen(word: word)));
+                                  setState(() {});
+                                },
+                              );
+                            },
+                          ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _chip(IconData icon, String label, {Color? color}) {
+    final c = color ?? Colors.blueGrey;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: c.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: c),
+          const SizedBox(width: 4),
+          Text(label,
+              style: TextStyle(
+                  fontSize: 11, color: c, fontWeight: FontWeight.w600)),
+        ],
+      ),
     );
   }
 }
@@ -2764,7 +3350,8 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
     final rest = <Word>[];
     for (final w in filteredWords) {
       final status = wordStatuses[w.uniqueId] ?? '';
-      final isMatch = _sortMode == 'not_studied' ? status.isEmpty : status == _sortMode;
+      final isMatch =
+          _sortMode == 'not_studied' ? status.isEmpty : status == _sortMode;
       (isMatch ? matching : rest).add(w);
     }
     return [...matching, ...rest];
@@ -2875,6 +3462,7 @@ class _VocabularyListScreenState extends State<VocabularyListScreen> {
 
                 return ListTile(
                   leading: _statusIcon(word),
+                  trailing: FavoriteStar(uniqueId: word.uniqueId, size: 24),
                   title: Hero(
                     tag: word.uniqueId,
                     child: Material(
@@ -2978,6 +3566,7 @@ class LearningScreen extends StatefulWidget {
   final int? unitFilter;
   final bool onlyFailed;
   final bool onlyKachaKacha;
+  final bool onlyFavorites;
 
   const LearningScreen({
     super.key,
@@ -2985,6 +3574,7 @@ class LearningScreen extends StatefulWidget {
     this.unitFilter,
     this.onlyFailed = false,
     this.onlyKachaKacha = false,
+    this.onlyFavorites = false,
   });
 
   @override
@@ -3076,20 +3666,28 @@ class _LearningScreenState extends State<LearningScreen>
         continue;
       }
 
+      if (widget.onlyFavorites) {
+        if (FavoritesManager().isFavorite(w.uniqueId)) {
+          sessionWords.add(w);
+          filteredTotal.add(w);
+        }
+        continue;
+      }
+
       filteredTotal.add(w);
       if (w.nextReview.isBefore(DateTime.now()) || w.repetitions == 0) {
         sessionWords.add(w);
       }
     }
 
-    if (widget.onlyFailed || widget.onlyKachaKacha) {
+    if (widget.onlyFailed || widget.onlyKachaKacha || widget.onlyFavorites) {
       sessionWords.shuffle();
     } else {
       sessionWords.sort((a, b) => a.nextReview.compareTo(b.nextReview));
     }
 
     int startIndex = 0;
-    if (!widget.onlyFailed && !widget.onlyKachaKacha) {
+    if (!widget.onlyFailed && !widget.onlyKachaKacha && !widget.onlyFavorites) {
       final prefs = await SharedPreferences.getInstance();
       final String? lastWordId = prefs.getString('last_session_word_id');
       if (lastWordId != null && sessionWords.isNotEmpty) {
@@ -3195,7 +3793,9 @@ class _LearningScreenState extends State<LearningScreen>
     );
 
     _wordsStudiedThisSession++;
-    if (isPositive) StreakManager().recordStudySession(1);
+    if (isPositive) {
+      StreakManager().recordStudySession(1, language: word.language);
+    }
 
     setState(() {
       studySession.removeAt(_currentIndex);
@@ -3331,7 +3931,13 @@ class _LearningScreenState extends State<LearningScreen>
                         fontWeight: FontWeight.w800,
                         color: kBluePrimary)),
               ),
-              _buildDifficultyBadge(word.difficulty),
+              Row(
+                children: [
+                  FavoriteStar(uniqueId: word.uniqueId, size: 24),
+                  const SizedBox(width: 4),
+                  _buildDifficultyBadge(word.difficulty),
+                ],
+              ),
             ],
           ),
           // Word — centered, big
@@ -3576,7 +4182,9 @@ class _LearningScreenState extends State<LearningScreen>
         ? 'חזרה על שגיאות'
         : widget.onlyKachaKacha
             ? 'תרגול ככה ככה'
-            : 'יחידה ${widget.unitFilter ?? 'כללי'}';
+            : widget.onlyFavorites
+                ? 'המילים המועדפות'
+                : 'יחידה ${widget.unitFilter ?? 'כללי'}';
     final displayTotal = _deckSize > 0 ? _deckSize : studySession.length;
     final displayCurrent = _outcomes.length + 1;
 
@@ -3845,15 +4453,9 @@ class _SessionDoneScreenState extends State<SessionDoneScreen> {
                     ],
                   ),
                   const SizedBox(height: 40),
-                  // "סבב נוסף" button
+                  // "חזרה למסך הבית" button
                   AnimatedButton(
-                    onTap: () => Navigator.pushReplacement(
-                      context,
-                      _slideRoute(LearningScreen(
-                        jsonPath: widget.jsonPath,
-                        unitFilter: widget.unitFilter,
-                      )),
-                    ),
+                    onTap: () => Navigator.popUntil(context, (r) => r.isFirst),
                     child: Container(
                       height: 58,
                       width: double.infinity,
@@ -3868,7 +4470,7 @@ class _SessionDoneScreenState extends State<SessionDoneScreen> {
                         ],
                       ),
                       child: const Center(
-                        child: Text('סבב נוסף',
+                        child: Text('חזרה למסך הבית',
                             style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 17,
@@ -3877,9 +4479,19 @@ class _SessionDoneScreenState extends State<SessionDoneScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  // "חזרה לבית" button
+                  // "המשך תרגול" button — back to this language's practices menu
                   AnimatedButton(
-                    onTap: () => Navigator.popUntil(context, (r) => r.isFirst),
+                    onTap: () {
+                      final title =
+                          widget.jsonPath.contains('hebrew') ? 'עברית' : 'אנגלית';
+                      Navigator.of(context).popUntil((r) => r.isFirst);
+                      Navigator.of(context).push(
+                        _slideRoute(UnitSelectorScreen(
+                          jsonPath: widget.jsonPath,
+                          title: title,
+                        )),
+                      );
+                    },
                     child: Container(
                       height: 52,
                       width: double.infinity,
@@ -3892,7 +4504,7 @@ class _SessionDoneScreenState extends State<SessionDoneScreen> {
                         ),
                       ),
                       child: Center(
-                        child: Text('חזרה לבית',
+                        child: Text('המשך תרגול',
                             style: TextStyle(
                                 color: isDark
                                     ? Colors.white
@@ -4175,14 +4787,15 @@ class _MuvvanSelectorScreenState extends State<MuvvanSelectorScreen> {
             title: 'תרגול לפי רמת קושי',
             subtitle: '5 רמות — רק המילים שהבנת',
             colors: const [Color(0xFF7A3DFD), Color(0xFF3D8BFD)],
-            onTap: () => Navigator.push(context,
-                _slideRoute(MuvvanByLevelScreen(langPrefix: prefix))),
+            onTap: () => Navigator.push(
+                context, _slideRoute(MuvvanByLevelScreen(langPrefix: prefix))),
           ),
           const SizedBox(height: 10),
           _optionButton(
             icon: Icons.restart_alt_rounded,
             title: 'אפס תרגול חוזר',
-            subtitle: 'פעולה זאת מאפסת רק את התרגול החוזר ולא את ההתקדמות שלך במילון',
+            subtitle:
+                'פעולה זאת מאפסת רק את התרגול החוזר ולא את ההתקדמות שלך במילון',
             colors: [Colors.grey.shade600, Colors.grey.shade800],
             onTap: () => Navigator.push(
                 context,
@@ -4320,8 +4933,8 @@ class _MuvvanByUnitScreenState extends State<MuvvanByUnitScreen> {
                       onTap: () async {
                         await Navigator.push(
                             context,
-                            _slideRoute(MuvvanReviewScreen(
-                                jsonPath: widget.jsonPath)));
+                            _slideRoute(
+                                MuvvanReviewScreen(jsonPath: widget.jsonPath)));
                         _loadData();
                       },
                     ),
@@ -4424,7 +5037,8 @@ class _MuvvanByLevelScreenState extends State<MuvvanByLevelScreen> {
           final progress = ProgressManager().getWordProgress(word.uniqueId);
           final status =
               progress != null ? (progress['word_status'] ?? '') : '';
-          final repeatDone = ProgressManager().isMuvvanRepeatDone(word.uniqueId);
+          final repeatDone =
+              ProgressManager().isMuvvanRepeatDone(word.uniqueId);
           if (status == 'muvvan' && !repeatDone) count++;
         }
         _counts[lvl - 1] = count;
@@ -4454,10 +5068,8 @@ class _MuvvanByLevelScreenState extends State<MuvvanByLevelScreen> {
                   onTap: count == 0
                       ? () {}
                       : () async {
-                          await Navigator.push(
-                              context,
-                              _slideRoute(
-                                  MuvvanReviewScreen(jsonPath: path)));
+                          await Navigator.push(context,
+                              _slideRoute(MuvvanReviewScreen(jsonPath: path)));
                           _loadCounts();
                         },
                   child: Opacity(
@@ -4536,7 +5148,8 @@ class _MuvvanByLevelScreenState extends State<MuvvanByLevelScreen> {
 class MuvvanReviewScreen extends StatefulWidget {
   final String jsonPath;
   final int? unitFilter;
-  const MuvvanReviewScreen({super.key, required this.jsonPath, this.unitFilter});
+  const MuvvanReviewScreen(
+      {super.key, required this.jsonPath, this.unitFilter});
 
   @override
   State<MuvvanReviewScreen> createState() => _MuvvanReviewScreenState();
@@ -4574,7 +5187,8 @@ class _MuvvanReviewScreenState extends State<MuvvanReviewScreen> {
       }
       final progress = ProgressManager().getWordProgress(w.uniqueId);
       final status = progress != null ? (progress['word_status'] ?? '') : '';
-      return status == 'muvvan' && !ProgressManager().isMuvvanRepeatDone(w.uniqueId);
+      return status == 'muvvan' &&
+          !ProgressManager().isMuvvanRepeatDone(w.uniqueId);
     }).toList();
     filtered.shuffle();
 
@@ -4662,7 +5276,8 @@ class _MuvvanReviewScreenState extends State<MuvvanReviewScreen> {
                       color: isDark ? const Color(0xFF1E2232) : Colors.white,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                          color: kEasyGreen.withValues(alpha: 0.45), width: 1.5),
+                          color: kEasyGreen.withValues(alpha: 0.45),
+                          width: 1.5),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withValues(alpha: 0.06),
@@ -4774,8 +5389,8 @@ class MuvvanReviewDoneScreen extends StatelessWidget {
                   Text(
                       'תרגלת מחדש את כל המילים שהבנת! הרשימה התאפסה כדי שתוכל להתחיל סבב חדש.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                          fontSize: 14, color: Colors.grey.shade600)),
+                      style:
+                          TextStyle(fontSize: 14, color: Colors.grey.shade600)),
                 ],
                 const SizedBox(height: 28),
                 SizedBox(
@@ -4808,8 +5423,7 @@ class MuvvanResetScopeScreen extends StatefulWidget {
       {super.key, required this.jsonPath, required this.langPrefix});
 
   @override
-  State<MuvvanResetScopeScreen> createState() =>
-      _MuvvanResetScopeScreenState();
+  State<MuvvanResetScopeScreen> createState() => _MuvvanResetScopeScreenState();
 }
 
 class _MuvvanResetScopeScreenState extends State<MuvvanResetScopeScreen> {
@@ -4840,9 +5454,7 @@ class _MuvvanResetScopeScreenState extends State<MuvvanResetScopeScreen> {
 
     for (final w in allWords) {
       if (!greenIds.contains(w.uniqueId)) continue;
-      _unitGreenIds
-          .putIfAbsent(w.unitNumber, () => {})
-          .add(w.uniqueId);
+      _unitGreenIds.putIfAbsent(w.unitNumber, () => {}).add(w.uniqueId);
     }
 
     for (int lvl = 1; lvl <= 5; lvl++) {
@@ -4924,7 +5536,8 @@ class _MuvvanResetScopeScreenState extends State<MuvvanResetScopeScreen> {
                       subtitle: Text('$_totalMuvvan מילים'),
                       onTap: () => _confirmAndReset(
                         title: 'איפוס כל המילים שהבנת',
-                        message: 'לאפס את התרגול החוזר לכל $_totalMuvvan המילים שהבנת?',
+                        message:
+                            'לאפס את התרגול החוזר לכל $_totalMuvvan המילים שהבנת?',
                       ),
                     ),
                     if (_unitGreenIds.isNotEmpty) ...[
@@ -5094,7 +5707,18 @@ class _SingleCardScreenState extends State<SingleCardScreen> {
               offset: const Offset(0, 8))
         ],
       ),
-      child: Column(
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          if (isFront)
+            Align(
+              alignment: Alignment.topLeft,
+              child: Padding(
+                padding: const EdgeInsets.all(6),
+                child: FavoriteStar(uniqueId: word.uniqueId, size: 28),
+              ),
+            ),
+          Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
@@ -5146,6 +5770,8 @@ class _SingleCardScreenState extends State<SingleCardScreen> {
                           color: textColor)),
                 )),
           ]
+        ],
+          ),
         ],
       ),
     );
@@ -5294,6 +5920,91 @@ class AboutScreen extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ==========================================
+// FAQ Screen
+// ==========================================
+class _FaqItem {
+  final String question;
+  final String answer;
+  const _FaqItem(this.question, this.answer);
+}
+
+class FaqScreen extends StatelessWidget {
+  const FaqScreen({super.key});
+
+  static const List<_FaqItem> _items = [
+    _FaqItem(
+      "מה קרה להתקדמות המילים שהייתה לי?",
+      "התקדמות המילים שלכם נשמרה, אך סדר המילים השתנה לאור החלטה מקצועית "
+          "שלנו למיין את המילים בצורה הגיונית יותר שתאפשר למידה יותר "
+          "איכותית. לדוגמא: אם מילה שסומנה כמובנת הופיעה לכם "
+          "ביחידה מספר 1, היא עכשיו הועברה ליחידה מספר 7 וכו'. סדר המילים "
+          "לפי רמות הקושי לא השתנה כלל.",
+    ),
+    _FaqItem(
+      "המילים שנמצאות ברמות הקושי וביחידות אלו אותן מילים?",
+      "כן, אלו אותן מילים רק דרך הלמידה שונה.",
+    ),
+    _FaqItem(
+      "מה קורה להתקדמות שלי אם אני מוחק/ת את האפליקציה?",
+      "מכיוון שהאפליקציה לא שומרת את זיכרון המשתמש באופן חיצוני לצערנו "
+          "התקדמותכם תמחק ואין איך לשחזר אותה.",
+    ),
+    _FaqItem(
+      "האם אלו כל המילים שאני צריך ללמוד למבחן?",
+      "אין ביכולתנו להבטיח כי כל המילים הדרושות למבחן קיימות באפליקציה, "
+          "אך כן קיימות אלפי מילים אשר נפוצות במבחן הפסיכומטרי.",
+    ),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("שאלות נפוצות")),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          for (final item in _items)
+            Card(
+              margin: const EdgeInsets.only(bottom: 12),
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: Theme.of(context).dividerColor),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: ExpansionTile(
+                title: Text(
+                  item.question,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                expandedCrossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.answer,
+                    style: const TextStyle(fontSize: 15, height: 1.5),
+                  ),
+                ],
+              ),
+            ),
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: () => showContactOptions(context),
+            icon: const Icon(Icons.quiz_outlined),
+            label: const Text("יש לכם שאלה שלא מופיעה כאן?"),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30)),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -5638,7 +6349,11 @@ class _StreakScreenState extends State<StreakScreen> {
     if (mounted) setState(() => _activity = activity);
   }
 
-  void _showGoalPicker(BuildContext context) {
+  void _showGoalPicker(BuildContext context, String language) {
+    final goalNotifier = language == 'english'
+        ? StreakManager().dailyGoalEnNotifier
+        : StreakManager().dailyGoalHeNotifier;
+    final langLabel = language == 'english' ? 'אנגלית' : 'עברית';
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -5646,7 +6361,7 @@ class _StreakScreenState extends State<StreakScreen> {
       ),
       builder: (ctx) {
         return ValueListenableBuilder<int>(
-          valueListenable: StreakManager().dailyGoalNotifier,
+          valueListenable: goalNotifier,
           builder: (_, currentGoal, __) {
             return Padding(
               padding: const EdgeInsets.fromLTRB(24, 20, 24, 40),
@@ -5654,9 +6369,10 @@ class _StreakScreenState extends State<StreakScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'יעד יומי',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  Text(
+                    'יעד יומי — $langLabel',
+                    style: const TextStyle(
+                        fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 6),
                   const Text(
@@ -5671,7 +6387,7 @@ class _StreakScreenState extends State<StreakScreen> {
                       final selected = goal == currentGoal;
                       return GestureDetector(
                         onTap: () async {
-                          await StreakManager().setDailyGoal(goal);
+                          await StreakManager().setDailyGoal(language, goal);
                           if (mounted) setState(() {});
                           if (ctx.mounted) Navigator.pop(ctx);
                         },
@@ -5721,7 +6437,8 @@ class _StreakScreenState extends State<StreakScreen> {
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
-                      onPressed: () => _showManualGoalDialog(ctx, currentGoal),
+                      onPressed: () =>
+                          _showManualGoalDialog(ctx, language, currentGoal),
                       icon: const Icon(Icons.edit_rounded, size: 18),
                       label: const Text('ערוך יעד מותאם אישית'),
                       style: OutlinedButton.styleFrom(
@@ -5742,7 +6459,8 @@ class _StreakScreenState extends State<StreakScreen> {
     );
   }
 
-  void _showManualGoalDialog(BuildContext context, int currentGoal) {
+  void _showManualGoalDialog(
+      BuildContext context, String language, int currentGoal) {
     final controller = TextEditingController(text: '$currentGoal');
     showDialog(
       context: context,
@@ -5772,7 +6490,7 @@ class _StreakScreenState extends State<StreakScreen> {
                   );
                   return;
                 }
-                await StreakManager().setDailyGoal(goal);
+                await StreakManager().setDailyGoal(language, goal);
                 if (mounted) setState(() {});
                 if (dialogCtx.mounted) Navigator.pop(dialogCtx);
                 if (context.mounted) Navigator.pop(context);
@@ -5846,22 +6564,33 @@ class _StreakScreenState extends State<StreakScreen> {
           const SizedBox(height: 20),
 
           // שורת סטטיסטיקות
+          _statCard(
+            isDark: isDark,
+            icon: Icons.emoji_events_rounded,
+            iconColor: Colors.amber,
+            label: 'שיא אישי',
+            value: '$longest ימים',
+          ),
+          const SizedBox(height: 14),
           Row(
             children: [
               Expanded(
-                  child: _statCard(
-                isDark: isDark,
-                icon: Icons.emoji_events_rounded,
-                iconColor: Colors.amber,
-                label: 'שיא אישי',
-                value: '$longest ימים',
-              )),
+                child: ValueListenableBuilder<int>(
+                  valueListenable: StreakManager().todayWordsHeNotifier,
+                  builder: (_, todayWords, __) => _goalCard(
+                      isDark: isDark,
+                      language: 'hebrew',
+                      todayWords: todayWords),
+                ),
+              ),
               const SizedBox(width: 14),
               Expanded(
                 child: ValueListenableBuilder<int>(
-                  valueListenable: StreakManager().todayWordsNotifier,
-                  builder: (_, todayWords, __) =>
-                      _goalCard(isDark: isDark, todayWords: todayWords),
+                  valueListenable: StreakManager().todayWordsEnNotifier,
+                  builder: (_, todayWords, __) => _goalCard(
+                      isDark: isDark,
+                      language: 'english',
+                      todayWords: todayWords),
                 ),
               ),
             ],
@@ -6055,14 +6784,21 @@ class _StreakScreenState extends State<StreakScreen> {
     );
   }
 
-  Widget _goalCard({required bool isDark, required int todayWords}) {
+  Widget _goalCard(
+      {required bool isDark,
+      required String language,
+      required int todayWords}) {
+    final goalNotifier = language == 'english'
+        ? StreakManager().dailyGoalEnNotifier
+        : StreakManager().dailyGoalHeNotifier;
+    final langLabel = language == 'english' ? 'אנגלית' : 'עברית';
     return ValueListenableBuilder<int>(
-      valueListenable: StreakManager().dailyGoalNotifier,
+      valueListenable: goalNotifier,
       builder: (_, goal, __) {
         final progress = (todayWords / goal).clamp(0.0, 1.0);
         final done = todayWords >= goal;
         return GestureDetector(
-          onTap: () => _showGoalPicker(context),
+          onTap: () => _showGoalPicker(context, language),
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -6118,7 +6854,7 @@ class _StreakScreenState extends State<StreakScreen> {
                       fontSize: 22, fontWeight: FontWeight.bold),
                 ),
                 Text(
-                  'יעד יומי',
+                  'יעד יומי · $langLabel',
                   style: TextStyle(
                       fontSize: 12,
                       color: isDark ? Colors.white54 : Colors.grey),
@@ -6129,6 +6865,77 @@ class _StreakScreenState extends State<StreakScreen> {
         );
       },
     );
+  }
+}
+
+// ==========================================
+// Contact options (email / Instagram) — shared by Settings and the FAQ screen
+// ==========================================
+const String _supportEmail = "pappostudios@gmail.com";
+
+void showContactOptions(BuildContext context) {
+  showModalBottomSheet(
+    context: context,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (context) {
+      return SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.email_outlined, color: Colors.blue),
+              title: const Text("שלח אימייל"),
+              onTap: () {
+                Navigator.pop(context);
+                launchSupportEmail(context);
+              },
+            ),
+            ListTile(
+              leading:
+                  const Icon(Icons.camera_alt_outlined, color: Colors.purple),
+              title: const Text("הודעה באינסטגרם"),
+              onTap: () {
+                Navigator.pop(context);
+                launchSupportInstagram(context);
+              },
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
+
+Future<void> launchSupportEmail(BuildContext context) async {
+  final Uri emailLaunchUri = Uri(
+    scheme: 'mailto',
+    path: _supportEmail,
+    query: 'subject=פניה בנושא אפליקציית מילומטרי',
+  );
+  if (!await launchUrl(emailLaunchUri)) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("לא הצלחנו לפתוח את אפליקציית המייל")),
+    );
+  }
+}
+
+Future<void> launchSupportInstagram(BuildContext context) async {
+  const String username = "pappo_studios";
+  final Uri nativeUrl = Uri.parse("instagram://user?username=$username");
+  final Uri webUrl = Uri.parse("https://www.instagram.com/$username");
+  try {
+    if (!await launchUrl(nativeUrl, mode: LaunchMode.externalApplication)) {
+      throw Exception('Could not launch native app');
+    }
+  } catch (e) {
+    if (!await launchUrl(webUrl, mode: LaunchMode.externalApplication)) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("לא הצלחנו לפתוח את האינסטגרם")),
+      );
+    }
   }
 }
 
@@ -6146,7 +6953,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   double ttsSpeed = 0.5;
   String _currentDetermination = "";
   bool _notificationsEnabled = true;
-  final String _email = "pappostudios@gmail.com";
 
   @override
   void initState() {
@@ -6190,70 +6996,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() => ttsSpeed = newSpeed);
   }
 
-  void _showContactOptions() {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return SafeArea(
-          child: Wrap(
-            children: [
-              ListTile(
-                leading: const Icon(Icons.email_outlined, color: Colors.blue),
-                title: const Text("שלח אימייל"),
-                onTap: () {
-                  Navigator.pop(context);
-                  _launchEmail();
-                },
-              ),
-              ListTile(
-                leading:
-                    const Icon(Icons.camera_alt_outlined, color: Colors.purple),
-                title: const Text("הודעה באינסטגרם"),
-                onTap: () {
-                  Navigator.pop(context);
-                  _launchInstagram();
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Future<void> _launchEmail() async {
-    final Uri emailLaunchUri = Uri(
-      scheme: 'mailto',
-      path: _email,
-      query: 'subject=פניה בנושא אפליקציית מילומטרי',
-    );
-    if (!await launchUrl(emailLaunchUri)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("לא הצלחנו לפתוח את אפליקציית המייל")),
-      );
-    }
-  }
-
-  Future<void> _launchInstagram() async {
-    const String username = "pappo_studios";
-    final Uri nativeUrl = Uri.parse("instagram://user?username=$username");
-    final Uri webUrl = Uri.parse("https://www.instagram.com/$username");
-    try {
-      if (!await launchUrl(nativeUrl, mode: LaunchMode.externalApplication)) {
-        throw Exception('Could not launch native app');
-      }
-    } catch (e) {
-      if (!await launchUrl(webUrl, mode: LaunchMode.externalApplication)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("לא הצלחנו לפתוח את האינסטגרם")),
-        );
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     bool isDark = Theme.of(context).brightness == Brightness.dark;
@@ -6287,6 +7029,41 @@ class _SettingsScreenState extends State<SettingsScreen> {
             secondary: Icon(isDark ? Icons.dark_mode : Icons.light_mode),
             value: isDark,
             onChanged: (val) => ThemeManager().toggleTheme(),
+          ),
+          ValueListenableBuilder<DateTime?>(
+            valueListenable: TestDateManager().testDate,
+            builder: (context, date, __) {
+              final subtitle = date == null
+                  ? "לא הוגדר"
+                  : "${date.day}/${date.month}/${date.year}";
+              return ListTile(
+                leading: const Icon(Icons.event, color: Colors.blue),
+                title: const Text("תאריך המבחן"),
+                subtitle: Text(subtitle),
+                trailing: date == null
+                    ? const Icon(Icons.arrow_forward_ios, size: 16)
+                    : IconButton(
+                        icon: const Icon(Icons.clear, size: 20),
+                        tooltip: "הסר תאריך",
+                        onPressed: () => TestDateManager().clear(),
+                      ),
+                onTap: () async {
+                  final now = DateTime.now();
+                  final picked = await showDatePicker(
+                    context: context,
+                    helpText: 'מתי המבחן שלך?',
+                    firstDate: now,
+                    lastDate: now.add(const Duration(days: 365 * 3)),
+                    initialDate: date != null && date.isAfter(now)
+                        ? date
+                        : now.add(const Duration(days: 30)),
+                  );
+                  if (picked != null) {
+                    await TestDateManager().setDate(picked);
+                  }
+                },
+              );
+            },
           ),
           const Divider(),
           _buildSectionHeader("הגדרות התראה"),
@@ -6332,11 +7109,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const Divider(),
           _buildSectionHeader("צרו קשר"),
           ListTile(
+            leading: const Icon(Icons.quiz_outlined, color: Colors.teal),
+            title: const Text("שאלות נפוצות"),
+            subtitle: const Text("תשובות לשאלות הכי נפוצות"),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () =>
+                Navigator.push(context, _slideRoute(const FaqScreen())),
+          ),
+          ListTile(
             leading: const Icon(Icons.chat_bubble_outline, color: Colors.blue),
             title: const Text("דברו איתי"),
             subtitle: const Text("דיווח על תקלות, הצעות או סתם דיבור"),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-            onTap: _showContactOptions,
+            onTap: () => showContactOptions(context),
           ),
           ListTile(
             leading: const Icon(Icons.description_outlined, color: Colors.grey),
