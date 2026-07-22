@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io' show Platform;
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
@@ -440,6 +441,43 @@ class TestDateManager {
 }
 
 // ==========================================
+// NATIVE INSETS — fallback navigation-bar height read directly from the
+// platform. Some OEM builds (Samsung One UI 3-button nav on Android 16,
+// where edge-to-edge can no longer be opted out of) don't reliably surface
+// the bottom system-bar inset through Flutter's own MediaQuery, causing
+// bottom action buttons to sit under the navigation bar. This reads the
+// real inset natively so screens can pad against whichever value is larger.
+// ==========================================
+class NativeInsets {
+  static final NativeInsets _instance = NativeInsets._internal();
+  factory NativeInsets() => _instance;
+  NativeInsets._internal();
+
+  static const MethodChannel _channel =
+      MethodChannel('com.pappostudios.milometry/insets');
+
+  double bottomNavBarInset = 0;
+
+  Future<void> init() async {
+    if (!Platform.isAndroid) return;
+    try {
+      final double? value =
+          await _channel.invokeMethod<double>('getNavigationBarInsetDp');
+      bottomNavBarInset = value ?? 0;
+    } catch (_) {
+      bottomNavBarInset = 0;
+    }
+  }
+}
+
+// Bottom inset to pad bottom-anchored buttons by, taking whichever of
+// Flutter's own MediaQuery padding or the native fallback reading is larger.
+double safeBottomInset(BuildContext context) {
+  return math.max(
+      MediaQuery.of(context).padding.bottom, NativeInsets().bottomNavBarInset);
+}
+
+// ==========================================
 // ANIMATION HELPER: כפתור עם אפקט לחיצה
 // ==========================================
 class AnimatedButton extends StatefulWidget {
@@ -834,13 +872,24 @@ class ProgressManager {
         }
       }
 
-      if (changed) await _saveToDisk();
+      if (changed) {
+        await _saveToDisk();
+        // Marks that this device actually had progress under the old,
+        // course-order-derived ids — i.e. it was upgraded from <=1.1.3,
+        // not a fresh install on 1.1.4+ (which never had old ids at all).
+        await _prefs?.setBool('had_legacy_word_ids', true);
+      }
     } catch (_) {
       // Migration asset missing/unreadable — leave progress as-is rather
       // than risk losing it.
     }
     await _prefs?.setBool(flagKey, true);
   }
+
+  // True only for installs that were upgraded from a version <=1.1.3 with
+  // saved progress — used to gate the one-time "units reorganized" notice
+  // so fresh 1.1.4+ installs never see it.
+  bool get hadLegacyWordIds => _prefs?.getBool('had_legacy_word_ids') ?? false;
 
   void _loadFromDisk() {
     List<String>? rawData = _prefs?.getStringList('userprogress');
@@ -1083,6 +1132,11 @@ void main() async {
     } catch (e) {
       debugPrint('TestDateManager init error: $e');
     }
+    try {
+      await NativeInsets().init();
+    } catch (e) {
+      debugPrint('NativeInsets init error: $e');
+    }
 
     final prefs = await SharedPreferences.getInstance();
     final int userAcceptedVersion = prefs.getInt('accepted_terms_version') ?? 0;
@@ -1238,7 +1292,50 @@ class _SplashScreenState extends State<SplashScreen> {
 // ── MiliCharacter ──────────────────────────────────────────────────────────
 class _MiliPainter extends CustomPainter {
   final double bobOffset;
-  _MiliPainter(this.bobOffset);
+  final bool asPencil;
+  _MiliPainter(this.bobOffset, {this.asPencil = false});
+
+  void _paintPencilHat(Canvas canvas, double s) {
+    canvas.save();
+    canvas.translate(108 * s, 42 * s);
+    canvas.rotate(-0.36);
+
+    // Shaft
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(center: Offset.zero, width: 20 * s, height: 62 * s),
+        Radius.circular(3 * s),
+      ),
+      Paint()..color = const Color(0xFFFFC94A),
+    );
+    // Ferrule (metal band)
+    canvas.drawRect(
+      Rect.fromCenter(
+          center: Offset(0, -36 * s), width: 22 * s, height: 8 * s),
+      Paint()..color = const Color(0xFFD8D8D8),
+    );
+    // Eraser
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(
+            center: Offset(0, -47 * s), width: 18 * s, height: 16 * s),
+        Radius.circular(6 * s),
+      ),
+      Paint()..color = const Color(0xFFFF8FA3),
+    );
+    // Wood tip
+    final tipPath = Path()
+      ..moveTo(-10 * s, 30 * s)
+      ..lineTo(10 * s, 30 * s)
+      ..lineTo(0, 46 * s)
+      ..close();
+    canvas.drawPath(tipPath, Paint()..color = const Color(0xFFEAC08A));
+    // Graphite point
+    canvas.drawCircle(
+        Offset(0, 44 * s), 2.6 * s, Paint()..color = const Color(0xFF4A4A4A));
+
+    canvas.restore();
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1321,16 +1418,20 @@ class _MiliPainter extends CustomPainter {
       Paint()..color = kBluePrimary,
     );
 
+    if (asPencil) _paintPencilHat(canvas, s);
+
     canvas.restore();
   }
 
   @override
-  bool shouldRepaint(_MiliPainter old) => old.bobOffset != bobOffset;
+  bool shouldRepaint(_MiliPainter old) =>
+      old.bobOffset != bobOffset || old.asPencil != asPencil;
 }
 
 class MiliCharacter extends StatefulWidget {
   final double size;
-  const MiliCharacter({super.key, this.size = 104});
+  final bool asPencil;
+  const MiliCharacter({super.key, this.size = 104, this.asPencil = false});
 
   @override
   State<MiliCharacter> createState() => _MiliCharacterState();
@@ -1365,7 +1466,7 @@ class _MiliCharacterState extends State<MiliCharacter>
       animation: _bob,
       builder: (_, __) => CustomPaint(
         size: Size(widget.size, widget.size),
-        painter: _MiliPainter(_bob.value),
+        painter: _MiliPainter(_bob.value, asPencil: widget.asPencil),
       ),
     );
   }
@@ -1902,17 +2003,68 @@ class _HomeScreenState extends State<HomeScreen>
     await TestDateManager().markPrompted();
     if (!mounted) return;
 
-    final now = DateTime.now();
-    final picked = await showDatePicker(
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    await showDialog(
       context: context,
-      helpText: 'מתי המבחן שלך?',
-      firstDate: now,
-      lastDate: now.add(const Duration(days: 365 * 3)),
-      initialDate: now.add(const Duration(days: 30)),
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const MiliCharacter(size: 92, asPencil: true),
+            const SizedBox(height: 16),
+            const Text(
+              'מתי המבחן שלך? 📚',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'ספרו לי מתי, ואני אספור יחד איתכם את הימים שנשארו —\n'
+              'ככה נדע בול כמה זמן יש להתאמן 💪',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                height: 1.5,
+                color: isDark ? Colors.white70 : Colors.grey.shade600,
+              ),
+            ),
+          ],
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+        actionsPadding: const EdgeInsets.only(bottom: 16, top: 4),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('אולי מאוחר יותר'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(999)),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            ),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              if (!context.mounted) return;
+              final now = DateTime.now();
+              final picked = await showDatePicker(
+                context: context,
+                helpText: 'מתי המבחן שלך?',
+                firstDate: now,
+                lastDate: now.add(const Duration(days: 365 * 3)),
+                initialDate: now.add(const Duration(days: 30)),
+              );
+              if (picked != null) {
+                await TestDateManager().setDate(picked);
+              }
+            },
+            child: const Text('בחירת תאריך'),
+          ),
+        ],
+      ),
     );
-    if (picked != null) {
-      await TestDateManager().setDate(picked);
-    }
   }
 
   // One-time notice shown after the units-reorganization update — the
@@ -1924,6 +2076,10 @@ class _HomeScreenState extends State<HomeScreen>
     const flagKey = 'units_reorganized_notice_shown';
     if (prefs.getBool(flagKey) == true) return;
     await prefs.setBool(flagKey, true);
+
+    // Only upgraders from <=1.1.3 (who actually had old-format word ids)
+    // should see this — fresh 1.1.4+ installs have nothing to explain.
+    if (!ProgressManager().hadLegacyWordIds) return;
 
     if (!mounted) return;
     await showDialog(
@@ -4309,7 +4465,8 @@ class _LearningScreenState extends State<LearningScreen>
 
                       // ── Action row ──
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                        padding: EdgeInsets.fromLTRB(
+                            16, 8, 16, 24 + safeBottomInset(context)),
                         child: _isFlipped
                             ? _buildResponseRow()
                             : _buildFlipButton(),
@@ -5625,7 +5782,8 @@ class _SingleCardScreenState extends State<SingleCardScreen> {
       appBar: AppBar(
           backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
           elevation: 0),
-      body: Padding(
+      body: SafeArea(
+        child: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
           children: [
@@ -5672,8 +5830,9 @@ class _SingleCardScreenState extends State<SingleCardScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: 20 + safeBottomInset(context)),
           ],
+        ),
         ),
       ),
     );
@@ -5875,7 +6034,7 @@ class AboutScreen extends StatelessWidget {
               const SizedBox(height: 20),
               const Text("מילומטרי",
                   style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-              const Text("גרסה 1.1.3", style: TextStyle(color: Colors.grey)),
+              const Text("גרסה 1.1.4", style: TextStyle(color: Colors.grey)),
               const SizedBox(height: 30),
               const Text(
                   "ברוכים הבאים לאפליקציית מילומטרי!\n\nהאפליקציה נועדה לעזור לכם ללמוד מילים לפסיכומטרי בצורה כיפית וקלה.\nתוכלו לתרגל מילים בעברית ובאנגלית ולעקוב אחרי ההתקדמות שלכם.\n\nפותח על ידי Pappo Studios.\nבהצלחה במבחן!",
@@ -7231,7 +7390,8 @@ class _TermsOfServiceScreenState extends State<TermsOfServiceScreen> {
         title: const Text('תנאי שימוש ופרטיות'),
         centerTitle: true,
       ),
-      body: Padding(
+      body: SafeArea(
+        child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
@@ -7350,7 +7510,9 @@ a.	בכל שאלה, בקשה או דיווח על תקלה בנוגע לאפלי
                 ),
               ),
             ),
+            SizedBox(height: safeBottomInset(context)),
           ],
+        ),
         ),
       ),
     );

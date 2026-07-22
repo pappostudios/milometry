@@ -2,6 +2,8 @@ package com.pappostudios.milometry
 
 import android.speech.tts.TextToSpeech
 import android.speech.tts.Voice
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -9,6 +11,7 @@ import java.util.Locale
 
 class MainActivity : FlutterActivity() {
     private val channelName = "com.pappostudios.milometry/tts"
+    private val insetsChannelName = "com.pappostudios.milometry/insets"
     private var tts: TextToSpeech? = null
     private var ttsReady = false
     // Holds a speak request that arrived before the engine finished initializing.
@@ -38,6 +41,26 @@ class MainActivity : FlutterActivity() {
                     "stop" -> {
                         tts?.stop()
                         result.success(null)
+                    }
+                    else -> result.notImplemented()
+                }
+            }
+
+        // Some OEM builds (seen on Samsung One UI with 3-button navigation,
+        // Android 16 targetSdk where edge-to-edge can no longer be opted out
+        // of) don't reliably propagate the navigation-bar inset through
+        // Flutter's MediaQuery. Read it directly from the real WindowInsets
+        // as a fallback so Dart can pad bottom action buttons correctly.
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, insetsChannelName)
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "getNavigationBarInsetDp" -> {
+                        val insets = ViewCompat.getRootWindowInsets(window.decorView)
+                        val bottomPx = insets
+                            ?.getInsets(WindowInsetsCompat.Type.navigationBars())
+                            ?.bottom ?: 0
+                        val density = resources.displayMetrics.density
+                        result.success(bottomPx / density)
                     }
                     else -> result.notImplemented()
                 }

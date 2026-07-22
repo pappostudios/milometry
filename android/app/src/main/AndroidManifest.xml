@@ -32,6 +32,16 @@
             android:name="flutterEmbedding"
             android:value="2" />
 
+        <!-- Android 15+ forces edge-to-edge by default, which lets the system
+             navigation bar draw on top of app content instead of reserving its
+             own space — this was causing the nav bar to overlap the bottom
+             action buttons on devices with 3-button navigation. Opting out
+             restores the pre-15 behavior where the nav bar reserves its own
+             space, matching what SafeArea already expects. -->
+        <meta-data
+            android:name="android.window.PROPERTY_OPT_OUT_EDGE_TO_EDGE_ENFORCEMENT"
+            android:value="true" />
+
         <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
         
         <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">
